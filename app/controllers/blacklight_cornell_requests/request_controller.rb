@@ -2,20 +2,17 @@ require_dependency "blacklight_cornell_requests/application_controller"
 
 module BlacklightCornellRequests
   
-  L2L = 'l2l'
-  BD = 'bd'
-  HOLD = 'hold'
-  RECALL = 'recall'
-  PURCHASE = 'purchase' # Note: this is a *purchase request*, which is different from a patron-driven acquisition
-  PDA = 'pda'
-  ILL = 'ill'
-  ASK_CIRCULATION = 'circ'
-  ASK_LIBRARIAN = 'ask'
   LIBRARY_ANNEX = 'Library Annex'
   HOLD_PADDING_TIME = 3
   
   class RequestController < ApplicationController
+
     def magic_request target=''
+
+      req = BlacklightCornellRequests::Request.new(params[:bibid])
+      req.netid = request.env['REMOTE_USER']
+      @results = req.request
+      
       target = 'default' if target.blank?
       render target
     end

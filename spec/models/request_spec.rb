@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'blacklight_cornell_requests/request'
  
  describe BlacklightCornellRequests::Request do
 
@@ -13,6 +14,58 @@ require 'spec_helper'
 	it "has a valid initializer" do 
 		request = BlacklightCornellRequests::Request.new(12345)
 		FactoryGirl.build(:request, bibid: 12345).bibid.should == request.bibid 
+	end
+
+	context "Main request function" do
+
+		it "returns the request options array, service, and Solr document" do
+			req = FactoryGirl.build(:request, bibid: nil)
+			req.request
+			
+			req.request_options.class.name.should == "Array"
+			req.service.should == "Ask"
+			req.document.should == nil
+		end
+
+		context "Patron is Cornell-affiliated" do
+
+			context "Loan type is regular" do
+
+				context "item status is 'not charged'" do
+
+					before(:each) { 
+						@request.env['REMOTE_USER'] = 'mjc12'
+						#ENV.stub(:[]).with('REMOTE_USER').and_return('mjc12') 
+					}
+
+					it "sets service to 'l2l'" do
+						req = FactoryGirl.build(:request, bibid: 7924013)
+						req.request
+						req.service.should == 'l2l'
+					end
+
+					it "sets request options to 'l2l'" do
+						req = FactoryGirl.build(:request, bibid: 7924013)
+						req.request
+						req.request_options[0][:service].should == 'l2l'
+						req.request_options.size.should == 1
+					end
+
+				end
+
+			end
+
+			context "Loan type is day" do
+			end
+
+			context "Loan type is minute" do
+			end
+
+		end
+
+		context "Patron is a guest" do
+		end
+
 	end
 
 	context "Working with holdings data" do

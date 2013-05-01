@@ -3,12 +3,23 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 module BlacklightCornellRequests
   class Request
+
+    L2L = 'l2l'
+    BD = 'bd'
+    HOLD = 'hold'
+    RECALL = 'recall'
+    PURCHASE = 'purchase' # Note: this is a *purchase request*, which is different from a patron-driven acquisition
+    PDA = 'pda'
+    ILL = 'ill'
+    ASK_CIRCULATION = 'circ'
+    ASK_LIBRARIAN = 'ask'
+
     # attr_accessible :title, :body
     include ActiveModel::Validations
     include Cornell::LDAP
     include BorrowDirect
 
-    attr_accessor :bibid, :holdings_data
+    attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :netid
     validates_presence_of :bibid
     def save(validate = true)
       validate ? valid? : true
@@ -21,6 +32,32 @@ module BlacklightCornellRequests
     def save!
       save
     end
+
+    ##################### Calculate optimum request method ##################### 
+    def request
+
+      request_options = []
+      service = 'ask'
+      document = nil
+
+      puts "self: #{self.inspect}"
+      puts "bibid: #{self.bibid}"
+
+      # Get holdings
+      holdings = get_holdings 'retrieve_detail_raw'
+      puts holdings
+
+      # Get patron class
+      netid = request.env['REMOTE_USER']
+     # patron_type = get_patron_type netid
+      puts "patron: #{patron_type}"
+
+
+      self.request_options = request_options
+      self.service = service
+      self.document = document
+
+    end   
 
     ##################### Manipulate holdings data #####################
 
@@ -89,6 +126,10 @@ module BlacklightCornellRequests
     end
 
     ############  Return eligible delivery services for request #################
+    def delivery_services
+      [L2L, BD, HOLD, RECALL, PURCHASE, PDA, ILL, ASK_LIBRARIAN, ASK_CIRCULATION]
+    end
+
     def eligible_services
 
       return nil unless self.bibid
