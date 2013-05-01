@@ -8,5 +8,5 @@ BlacklightCornellRequests::Engine.routes.draw do
   match 'purchase/:id' =>'request#purchase', :as =>'request_purchase'
   match 'ask/:id' =>'request#ask', :as =>'request_ask'
   match 'voyager' => 'request#make_request', :as => 'request_make_request', :via => :post
-  match '/:id' => 'request#request', :as => 'request'
+  match '/:id' => 'request#magic_request', :as => 'magic_request'
 end

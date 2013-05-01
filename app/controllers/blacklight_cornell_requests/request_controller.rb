@@ -15,7 +15,7 @@ module BlacklightCornellRequests
   HOLD_PADDING_TIME = 3
   
   class RequestController < ApplicationController
-    def request target=''
+    def magic_request target=''
       target = 'default' if target.blank?
       render target
     end
