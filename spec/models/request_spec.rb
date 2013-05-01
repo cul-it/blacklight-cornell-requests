@@ -10,6 +10,11 @@ require 'spec_helper'
 		FactoryGirl.build(:request, bibid: nil).should_not be_valid
 	end
 
+	it "has a valid initializer" do 
+		request = BlacklightCornellRequests::Request.new(12345)
+		FactoryGirl.build(:request, bibid: 12345).bibid.should == request.bibid 
+	end
+
 	context "Working with holdings data" do
 
 		context "retrieving holdings data for its bib id" do

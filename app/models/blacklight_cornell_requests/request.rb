@@ -14,6 +14,10 @@ module BlacklightCornellRequests
       validate ? valid? : true
     end
 
+    def initialize(bibid)
+      self.bibid = bibid
+    end
+
     def save!
       save
     end

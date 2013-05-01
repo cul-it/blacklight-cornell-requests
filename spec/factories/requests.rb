@@ -2,8 +2,10 @@
 
 FactoryGirl.define do 
 
-	factory :request, :class => "BlacklightCornellRequests::Request" do |f|
-		f.bibid { 5000000 + Random.rand(100000) }
+	factory :request, :class => "BlacklightCornellRequests::Request" do
+
+		initialize_with { BlacklightCornellRequests::Request.new(5000000 + Random.rand(100000))}
+		
 	end
 	
 end
