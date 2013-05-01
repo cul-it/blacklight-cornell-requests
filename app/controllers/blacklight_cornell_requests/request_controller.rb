@@ -75,35 +75,35 @@ module BlacklightCornellRequests
     end
 
     def l2l
-      return request_item L2L
+      return request L2L
     end
 
     def hold
-      return request_item HOLD
+      return request HOLD
     end
 
     def recall
-      return request_item RECALL
+      return request RECALL
     end
 
     def bd
-      return request_item BD
+      return request BD
     end
 
     def ill
-      return request_item ILL
+      return request ILL
     end
 
     def purchase
-      return request_item PURCHASE
+      return request PURCHASE
     end
 
     def pda
-      return request_item PDA
+      return request PDA
     end
 
     def ask
-      return request_item ASK_LIBRARIAN
+      return request ASK_LIBRARIAN
     end
   end
 end
