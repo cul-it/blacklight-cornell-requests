@@ -78,6 +78,14 @@ module BlacklightCornellRequests
       if patron_type == 'cornell' and item_loan_type == 'regular' and item_status == 'Not Charged'
         service = 'l2l'
         request_options = [ {:service => service} ]
+      elsif patron_type == 'cornell' and item_loan_type == 'regular' and item_status == 'Charged'
+        params = {}
+        if borrowDirect_available? params
+          service = 'bd'
+        else
+          service = 'ill'
+        end
+        request_options = [ {:service => service}, {:service => 'ill'}, {:service => 'recall'}, {:service => 'hold'} ]
       end
 
       self.request_options = request_options

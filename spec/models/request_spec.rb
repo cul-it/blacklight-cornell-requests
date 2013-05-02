@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'blacklight_cornell_requests/request'
+require 'blacklight_cornell_requests/borrow_direct'
  
  describe BlacklightCornellRequests::Request do
 
@@ -33,25 +34,45 @@ require 'blacklight_cornell_requests/request'
 
 				context "item status is 'not charged'" do
 
-					it "sets service to 'l2l'" do
-						req = FactoryGirl.build(:request, bibid: 7924013)
-						VCR.use_cassette 'holdings/7924013' do
-							req.get_holdings('retrieve_detail_raw')
-						end
+					let(:req) { FactoryGirl.build(:request, bibid: 7924013) }
+					before(:all) {
 						req.netid = 'sk274'
+						VCR.use_cassette 'holdings/cornell_regular_notcharged' do
+							req.get_holdings('retrieve_detail_raw')
+						end		
 						req.magic_request
+					}
+
+					it "sets service to 'l2l'" do
 						req.service.should == 'l2l'
 					end
 
 					it "sets request options to 'l2l'" do
-						req = FactoryGirl.build(:request, bibid: 7924013)
-						VCR.use_cassette 'holdings/7924013' do
-							req.get_holdings('retrieve_detail_raw')
-						end
-						req.netid = 'sk274'
-						req.magic_request
 						req.request_options[0][:service].should == 'l2l'
 						req.request_options.size.should == 1
+					end
+
+				end
+
+				context "item status is 'charged'" do
+
+					let(:req) { FactoryGirl.build(:request, bibid: 3955095) }
+					before(:all) { 
+						req.stub(:borrowDirect_available?).and_return(true) 
+						req.netid = 'sk274'
+						VCR.use_cassette 'holdings/cornell_regular_charged' do
+							req.get_holdings('retrieve_detail_raw')
+						end					
+						req.magic_request	
+					}
+
+					it "sets service to 'bd'" do
+						req.service.should == 'bd'
+					end
+
+					it "sets request options to 'bd, recall, ill, hold'" do
+						req.request_options[0][:service].should == 'bd'
+						req.request_options.size.should == 4
 					end
 
 				end
