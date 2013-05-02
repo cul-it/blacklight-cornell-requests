@@ -82,10 +82,11 @@ module BlacklightCornellRequests
         params = {}
         if borrowDirect_available? params
           service = 'bd'
+          request_options.push( {:service => service} )
         else
           service = 'ill'
         end
-        request_options = [ {:service => service}, {:service => 'ill'}, {:service => 'recall'}, {:service => 'hold'} ]
+        request_options.push({:service => 'ill'}, {:service => 'recall'}, {:service => 'hold'})
       end
 
       self.request_options = request_options

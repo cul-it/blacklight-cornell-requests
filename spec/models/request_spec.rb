@@ -58,21 +58,46 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 					let(:req) { FactoryGirl.build(:request, bibid: 3955095) }
 					before(:all) { 
-						req.stub(:borrowDirect_available?).and_return(true) 
 						req.netid = 'sk274'
 						VCR.use_cassette 'holdings/cornell_regular_charged' do
 							req.get_holdings('retrieve_detail_raw')
 						end					
-						req.magic_request	
 					}
 
-					it "sets service to 'bd'" do
-						req.service.should == 'bd'
+					context "available through Borrow Direct" do
+
+						before(:all) {
+							req.stub(:borrowDirect_available?).and_return(true) 
+							req.magic_request	
+						}
+
+						it "sets service to 'bd'" do
+							req.service.should == 'bd'
+						end
+
+						it "sets request options to 'bd, recall, ill, hold'" do
+							req.request_options[0][:service].should == 'bd'
+							req.request_options.size.should == 4
+						end
+
 					end
 
-					it "sets request options to 'bd, recall, ill, hold'" do
-						req.request_options[0][:service].should == 'bd'
-						req.request_options.size.should == 4
+					context "not available through Borrow Direct" do
+
+						before(:all) { 
+							req.stub(:borrowDirect_available?).and_return(false) 
+							req.magic_request
+						}
+
+						it "sets service to 'ill'" do
+							req.service.should == 'ill'
+						end
+
+						it "sets request options to 'ill, recall, hold'" do
+							req.request_options[0][:service].should == 'ill'
+							req.request_options.size.should == 3
+						end
+
 					end
 
 				end
