@@ -14,6 +14,7 @@ module BlacklightCornellRequests
     ASK_CIRCULATION = 'circ'
     ASK_LIBRARIAN = 'ask'
     LIBRARY_ANNEX = 'Library Annex'
+    HOLD_PADDING_TIME = 3
 
     # attr_accessible :title, :body
     include ActiveModel::Validations
@@ -32,6 +33,10 @@ module BlacklightCornellRequests
 
     def save!
       save
+    end
+
+    def get_hold_padding
+      return HOLD_PADDING_TIME
     end
 
     ##################### Calculate optimum request method ##################### 
@@ -74,9 +79,13 @@ module BlacklightCornellRequests
 
       # Iterate through all items and get list of delivery methods
       all_items.each do |item|
-
+        services = get_delivery_options item
+        item[:services] = services
       end
 
+
+
+      puts "all items: #{all_items.inspect}"
       # if patron_type == 'cornell' and item_loan_type == 'regular' and item_status == 'Not Charged'
       #   service = 'l2l'
       #   request_options = [ {:service => service} ]
@@ -169,15 +178,21 @@ module BlacklightCornellRequests
     end
 
     # Main entry point for determining which delivery services are available for a given item
+    # Returns an array of hashes with the following structure:
+    # { :service => SERVICE NAME, :estimate => ESTIMATED DELIVERY TIME }
+    # The array is sorted by delivery time estimate, so the first array item should be 
+    # the fastest (i.e., the "best") delivery option.
     def get_delivery_options item
 
       patron_type = get_patron_type self.netid
 
       if patron_type == 'cornell'
-        return get_cornell_delivery_options item
+        options = get_cornell_delivery_options item
       else
-        return get_guest_delivery_options item
+        options = get_guest_delivery_options item
       end
+
+      return sort_request_options options
 
     end
 
@@ -191,9 +206,14 @@ module BlacklightCornellRequests
 
     end
 
-    def get_delivery_time item_data
+    # Custom sort method: sort by delivery time estimate from a hash
+    def sort_request_options request_options
+      return request_options.sort_by { |option| option[:estimate] }
+    end
 
-      case item_data[:service] 
+    def get_delivery_time service, item_data
+
+      case service 
 
         when 'l2l'
           if item_data['location'] == LIBRARY_ANNEX

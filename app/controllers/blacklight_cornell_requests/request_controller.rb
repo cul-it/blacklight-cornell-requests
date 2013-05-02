@@ -1,10 +1,7 @@
 require_dependency "blacklight_cornell_requests/application_controller"
 
 module BlacklightCornellRequests
-  
-  LIBRARY_ANNEX = 'Library Annex'
-  HOLD_PADDING_TIME = 3
-  
+    
   class RequestController < ApplicationController
 
     def magic_request target=''

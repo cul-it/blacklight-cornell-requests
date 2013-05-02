@@ -38,7 +38,7 @@ require 'blacklight_cornell_requests/borrow_direct'
 		# 		context "item status is 'not charged'" do
 
 		# 			before(:all) {
-		# 				req.bibid = 7924013
+		# 				req.bibid = 1419
 		# 				VCR.use_cassette 'holdings/cornell_regular_notcharged' do
 		# 					req.get_holdings('retrieve_detail_raw')
 		# 				end		
@@ -167,23 +167,26 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 			let(:req) { FactoryGirl.build(:request, bibid: nil) }
 			before(:each) { 
-				req.stub(:get_cornell_delivery_options).and_return(1)
-				req.stub(:get_guest_delivery_options).and_return(2)
+				req.stub(:get_cornell_delivery_options).and_return([{:service => 'l2l', :estimate => 2}])
+				req.stub(:get_guest_delivery_options).and_return([{:service => 'bd', :estimate => 1}])
 			}
 
 			it "should use get_cornell_delivery_options if patron is Cornell" do 
 				req.netid = 'mjc12' 
-				req.get_delivery_options(nil).should == 1
+				result = req.get_delivery_options(nil)
+				result[0][:service].should == 'l2l'
 			end
 
 			it "should use get_guest_delivery_options if patron is guest" do 
 				req.netid = 'gid-silterrae'
-				req.get_delivery_options(nil).should == 2
+				result = req.get_delivery_options(nil)
+				result[0][:service].should == 'bd'
 			end
 
 			it "should use get_guest_delivery_options if patron is null" do 
 				req.netid = ''
-				req.get_delivery_options(nil).should == 2
+				result = req.get_delivery_options(nil)
+				result[0][:service].should == 'bd'
 			end
 
 		end
@@ -332,9 +335,101 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 		context "Getting delivery times" do
 
-			describe "returns " do
+			let(:req) { FactoryGirl.create(:request) }
 
-				it "does stuff" do
+			describe "l2l" do 
+
+				it "returns 1 if item is at the annex" do
+					params = { :service => 'l2l', 'location' => 'Library Annex' }
+					req.get_delivery_time('l2l', params).should == 1
+				end
+
+				it "returns 2 if item is not at annex" do
+					params = { :service => 'l2l', 'location' => 'Maui' }
+					req.get_delivery_time('l2l', params).should == 2
+				end
+
+			end
+
+			describe 'bd' do 
+
+				it "returns 6" do
+					req.get_delivery_time('bd', nil).should == 6
+				end
+
+			end
+
+			describe 'hold' do 
+
+				it "returns 180 if there is no hold date" do
+					params = { :service => 'hold', 'itemStatus' => 'Hold' }
+					req.get_delivery_time('hold', params).should == 180
+				end
+
+				it "returns 180 if there is a hold date problem" do
+					params = { :service => 'hold', 'itemStatus' => 'Hold -- Due on 1977-10-15' }
+					req.get_delivery_time('hold', params).should == 180					
+				end
+
+				it "returns the remaining time till due date plus padding time for a valid hold date" do
+					params = { :service => 'hold', 'itemStatus' => "Hold -- Due on #{Date.today + 10}" }
+					req.get_delivery_time('hold', params).should == 10 + req.get_hold_padding						
+				end
+
+			end
+
+			describe 'ill' do 
+
+				it "returns 14" do
+					req.get_delivery_time('ill', nil).should == 14
+				end
+
+			end
+
+			describe 'recall' do 
+
+				it "returns 30" do
+					req.get_delivery_time('recall', nil).should == 30
+				end
+
+			end
+
+			describe 'pda' do 
+
+				it "returns 5" do
+					req.get_delivery_time('pda', nil).should == 5
+				end
+
+			end
+
+			describe 'purchase' do 
+
+				it "returns 10" do
+					req.get_delivery_time('purchase', nil).should == 10
+				end
+
+			end
+
+			describe 'ask' do 
+
+				it "returns 9999" do
+					req.get_delivery_time('ask', nil).should == 9999
+				end
+
+			end
+
+			describe 'circ' do 
+
+				it "returns 9998" do
+					req.get_delivery_time('circ', nil).should == 9998
+				end
+
+			end
+
+			describe 'default' do 
+
+				it "returns 9999 if it doesn't know what else to do" do
+					req.get_delivery_time('help', nil).should == 9999
 				end
 
 			end
