@@ -13,6 +13,7 @@ module BlacklightCornellRequests
     ILL = 'ill'
     ASK_CIRCULATION = 'circ'
     ASK_LIBRARIAN = 'ask'
+    LIBRARY_ANNEX = 'Library Annex'
 
     # attr_accessible :title, :body
     include ActiveModel::Validations
@@ -51,43 +52,44 @@ module BlacklightCornellRequests
       get_holdings 'retrieve_detail_raw' unless self.holdings_data
        puts self.holdings_data
 
-      # Get patron class
-      patron_type = get_patron_type self.netid
-
       # Get loan type code
       # TODO: we're only looking at the first holdings record in the array here. Make this smarter!
       loan_type_code = self.holdings_data[self.bibid.to_s]['records'][0]['item_status']['itemdata'][0]['typeCode']
       item_loan_type = loan_type loan_type_code
 
-      # Get item status
-      # TODO: check our logic here; is this the best we can do?
-      statuses = []
+      # Get item status and location for each item in each holdings record; store in all_items
+      all_items = []
       item_status = 'Charged'
       holdings = self.holdings_data[self.bibid.to_s]['records']
       holdings.each do |h|
         items = h['item_status']['itemdata']
         items.each do |i|
           status = item_status i['itemStatus']
-          statuses.push ({ :status => status, :id => i['itemid'] })
-          if status == 'Not Charged'
-            item_status = 'Not Charged'
-          end
+          all_items.push({ :id => i['itemid'], 
+                           :status => status, 
+                           :location => i['location']
+                         })
         end
       end
 
-      if patron_type == 'cornell' and item_loan_type == 'regular' and item_status == 'Not Charged'
-        service = 'l2l'
-        request_options = [ {:service => service} ]
-      elsif patron_type == 'cornell' and item_loan_type == 'regular' and item_status == 'Charged'
-        params = {}
-        if borrowDirect_available? params
-          service = 'bd'
-          request_options.push( {:service => service} )
-        else
-          service = 'ill'
-        end
-        request_options.push({:service => 'ill'}, {:service => 'recall'}, {:service => 'hold'})
+      # Iterate through all items and get list of delivery methods
+      all_items.each do |item|
+
       end
+
+      # if patron_type == 'cornell' and item_loan_type == 'regular' and item_status == 'Not Charged'
+      #   service = 'l2l'
+      #   request_options = [ {:service => service} ]
+      # elsif patron_type == 'cornell' and item_loan_type == 'regular' and item_status == 'Charged'
+      #   params = {}
+      #   if borrowDirect_available? params
+      #     service = 'bd'
+      #     request_options.push( {:service => service} )
+      #   else
+      #     service = 'ill'
+      #   end
+      #   request_options.push({:service => 'ill'}, {:service => 'recall'}, {:service => 'hold'})
+      # end
 
       self.request_options = request_options
       self.service = service
@@ -166,12 +168,80 @@ module BlacklightCornellRequests
       [L2L, BD, HOLD, RECALL, PURCHASE, PDA, ILL, ASK_LIBRARIAN, ASK_CIRCULATION]
     end
 
-    def eligible_services
+    # Main entry point for determining which delivery services are available for a given item
+    def get_delivery_options item
 
-      return nil unless self.bibid
+      patron_type = get_patron_type self.netid
 
-      'test'
+      if patron_type == 'cornell'
+        return get_cornell_delivery_options item
+      else
+        return get_guest_delivery_options item
+      end
 
     end
+
+    # Determine delivery options for an item if the patron is a Cornell affiliate
+    def get_cornell_delivery_options item
+
+    end
+
+    # Determine delivery options for an item if the patron is a guest (non-Cornell)
+    def get_guest_delivery_options item
+
+    end
+
+    def get_delivery_time item_data
+
+      case item_data[:service] 
+
+        when 'l2l'
+          if item_data['location'] == LIBRARY_ANNEX
+            1
+          else
+            2
+          end
+
+        when 'bd'
+          6
+        when 'ill'
+          14
+
+        when 'hold'
+          ## if it got to this point, it means it is not available and should have Due on xxxx-xx-xx
+          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data['itemStatus'])
+          if ! dueDate.nil?
+            estimate = (Date.parse(dueDate[1]) - Date.today).to_i
+            if (estimate < 0)
+              ## this item is overdue
+              ## use default value instead
+              return 180
+            end
+            ## pad for extra days for processing time?
+            ## also padding would allow l2l to be always first option
+            return estimate.to_i + HOLD_PADDING_TIME
+          else
+            ## due date not found... use default
+            return 180
+          end
+
+        when 'recall'
+          30
+        when 'pda'
+          5
+        when 'purchase'
+          10
+        when 'ask'
+          9999
+        when 'circ'
+          9998
+        else
+          9999
+      end
+
+    end
+
+
   end
+
 end
