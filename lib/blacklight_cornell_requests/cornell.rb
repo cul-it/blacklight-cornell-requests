@@ -1,3 +1,5 @@
+require 'net/ldap'
+
 module BlacklightCornellRequests
 
   module Cornell

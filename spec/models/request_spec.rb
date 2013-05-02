@@ -20,10 +20,10 @@ require 'blacklight_cornell_requests/request'
 
 		it "returns the request options array, service, and Solr document" do
 			req = FactoryGirl.build(:request, bibid: nil)
-			req.request
+			req.magic_request
 			
 			req.request_options.class.name.should == "Array"
-			req.service.should == "Ask"
+			req.service.should == "ask"
 			req.document.should == nil
 		end
 
@@ -33,20 +33,17 @@ require 'blacklight_cornell_requests/request'
 
 				context "item status is 'not charged'" do
 
-					before(:each) { 
-						@request.env['REMOTE_USER'] = 'mjc12'
-						#ENV.stub(:[]).with('REMOTE_USER').and_return('mjc12') 
-					}
-
 					it "sets service to 'l2l'" do
 						req = FactoryGirl.build(:request, bibid: 7924013)
-						req.request
+						req.netid = 'sk274'
+						req.magic_request
 						req.service.should == 'l2l'
 					end
 
 					it "sets request options to 'l2l'" do
 						req = FactoryGirl.build(:request, bibid: 7924013)
-						req.request
+						req.netid = 'sk274'
+						req.magic_request
 						req.request_options[0][:service].should == 'l2l'
 						req.request_options.size.should == 1
 					end

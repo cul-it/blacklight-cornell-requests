@@ -34,24 +34,19 @@ module BlacklightCornellRequests
     end
 
     ##################### Calculate optimum request method ##################### 
-    def request
+    def magic_request
 
       request_options = []
       service = 'ask'
       document = nil
 
-      puts "self: #{self.inspect}"
-      puts "bibid: #{self.bibid}"
-
       # Get holdings
-      holdings = get_holdings 'retrieve_detail_raw'
-      puts holdings
+      # holdings = get_holdings 'retrieve_detail_raw'
+      # puts holdings
 
       # Get patron class
-      netid = request.env['REMOTE_USER']
-     # patron_type = get_patron_type netid
-      puts "patron: #{patron_type}"
-
+      #netid = request.env['REMOTE_USER']
+      patron_type = get_patron_type self.netid
 
       self.request_options = request_options
       self.service = service

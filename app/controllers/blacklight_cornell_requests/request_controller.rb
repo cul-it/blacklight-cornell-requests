@@ -11,7 +11,7 @@ module BlacklightCornellRequests
 
       req = BlacklightCornellRequests::Request.new(params[:bibid])
       req.netid = request.env['REMOTE_USER']
-      @results = req.request
+      @results = req.magic_request
       
       target = 'default' if target.blank?
       render target
