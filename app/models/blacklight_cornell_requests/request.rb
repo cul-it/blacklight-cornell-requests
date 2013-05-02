@@ -40,13 +40,45 @@ module BlacklightCornellRequests
       service = 'ask'
       document = nil
 
+      if self.bibid.nil?
+        self.request_options = request_options
+        self.service = service
+        self.document = document
+        return
+      end
+
       # Get holdings
-      # holdings = get_holdings 'retrieve_detail_raw'
-      # puts holdings
+      get_holdings 'retrieve_detail_raw' unless self.holdings_data
+       puts self.holdings_data
 
       # Get patron class
-      #netid = request.env['REMOTE_USER']
       patron_type = get_patron_type self.netid
+
+      # Get loan type code
+      # TODO: we're only looking at the first holdings record in the array here. Make this smarter!
+      loan_type_code = self.holdings_data[self.bibid.to_s]['records'][0]['item_status']['itemdata'][0]['typeCode']
+      item_loan_type = loan_type loan_type_code
+
+      # Get item status
+      # TODO: check our logic here; is this the best we can do?
+      statuses = []
+      item_status = 'Charged'
+      holdings = self.holdings_data[self.bibid.to_s]['records']
+      holdings.each do |h|
+        items = h['item_status']['itemdata']
+        items.each do |i|
+          status = item_status i['itemStatus']
+          statuses.push ({ :status => status, :id => i['itemid'] })
+          if status == 'Not Charged'
+            item_status = 'Not Charged'
+          end
+        end
+      end
+
+      if patron_type == 'cornell' and item_loan_type == 'regular' and item_status == 'Not Charged'
+        service = 'l2l'
+        request_options = [ {:service => service} ]
+      end
 
       self.request_options = request_options
       self.service = service
@@ -56,7 +88,7 @@ module BlacklightCornellRequests
 
     ##################### Manipulate holdings data #####################
 
-    # Retrieve holdings data from the Voyager service configured in the
+    # Set holdings data from the Voyager service configured in the
     # environments file.
     # holdings_param = { :bibid => <bibid>, :type => retrieve|retrieve_detail_raw}
     def get_holdings(type = 'retrieve')
@@ -68,7 +100,7 @@ module BlacklightCornellRequests
       # return nil if there is no meaningful response (e.g., invalid bibid)
       return nil if response[self.bibid.to_s].nil?
 
-      return response
+      self.holdings_data = response
 
     end
 

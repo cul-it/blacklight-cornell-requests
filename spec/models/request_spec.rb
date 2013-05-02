@@ -35,6 +35,9 @@ require 'blacklight_cornell_requests/request'
 
 					it "sets service to 'l2l'" do
 						req = FactoryGirl.build(:request, bibid: 7924013)
+						VCR.use_cassette 'holdings/7924013' do
+							req.get_holdings('retrieve_detail_raw')
+						end
 						req.netid = 'sk274'
 						req.magic_request
 						req.service.should == 'l2l'
@@ -42,6 +45,9 @@ require 'blacklight_cornell_requests/request'
 
 					it "sets request options to 'l2l'" do
 						req = FactoryGirl.build(:request, bibid: 7924013)
+						VCR.use_cassette 'holdings/7924013' do
+							req.get_holdings('retrieve_detail_raw')
+						end
 						req.netid = 'sk274'
 						req.magic_request
 						req.request_options[0][:service].should == 'l2l'
