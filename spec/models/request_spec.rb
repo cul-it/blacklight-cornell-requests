@@ -30,13 +30,15 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 		context "Patron is Cornell-affiliated" do
 
+			let(:req) { FactoryGirl.build(:request, bibid: nil) }
+			before(:all) { req.netid = 'sk274' }
+
 			context "Loan type is regular" do
 
 				context "item status is 'not charged'" do
 
-					let(:req) { FactoryGirl.build(:request, bibid: 7924013) }
 					before(:all) {
-						req.netid = 'sk274'
+						req.bibid = 7924013
 						VCR.use_cassette 'holdings/cornell_regular_notcharged' do
 							req.get_holdings('retrieve_detail_raw')
 						end		
@@ -56,9 +58,8 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 				context "item status is 'charged'" do
 
-					let(:req) { FactoryGirl.build(:request, bibid: 3955095) }
 					before(:all) { 
-						req.netid = 'sk274'
+						req.bibid = 3955095
 						VCR.use_cassette 'holdings/cornell_regular_charged' do
 							req.get_holdings('retrieve_detail_raw')
 						end					
