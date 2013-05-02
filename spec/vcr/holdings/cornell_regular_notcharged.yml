@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: http://culsearchdev.library.cornell.edu:8950/holdings/retrieve_detail_raw/7924013
+    uri: http://culsearchdev.library.cornell.edu:8950/holdings/retrieve_detail_raw/1419
     body:
       encoding: US-ASCII
       string: ''
@@ -24,33 +24,48 @@ http_interactions:
         SUU9RWRnZQ==
       !binary "RXRhZw==":
       - !binary |-
-        ImZjZGM3YTRjODAwMmMyODQwMTA2MGE4Y2NmODViYzAyIg==
+        ImI2OGUzM2MyZTYzNzVhN2NlZmFhYmQwNTA3MmFhNzY3Ig==
       !binary "Q2FjaGUtQ29udHJvbA==":
       - !binary |-
         bWF4LWFnZT0wLCBwcml2YXRlLCBtdXN0LXJldmFsaWRhdGU=
       !binary "WC1SdW50aW1l":
       - !binary |-
-        MC41OTk4NjQ=
+        MC44MDM2MjM=
       !binary "Q29udGVudC1MZW5ndGg=":
       - !binary |-
-        MTAwNw==
+        NjA0Nw==
       !binary "U2VydmVy":
       - !binary |-
         V0VCcmljay8xLjMuMSAoUnVieS8xLjkuMy8yMDEyLTA0LTIwKQ==
       !binary "RGF0ZQ==":
       - !binary |-
-        VGh1LCAwMiBNYXkgMjAxMyAxNToxNTowOSBHTVQ=
+        VGh1LCAwMiBNYXkgMjAxMyAyMDo0MzoyMSBHTVQ=
       !binary "Q29ubmVjdGlvbg==":
       - !binary |-
         S2VlcC1BbGl2ZQ==
     body:
       encoding: US-ASCII
-      string: ! '{"7924013":{"records":[{"bibid":"7924013","holding_id":"8317749","location_name":"olin","call_number":"PR6068.O93
-        Z5265 2012","shelving_title":"","summary_holdings":[],"supplements":[],"indexes":[],"notes":[],"reproduction_note":"","urls":[],"item_count":1,"temp_locations":[],"item_status":{"itemdata":[{"href":"http://catalog-test.library.cornell.edu/vxws/record/7924013/items/9193583","itemid":"9193583","permLocation":"Olin
-        Library","location_id":"99","tempLocation":"","location":"Olin Library","callNumber":"PR6068.O93
-        Z5265 2012","copy":"c. 1","itemBarcode":"31924117755730","enumeration":"","chron":"","year":"","caption":"","freeText":"","typeCode":"3","typeDesc":"book","tempType":"0","itemStatus":"Not
-        Charged","spineLabel":"","itemNote":"0","onReserve":"N","exclude_location_id":[181,188]}],"status":"available","messages":[{"status_code":"Not
-        Charged","short_message":"Not Charged","long_message":"Not Charged"}],"location_id":"99"},"services":[],"current_issues":[],"orders":[],"onotes":[]}]}}'
+      string: ! '{"1419":{"records":[{"bibid":"1419","holding_id":"5777","location_name":"law","call_number":"KF4627
+        .S43 1962","shelving_title":"","summary_holdings":["v.1-2"],"supplements":[],"indexes":[],"notes":[],"reproduction_note":"","urls":[],"item_count":2,"temp_locations":[],"item_status":{"itemdata":[{"href":"http://catalog-test.library.cornell.edu/vxws/record/1419/items/21909","itemid":"21909","permLocation":"Law
+        Library (Myron Taylor Hall)","location_id":"63","tempLocation":"","location":"Law
+        Library (Myron Taylor Hall)","callNumber":"KF4627 .S43 1962","copy":"c. 1","itemBarcode":"31924016935755","enumeration":"v.1","chron":"","year":"","caption":"","freeText":"","typeCode":"3","typeDesc":"book","tempType":"0","itemStatus":"v.1  Requested","spineLabel":"","itemNote":"0","onReserve":"N","exclude_location_id":[171]},{"href":"http://catalog-test.library.cornell.edu/vxws/record/1419/items/21910","itemid":"21910","permLocation":"Law
+        Library (Myron Taylor Hall)","location_id":"63","tempLocation":"","location":"Law
+        Library (Myron Taylor Hall)","callNumber":"KF4627 .S43 1962","copy":"c. 1","itemBarcode":"31924016935763","enumeration":"v.2","chron":"","year":"","caption":"","freeText":"","typeCode":"3","typeDesc":"book","tempType":"0","itemStatus":"Not
+        Charged","spineLabel":"","itemNote":"0","onReserve":"N","exclude_location_id":[171]}],"status":"not_available","messages":[{"status_code":"v.1  Requested","short_message":"v.1  Requested","long_message":"v.1  Requested"},{"status_code":"Not
+        Charged","short_message":"Not Charged","long_message":"Not Charged"}],"location_id":"63"},"services":["in_process","borrow_direct","ill","recall_hold"],"current_issues":[],"orders":[],"onotes":[]},{"bibid":"1419","holding_id":"5778","location_name":"mann,anxt","call_number":"QB281
+        .S39","shelving_title":"","summary_holdings":["v.2"],"supplements":[],"indexes":[],"notes":[],"reproduction_note":"","urls":[],"item_count":1,"temp_locations":[],"item_status":{"itemdata":[{"href":"http://catalog-test.library.cornell.edu/vxws/record/1419/items/21911","itemid":"21911","permLocation":"Library
+        Annex","location_id":"72","tempLocation":"","location":"Library Annex","callNumber":"QB281
+        .S39","copy":"c. 1","itemBarcode":"31924000005797","enumeration":"v.2","chron":"","year":"","caption":"","freeText":"","typeCode":"3","typeDesc":"book","tempType":"0","itemStatus":"v.2  Requested","spineLabel":"","itemNote":"0","onReserve":"N","exclude_location_id":[]}],"status":"not_available","messages":[{"status_code":"v.2  Requested","short_message":"v.2  Requested","long_message":"v.2  Requested"}],"location_id":"72"},"services":["in_process","borrow_direct","ill","recall_hold"],"current_issues":[],"orders":[],"onotes":[]},{"bibid":"1419","holding_id":"5248430","location_name":"olin","call_number":"Oversize
+        HD205 1962 .S52 +","shelving_title":"","summary_holdings":["v.1-2"],"supplements":[],"indexes":[],"notes":[],"reproduction_note":"","urls":[],"item_count":2,"temp_locations":[],"item_status":{"itemdata":[{"href":"http://catalog-test.library.cornell.edu/vxws/record/1419/items/6782462","itemid":"6782462","permLocation":"Olin
+        Library","location_id":"99","tempLocation":"","location":"Olin Library","callNumber":"Oversize
+        HD205 1962 .S52 +","copy":"c. 1","itemBarcode":"31924032422408","enumeration":"v.1","chron":"","year":"","caption":"","freeText":"","typeCode":"3","typeDesc":"book","tempType":"0","itemStatus":"v.1  Requested","spineLabel":"","itemNote":"0","onReserve":"N","exclude_location_id":[181,188]},{"href":"http://catalog-test.library.cornell.edu/vxws/record/1419/items/6782463","itemid":"6782463","permLocation":"Olin
+        Library","location_id":"99","tempLocation":"","location":"Olin Library","callNumber":"Oversize
+        HD205 1962 .S52 +","copy":"c. 1","itemBarcode":"31924032422416","enumeration":"v.2","chron":"","year":"","caption":"","freeText":"","typeCode":"3","typeDesc":"book","tempType":"0","itemStatus":"v.2  Requested","spineLabel":"","itemNote":"0","onReserve":"N","exclude_location_id":[181,188]}],"status":"not_available","messages":[{"status_code":"v.1  Requested","short_message":"v.1  Requested","long_message":"v.1  Requested"},{"status_code":"v.2  Requested","short_message":"v.2  Requested","long_message":"v.2  Requested"}],"location_id":"99"},"services":["in_process","borrow_direct","ill","recall_hold"],"current_issues":[],"orders":[],"onotes":[]},{"bibid":"1419","holding_id":"5248433","location_name":"olin","call_number":"Oversize
+        HD205 1962 .S52 +","shelving_title":"","summary_holdings":["v.1-2"],"supplements":[],"indexes":[],"notes":[],"reproduction_note":"","urls":[],"item_count":2,"temp_locations":[],"item_status":{"itemdata":[{"href":"http://catalog-test.library.cornell.edu/vxws/record/1419/items/6782465","itemid":"6782465","permLocation":"Olin
+        Library","location_id":"99","tempLocation":"","location":"Olin Library","callNumber":"Oversize
+        HD205 1962 .S52 +","copy":"c. 2","itemBarcode":"31924032422424","enumeration":"v.1","chron":"","year":"","caption":"","freeText":"","typeCode":"3","typeDesc":"book","tempType":"0","itemStatus":"v.1  Requested","spineLabel":"","itemNote":"0","onReserve":"N","exclude_location_id":[181,188]},{"href":"http://catalog-test.library.cornell.edu/vxws/record/1419/items/6782466","itemid":"6782466","permLocation":"Olin
+        Library","location_id":"99","tempLocation":"","location":"Olin Library","callNumber":"Oversize
+        HD205 1962 .S52 +","copy":"c. 2","itemBarcode":"31924032422432","enumeration":"v.2","chron":"","year":"","caption":"","freeText":"","typeCode":"3","typeDesc":"book","tempType":"0","itemStatus":"v.2  Requested","spineLabel":"","itemNote":"0","onReserve":"N","exclude_location_id":[181,188]}],"status":"not_available","messages":[{"status_code":"v.1  Requested","short_message":"v.1  Requested","long_message":"v.1  Requested"},{"status_code":"v.2  Requested","short_message":"v.2  Requested","long_message":"v.2  Requested"}],"location_id":"99"},"services":["in_process","borrow_direct","ill","recall_hold"],"current_issues":[],"orders":[],"onotes":[]}]}}'
     http_version: 
-  recorded_at: Thu, 02 May 2013 15:15:09 GMT
+  recorded_at: Thu, 02 May 2013 20:43:21 GMT
 recorded_with: VCR 2.4.0

@@ -36,7 +36,7 @@ module BlacklightCornellRequests
     end
 
     def get_hold_padding
-      return HOLD_PADDING_TIME
+      HOLD_PADDING_TIME
     end
 
     ##################### Calculate optimum request method ##################### 
@@ -57,11 +57,6 @@ module BlacklightCornellRequests
       get_holdings 'retrieve_detail_raw' unless self.holdings_data
        puts self.holdings_data
 
-      # Get loan type code
-      # TODO: we're only looking at the first holdings record in the array here. Make this smarter!
-      loan_type_code = self.holdings_data[self.bibid.to_s]['records'][0]['item_status']['itemdata'][0]['typeCode']
-      item_loan_type = loan_type loan_type_code
-
       # Get item status and location for each item in each holdings record; store in all_items
       all_items = []
       item_status = 'Charged'
@@ -72,7 +67,7 @@ module BlacklightCornellRequests
           status = item_status i['itemStatus']
           all_items.push({ :id => i['itemid'], 
                            :status => status, 
-                           :location => i['location']
+                           'location' => i[:location]
                          })
         end
       end
@@ -83,25 +78,13 @@ module BlacklightCornellRequests
         item[:services] = services
       end
 
-
+      # TODO: Do something useful with sorted items
 
       puts "all items: #{all_items.inspect}"
-      # if patron_type == 'cornell' and item_loan_type == 'regular' and item_status == 'Not Charged'
-      #   service = 'l2l'
-      #   request_options = [ {:service => service} ]
-      # elsif patron_type == 'cornell' and item_loan_type == 'regular' and item_status == 'Charged'
-      #   params = {}
-      #   if borrowDirect_available? params
-      #     service = 'bd'
-      #     request_options.push( {:service => service} )
-      #   else
-      #     service = 'ill'
-      #   end
-      #   request_options.push({:service => 'ill'}, {:service => 'recall'}, {:service => 'hold'})
-      # end
 
-      self.request_options = request_options
-      self.service = service
+      best_choice = all_items.pop
+      self.request_options = all_items
+      self.service = best_choice
       self.document = document
 
     end   
@@ -192,18 +175,43 @@ module BlacklightCornellRequests
         options = get_guest_delivery_options item
       end
 
+      # Get delivery time estimates for each option
+      options.each do |option|
+        option[:estimate] = get_delivery_time(option[:service], option)
+      end
+
       return sort_request_options options
 
     end
 
-    # Determine delivery options for an item if the patron is a Cornell affiliate
+    # Determine delivery options for a single item if the patron is a Cornell affiliate
     def get_cornell_delivery_options item
 
+      item_loan_type = loan_type item['typeCode']
+
+
+      if item_loan_type == 'regular' and item[:status] == 'Not Charged'
+        service = 'l2l'
+        request_options = [ {:service => service, 'location' => item[:location] } ]
+      elsif item_loan_type == 'regular' and item[:status] == 'Charged'
+        params = {}
+        if borrowDirect_available? params
+          service = 'bd'
+          request_options.push( {:service => service, 'location' => item[:location] } )
+        else
+          service = 'ill'
+        end
+        request_options.push({:service => 'ill', 'location' => item[:location]}, 
+                             {:service => 'recall','location' => item[:location]},
+                             {:service => 'hold', 'location' => item[:location]})
+      end
+
+      return request_options
     end
 
-    # Determine delivery options for an item if the patron is a guest (non-Cornell)
+    # Determine delivery options for a single item if the patron is a guest (non-Cornell)
     def get_guest_delivery_options item
-
+      [{:service => 'ask', 'location' => 'Mann'}]
     end
 
     # Custom sort method: sort by delivery time estimate from a hash
@@ -239,7 +247,7 @@ module BlacklightCornellRequests
             end
             ## pad for extra days for processing time?
             ## also padding would allow l2l to be always first option
-            return estimate.to_i + HOLD_PADDING_TIME
+            return estimate.to_i + get_hold_padding
           else
             ## due date not found... use default
             return 180

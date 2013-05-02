@@ -30,7 +30,7 @@ http_interactions:
         bWF4LWFnZT0wLCBwcml2YXRlLCBtdXN0LXJldmFsaWRhdGU=
       !binary "WC1SdW50aW1l":
       - !binary |-
-        MC40MTI2NjQ=
+        MC4zNTc4MTc=
       !binary "Q29udGVudC1MZW5ndGg=":
       - !binary |-
         Mzgy
@@ -39,7 +39,7 @@ http_interactions:
         V0VCcmljay8xLjMuMSAoUnVieS8xLjkuMy8yMDEyLTA0LTIwKQ==
       !binary "RGF0ZQ==":
       - !binary |-
-        VGh1LCAwMiBNYXkgMjAxMyAxNDo0NTowMiBHTVQ=
+        VGh1LCAwMiBNYXkgMjAxMyAyMDozMDo0MiBHTVQ=
       !binary "Q29ubmVjdGlvbg==":
       - !binary |-
         S2VlcC1BbGl2ZQ==
@@ -50,5 +50,5 @@ http_interactions:
         24","status":"available","holding_id":["7109768"],"copies":[{"items":{"Available":{"status":"available","count":1}},"supplements":"Supplements:
         1 DVD 1 booklet","summary_holdings":"Library has: 1 sound disc"}],"services":["doc_delivery"]}]}}'
     http_version: 
-  recorded_at: Thu, 02 May 2013 14:45:02 GMT
+  recorded_at: Thu, 02 May 2013 20:30:42 GMT
 recorded_with: VCR 2.4.0

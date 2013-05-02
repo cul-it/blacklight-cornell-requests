@@ -19,138 +19,138 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 	context "Main request function" do
 
-		# it "returns the request options array, service, and Solr document" do
-		# 	req = FactoryGirl.build(:request, bibid: nil)
-		# 	req.magic_request
+		it "returns the request options array, service, and Solr document" do
+			req = FactoryGirl.build(:request, bibid: nil)
+			req.magic_request
 			
-		# 	req.request_options.class.name.should == "Array"
-		# 	req.service.should == "ask"
-		# 	req.document.should == nil
-		# end
+			req.request_options.class.name.should == "Array"
+			req.service.should == "ask"
+			req.document.should == nil
+		end
 
-		# context "Patron is Cornell-affiliated" do
+		context "Patron is Cornell-affiliated" do
 
-		# 	let(:req) { FactoryGirl.build(:request, bibid: nil) }
-		# 	before(:all) { req.netid = 'sk274' }
+			let(:req) { FactoryGirl.build(:request, bibid: nil) }
+			before(:all) { req.netid = 'sk274' }
 
-		# 	context "Loan type is regular" do
+			context "Loan type is regular" do
 
-		# 		context "item status is 'not charged'" do
+				context "item status is 'not charged'" do
 
-		# 			before(:all) {
-		# 				req.bibid = 1419
-		# 				VCR.use_cassette 'holdings/cornell_regular_notcharged' do
-		# 					req.get_holdings('retrieve_detail_raw')
-		# 				end		
-		# 				req.magic_request
-		# 			}
+					before(:all) {
+						req.bibid = 1419
+						VCR.use_cassette 'holdings/cornell_regular_notcharged' do
+							req.get_holdings('retrieve_detail_raw')
+						end		
+						req.magic_request
+					}
 
-		# 			it "sets service to 'l2l'" do
-		# 				req.service.should == 'l2l'
-		# 			end
+					it "sets service to 'l2l'" do
+						req.service.should == 'l2l'
+					end
 
-		# 			it "sets request options to 'l2l'" do
-		# 				req.request_options[0][:service].should == 'l2l'
-		# 				req.request_options.size.should == 1
-		# 			end
+					it "sets request options to 'l2l'" do
+						req.request_options[0][:service].should == 'l2l'
+						req.request_options.size.should == 1
+					end
 
-		# 		end
+				end
 
-		# 		context "item status is 'charged'" do
+				context "item status is 'charged'" do
 
-		# 			before(:all) { 
-		# 				req.bibid = 3955095
-		# 				VCR.use_cassette 'holdings/cornell_regular_charged' do
-		# 					req.get_holdings('retrieve_detail_raw')
-		# 				end					
-		# 			}
+					before(:all) { 
+						req.bibid = 3955095
+						VCR.use_cassette 'holdings/cornell_regular_charged' do
+							req.get_holdings('retrieve_detail_raw')
+						end					
+					}
 
-		# 			context "available through Borrow Direct" do
+					context "available through Borrow Direct" do
 
-		# 				before(:all) {
-		# 					req.stub(:borrowDirect_available?).and_return(true) 
-		# 					req.magic_request	
-		# 				}
+						before(:all) {
+							req.stub(:borrowDirect_available?).and_return(true) 
+							req.magic_request	
+						}
 
-		# 				it "sets service to 'bd'" do
-		# 					req.service.should == 'bd'
-		# 				end
+						it "sets service to 'bd'" do
+							req.service.should == 'bd'
+						end
 
-		# 				it "sets request options to 'bd, recall, ill, hold'" do
-		# 					req.request_options[0][:service].should == 'bd'
-		# 					req.request_options.size.should == 4
-		# 				end
+						it "sets request options to 'bd, recall, ill, hold'" do
+							req.request_options[0][:service].should == 'bd'
+							req.request_options.size.should == 4
+						end
 
-		# 			end
+					end
 
-		# 			context "not available through Borrow Direct" do
+					context "not available through Borrow Direct" do
 
-		# 				before(:all) { 
-		# 					req.stub(:borrowDirect_available?).and_return(false) 
-		# 					req.magic_request
-		# 				}
+						before(:all) { 
+							req.stub(:borrowDirect_available?).and_return(false) 
+							req.magic_request
+						}
 
-		# 				it "sets service to 'ill'" do
-		# 					req.service.should == 'ill'
-		# 				end
+						it "sets service to 'ill'" do
+							req.service.should == 'ill'
+						end
 
-		# 				it "sets request options to 'ill, recall, hold'" do
-		# 					req.request_options[0][:service].should == 'ill'
-		# 					req.request_options.size.should == 3
-		# 				end
+						it "sets request options to 'ill, recall, hold'" do
+							req.request_options[0][:service].should == 'ill'
+							req.request_options.size.should == 3
+						end
 
-		# 			end
+					end
 
-		# 		end
+				end
 
-		# 		context "Item status is 'requested'" do
+				context "Item status is 'requested'" do
 
-		# 			before(:all) { 
-		# 				req.bibid = 6370407
-		# 				VCR.use_cassette 'holdings/cornell_regular_requested' do
-		# 					req.get_holdings('retrieve_detail_raw')
-		# 				end					
-		# 			}
+					before(:all) { 
+						req.bibid = 6370407
+						VCR.use_cassette 'holdings/cornell_regular_requested' do
+							req.get_holdings('retrieve_detail_raw')
+						end					
+					}
 
-		# 			context "available through Borrow Direct" do
+					context "available through Borrow Direct" do
 
-		# 				before(:all) {
-		# 					req.stub(:borrowDirect_available?).and_return(true) 
-		# 					req.magic_request	
-		# 				}
+						before(:all) {
+							req.stub(:borrowDirect_available?).and_return(true) 
+							req.magic_request	
+						}
 
-		# 				it "sets service to 'bd'" do
-		# 					req.service.should == 'bd'
-		# 				end
+						it "sets service to 'bd'" do
+							req.service.should == 'bd'
+						end
 
-		# 				it "sets request options to 'bd, recall, ill, hold'" do
-		# 					req.request_options[0][:service].should == 'bd'
-		# 					req.request_options.size.should == 4
-		# 				end
+						it "sets request options to 'bd, recall, ill, hold'" do
+							req.request_options[0][:service].should == 'bd'
+							req.request_options.size.should == 4
+						end
 
-		# 			end
+					end
 
-		# 			context "not available through Borrow Direct" do
+					context "not available through Borrow Direct" do
 
-		# 				before(:all) { 
-		# 					req.stub(:borrowDirect_available?).and_return(false) 
-		# 					req.magic_request
-		# 				}
+						before(:all) { 
+							req.stub(:borrowDirect_available?).and_return(false) 
+							req.magic_request
+						}
 
-		# 				it "sets service to 'ill'" do
-		# 					req.service.should == 'ill'
-		# 				end
+						it "sets service to 'ill'" do
+							req.service.should == 'ill'
+						end
 
-		# 				it "sets request options to 'ill, recall, hold'" do
-		# 					req.request_options[0][:service].should == 'ill'
-		# 					req.request_options.size.should == 3
-		# 				end
+						it "sets request options to 'ill, recall, hold'" do
+							req.request_options[0][:service].should == 'ill'
+							req.request_options.size.should == 3
+						end
 
-		# 			end
+					end
 
-		# 		end
+				end
 
-		# 	end
+			end
 
 		# 	context "Loan type is day" do
 		# 	end
@@ -158,7 +158,7 @@ require 'blacklight_cornell_requests/borrow_direct'
 		# 	context "Loan type is minute" do
 		# 	end
 
-		# end
+		 end
 
 		# context "Patron is a guest" do
 		# end
@@ -167,8 +167,8 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 			let(:req) { FactoryGirl.build(:request, bibid: nil) }
 			before(:each) { 
-				req.stub(:get_cornell_delivery_options).and_return([{:service => 'l2l', :estimate => 2}])
-				req.stub(:get_guest_delivery_options).and_return([{:service => 'bd', :estimate => 1}])
+				req.stub(:get_cornell_delivery_options).and_return([{:service => 'ill', 'location' => 'Olin'}, {:service => 'l2l', 'location' => 'Library Annex'}])
+				req.stub(:get_guest_delivery_options).and_return([{:service => 'ask', 'location' => 'Mann'}])
 			}
 
 			it "should use get_cornell_delivery_options if patron is Cornell" do 
@@ -180,13 +180,22 @@ require 'blacklight_cornell_requests/borrow_direct'
 			it "should use get_guest_delivery_options if patron is guest" do 
 				req.netid = 'gid-silterrae'
 				result = req.get_delivery_options(nil)
-				result[0][:service].should == 'bd'
+				result[0][:service].should == 'ask'
 			end
 
 			it "should use get_guest_delivery_options if patron is null" do 
 				req.netid = ''
 				result = req.get_delivery_options(nil)
-				result[0][:service].should == 'bd'
+				result[0][:service].should == 'ask'
+			end
+
+			it "sorts the return array by delivery time" do
+				req.netid = 'mjc12' 
+				req.get_holdings
+				puts req.holdings_data.inspect
+				options = req.get_delivery_options(nil)
+				options[0][:service].should == 'l2l'
+				options[0][:estimate].should == 1
 			end
 
 		end
