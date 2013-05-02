@@ -34,7 +34,7 @@ module BlacklightCornellRequests
       # Reference Groups reference page is http://www.it.cornell.edu/services/group/about/reference.cfm
       def get_patron_type netid
 
-        unless netid.nil?
+        unless netid.blank?
           patron_dn = get_ldap_dn netid
           return nil if patron_dn.nil?
 
