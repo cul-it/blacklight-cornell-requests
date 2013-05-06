@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rspec-rails", "~> 2.5"
   s.add_development_dependency "capybara", "~> 0.4"
   s.add_development_dependency "guard-spork"
+  s.add_development_dependency "guard-rspec"
   s.add_development_dependency "spork"
   s.add_development_dependency "webmock"
   s.add_development_dependency "vcr"
