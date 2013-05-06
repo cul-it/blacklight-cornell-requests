@@ -1,0 +1,51 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://culsearchdev.library.cornell.edu:8950/holdings/retrieve_detail_raw/1988102
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers: {}
+  response:
+    status:
+      code: 200
+      message: !binary |-
+        T0sg
+    headers:
+      !binary "QWNjZXNzLUNvbnRyb2wtQWxsb3ctT3JpZ2lu":
+      - !binary |-
+        Kg==
+      !binary "Q29udGVudC1UeXBl":
+      - !binary |-
+        YXBwbGljYXRpb24vanNvbjsgY2hhcnNldD11dGYtOA==
+      !binary "WC1VYS1Db21wYXRpYmxl":
+      - !binary |-
+        SUU9RWRnZQ==
+      !binary "RXRhZw==":
+      - !binary |-
+        ImVkNjUxODk3MzdhNjI5Yzg1NGYzYjAzNmEyYTUzZDMwIg==
+      !binary "Q2FjaGUtQ29udHJvbA==":
+      - !binary |-
+        bWF4LWFnZT0wLCBwcml2YXRlLCBtdXN0LXJldmFsaWRhdGU=
+      !binary "WC1SdW50aW1l":
+      - !binary |-
+        MC4wOTE3MDI=
+      !binary "Q29udGVudC1MZW5ndGg=":
+      - !binary |-
+        MjY=
+      !binary "U2VydmVy":
+      - !binary |-
+        V0VCcmljay8xLjMuMSAoUnVieS8xLjkuMy8yMDEyLTA0LTIwKQ==
+      !binary "RGF0ZQ==":
+      - !binary |-
+        TW9uLCAwNiBNYXkgMjAxMyAxODo1MDo1NiBHTVQ=
+      !binary "Q29ubmVjdGlvbg==":
+      - !binary |-
+        S2VlcC1BbGl2ZQ==
+    body:
+      encoding: US-ASCII
+      string: ! '{"1988102":{"records":[]}}'
+    http_version: 
+  recorded_at: Mon, 06 May 2013 18:50:56 GMT
+recorded_with: VCR 2.4.0

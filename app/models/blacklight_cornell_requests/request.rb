@@ -186,24 +186,27 @@ module BlacklightCornellRequests
 
     # Determine delivery options for a single item if the patron is a Cornell affiliate
     def get_cornell_delivery_options item
-
+pp "mytest"
       item_loan_type = loan_type item['typeCode']
+      print "item: #{item.inspect}"
 
-
+      request_options = []
       if item_loan_type == 'regular' and item[:status] == 'Not Charged'
+
         service = 'l2l'
         request_options = [ {:service => service, 'location' => item[:location] } ]
-      elsif item_loan_type == 'regular' and item[:status] == 'Charged'
+
+      elsif ((item_loan_type == 'regular' and item[:status] == 'Charged') or
+             (item_loan_type == 'regular' and item[:status] == 'Requested'))
+        # TODO: Test and fix BD check with real params
         params = {}
         if borrowDirect_available? params
-          service = 'bd'
-          request_options.push( {:service => service, 'location' => item[:location] } )
-        else
-          service = 'ill'
+          request_options.push( {:service => 'bd', 'location' => item[:location] } )
         end
         request_options.push({:service => 'ill', 'location' => item[:location]}, 
                              {:service => 'recall','location' => item[:location]},
                              {:service => 'hold', 'location' => item[:location]})
+
       end
 
       return request_options

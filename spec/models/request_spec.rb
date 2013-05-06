@@ -28,138 +28,6 @@ require 'blacklight_cornell_requests/borrow_direct'
 			req.document.should == nil
 		end
 
-		context "Patron is Cornell-affiliated" do
-
-			let(:req) { FactoryGirl.build(:request, bibid: nil) }
-			before(:all) { req.netid = 'sk274' }
-
-			context "Loan type is regular" do
-
-				context "item status is 'not charged'" do
-
-					before(:all) {
-						req.bibid = 1419
-						VCR.use_cassette 'holdings/cornell_regular_notcharged' do
-							req.get_holdings('retrieve_detail_raw')
-						end		
-						req.magic_request
-					}
-
-					it "sets service to 'l2l'" do
-						req.service.should == 'l2l'
-					end
-
-					it "sets request options to 'l2l'" do
-						req.request_options[0][:service].should == 'l2l'
-						req.request_options.size.should == 1
-					end
-
-				end
-
-				context "item status is 'charged'" do
-
-					before(:all) { 
-						req.bibid = 3955095
-						VCR.use_cassette 'holdings/cornell_regular_charged' do
-							req.get_holdings('retrieve_detail_raw')
-						end					
-					}
-
-					context "available through Borrow Direct" do
-
-						before(:all) {
-							req.stub(:borrowDirect_available?).and_return(true) 
-							req.magic_request	
-						}
-
-						it "sets service to 'bd'" do
-							req.service.should == 'bd'
-						end
-
-						it "sets request options to 'bd, recall, ill, hold'" do
-							req.request_options[0][:service].should == 'bd'
-							req.request_options.size.should == 4
-						end
-
-					end
-
-					context "not available through Borrow Direct" do
-
-						before(:all) { 
-							req.stub(:borrowDirect_available?).and_return(false) 
-							req.magic_request
-						}
-
-						it "sets service to 'ill'" do
-							req.service.should == 'ill'
-						end
-
-						it "sets request options to 'ill, recall, hold'" do
-							req.request_options[0][:service].should == 'ill'
-							req.request_options.size.should == 3
-						end
-
-					end
-
-				end
-
-				context "Item status is 'requested'" do
-
-					before(:all) { 
-						req.bibid = 6370407
-						VCR.use_cassette 'holdings/cornell_regular_requested' do
-							req.get_holdings('retrieve_detail_raw')
-						end					
-					}
-
-					context "available through Borrow Direct" do
-
-						before(:all) {
-							req.stub(:borrowDirect_available?).and_return(true) 
-							req.magic_request	
-						}
-
-						it "sets service to 'bd'" do
-							req.service.should == 'bd'
-						end
-
-						it "sets request options to 'bd, recall, ill, hold'" do
-							req.request_options[0][:service].should == 'bd'
-							req.request_options.size.should == 4
-						end
-
-					end
-
-					context "not available through Borrow Direct" do
-
-						before(:all) { 
-							req.stub(:borrowDirect_available?).and_return(false) 
-							req.magic_request
-						}
-
-						it "sets service to 'ill'" do
-							req.service.should == 'ill'
-						end
-
-						it "sets request options to 'ill, recall, hold'" do
-							req.request_options[0][:service].should == 'ill'
-							req.request_options.size.should == 3
-						end
-
-					end
-
-				end
-
-			end
-
-		# 	context "Loan type is day" do
-		# 	end
-
-		# 	context "Loan type is minute" do
-		# 	end
-
-		 end
-
 		# context "Patron is a guest" do
 		# end
 
@@ -197,6 +65,194 @@ require 'blacklight_cornell_requests/borrow_direct'
 				options[0][:service].should == 'l2l'
 				options[0][:estimate].should == 1
 			end
+
+			# Next set of tests act on get_cornell_delivery_options
+			context "Patron is Cornell-affiliated" do
+
+				let(:r) { FactoryGirl.build(:request, bibid: nil) }
+				before(:all) { r.netid = 'sk274' }
+
+				context "Loan type is regular" do
+
+					context "item status is 'not charged'" do
+
+						before(:all) { 
+							r.bibid = 1988102
+							VCR.use_cassette 'holdings/cornell_not_charged' do
+								r.get_holdings('retrieve_detail_raw')
+							end					
+						}
+
+						it "suggests L2L for the service" do
+							item = { 'typeCode' => 'regular', 
+							   		 :status => 'Not Charged'
+							 }
+							services = r.get_delivery_options item
+							services[0][:service].should == 'l2l'
+						end
+
+						it "sets request options to 'l2l" do
+							item = { 'typeCode' => 'regular', 
+							   		 :status => 'Not Charged'
+							 }
+							options = r.get_delivery_options item
+							b = Set.new ['l2l']
+							options.length.should == b.length
+							options.each do |o|
+								b.should include(o[:service])
+							end
+
+						end
+
+					end
+
+					context "item status is 'charged'" do
+
+						before(:all) { 
+							r.bibid = 3955095
+							VCR.use_cassette 'holdings/cornell_regular_charged' do
+								r.get_holdings('retrieve_detail_raw')
+							end					
+						}
+
+						context "available through Borrow Direct" do
+
+							before(:each) {
+								r.stub(:borrowDirect_available?).and_return(true) 
+							}
+
+							it "suggests BD for the service" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Charged'
+								 }
+								services = r.get_delivery_options item
+								services[0][:service].should == 'bd'
+							end
+
+							it "sets request options to 'bd, recall, ill, hold'" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Charged'
+								 }
+								options = r.get_delivery_options item
+								b = Set.new ['bd', 'recall', 'ill', 'hold']
+								options.length.should == b.length
+								options.each do |o|
+									b.should include(o[:service])
+								end
+
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(false) 
+								r.magic_request
+							}
+
+							it "suggests ILL for the service" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Charged'
+								 }
+								services = r.get_delivery_options item
+								services[0][:service].should == 'ill'
+							end
+
+							it "sets request options to 'ill, recall, hold'" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Charged'
+								 }
+								options = r.get_delivery_options item
+								b = Set.new ['recall', 'ill', 'hold']
+								options.length.should == b.length
+								options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+						end
+
+					end
+
+					context "Item status is 'requested'" do
+
+						before(:all) { 
+							r.bibid = 6370407
+							VCR.use_cassette 'holdings/cornell_regular_requested' do
+								r.get_holdings('retrieve_detail_raw')
+							end					
+						}
+
+						context "available through Borrow Direct" do
+
+							before(:each) {
+								r.stub(:borrowDirect_available?).and_return(true) 
+							}
+
+							it "suggests BD for the service" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Charged'
+								 }
+								services = r.get_delivery_options item
+								services[0][:service].should == 'bd'
+							end
+
+							it "sets request options to 'bd, recall, ill, hold'" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Charged'
+								 }
+								options = r.get_delivery_options item
+								b = Set.new ['bd', 'recall', 'ill', 'hold']
+								options.length.should == b.length
+								options.each do |o|
+									b.should include(o[:service])
+								end
+
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(false) 
+								r.magic_request
+							}
+
+							it "suggests ILL for the service" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Charged'
+								 }
+								services = r.get_delivery_options item
+								services[0][:service].should == 'ill'
+							end
+
+							it "sets request options to 'ill, recall, hold'" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Charged'
+								 }
+								options = r.get_delivery_options item
+								b = Set.new ['recall', 'ill', 'hold']
+								options.length.should == b.length
+								options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+						end
+
+					end
+
+				end
+
+			# 	context "Loan type is day" do
+			# 	end
+
+			# 	context "Loan type is minute" do
+			# 	end
+
+			 end
 
 		end
 
