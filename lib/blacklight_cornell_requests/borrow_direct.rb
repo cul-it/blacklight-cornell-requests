@@ -9,7 +9,7 @@ module BlacklightCornellRequests
       begin
         return _borrowDirect_available? params
       rescue => e
-        logger.warn "Error checking borrow direct availability: exception #{e.class.name} : #{e.message}"
+        Rails.logger.warn "Error checking borrow direct availability: exception #{e.class.name} : #{e.message}"
       return false
       end
 
