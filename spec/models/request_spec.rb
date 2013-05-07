@@ -60,7 +60,6 @@ require 'blacklight_cornell_requests/borrow_direct'
 			it "sorts the return array by delivery time" do
 				req.netid = 'mjc12' 
 				req.get_holdings
-				puts req.holdings_data.inspect
 				options = req.get_delivery_options(nil)
 				options[0][:service].should == 'l2l'
 				options[0][:estimate].should == 1
@@ -355,7 +354,6 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 							before(:all) { 
 								r.stub(:borrowDirect_available?).and_return(false) 
-								r.magic_request
 							}
 
 							it "suggests purchase for the service" do
@@ -381,13 +379,321 @@ require 'blacklight_cornell_requests/borrow_direct'
 						end
 					end
 
+				end 
+
+				context "Loan type is day" do
+
+					context "item status is 'not charged'" do
+
+						before(:all) { 
+							r.stub(:borrowDirect_available?).and_return(true)
+						}
+
+						context "one- or two-day loan" do 
+
+							# L2L is not available, so there should be no services listed
+							it "has no request options" do
+								options = r.get_delivery_options({ 'typeCode' => 10, # 1-day loan
+							   		 							:status => 'Not Charged'
+							 						  			 })
+								options.should == []
+							end
+
+						end
+
+						context "three- or more-day loan" do
+
+							before(:all) { @options = r.get_delivery_options({ 'typeCode' => 11, # 3-day loan
+							   		 							:status => 'Not Charged'
+							 								  })
+										 }
+
+							it "sets request options to 'L2L'" do
+								b = Set.new ['l2l']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests L2L for the service" do
+								@options[0][:service].should == 'l2l'
+							end
+
+						end
+
+					end
+
+					context "item status is 'charged'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(true)
+								@options = r.get_delivery_options({ 'typeCode' => 11, # 3-day loan
+								   		 							:status => 'Charged'
+								 								  })
+							}
+
+							it "sets request options to 'BD, ILL, hold'" do
+								b = Set.new ['bd', 'ill', 'hold']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests BD for the service" do
+								@options[0][:service].should == 'bd'
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(false)
+								@options = r.get_delivery_options({ 'typeCode' => 11, # 3-day loan
+								   		 							:status => 'Charged'
+								 								  })
+							}
+
+							it "sets request options to ILL, hold" do
+								b = Set.new ['ill', 'hold']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests ILL for the service" do
+								@options[0][:service].should == 'ill'
+							end
+
+						end
+
+					end
+
+					context "item status is 'requested'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(true)
+								@options = r.get_delivery_options({ 'typeCode' => 11, # 3-day loan
+								   		 							:status => 'Requested'
+								 								  })
+							}
+
+							it "sets request options to 'BD, ILL, hold'" do
+								b = Set.new ['bd', 'ill', 'hold']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests BD for the service" do
+								@options[0][:service].should == 'bd'
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(false)
+								@options = r.get_delivery_options({ 'typeCode' => 11, # 3-day loan
+								   		 							:status => 'Requested'
+								 								  })
+							}
+
+							it "sets request options to ILL, hold" do
+								b = Set.new ['ill', 'hold']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests ILL for the service" do
+								@options[0][:service].should == 'ill'
+							end
+
+						end
+
+					end
+
+					context "item status is 'missing'" do
+						pending
+					end
+
+					context "item status is 'lost'" do
+						pending
+					end
+
 				end
 
-			# 	context "Loan type is day" do
-			# 	end
+				context "Loan type is minute" do
 
-			# 	context "Loan type is minute" do
-			# 	end
+					context "item status is 'not charged'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(true)
+								@options = r.get_delivery_options({ 'typeCode' => 22, # one-hour loan
+								   		 							:status => 'Not Charged'
+								 								  })
+							}
+
+							it "sets request options to 'BD, ask at circulation'" do
+								b = Set.new ['bd', 'circ']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests BD for the service" do
+								@options[0][:service].should == 'bd'
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(false)
+								@options = r.get_delivery_options({ 'typeCode' => 22, # one-hour loan
+								   		 							:status => 'Not Charged'
+								 								  })
+							}
+
+							it "sets request options to 'ask at circulation'" do
+								b = Set.new ['circ']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests ask at circ for the service" do
+								@options[0][:service].should == 'circ'
+							end
+
+						end
+
+					end
+
+					context "item status is 'charged'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(true)
+								@options = r.get_delivery_options({ 'typeCode' => 22, # one-hour loan
+								   		 							:status => 'Charged'
+								 								  })
+							}
+
+							it "sets request options to 'BD, ask at circulation'" do
+								b = Set.new ['bd', 'circ']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests BD for the service" do
+								@options[0][:service].should == 'bd'
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(false)
+								@options = r.get_delivery_options({ 'typeCode' => 22, # one-hour loan
+								   		 							:status => 'Charged'
+								 								  })
+							}
+
+							it "sets request options to 'ask at circulation'" do
+								b = Set.new ['circ']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests ask at circ for the service" do
+								@options[0][:service].should == 'circ'
+							end
+
+						end
+
+					end
+
+					context "item status is 'requested'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(true)
+								@options = r.get_delivery_options({ 'typeCode' => 22, # one-hour loan
+								   		 							:status => 'Requested'
+								 								  })
+							}
+
+							it "sets request options to 'BD, ask at circulation'" do
+								b = Set.new ['bd', 'circ']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests BD for the service" do
+								@options[0][:service].should == 'bd'
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(false)
+								@options = r.get_delivery_options({ 'typeCode' => 22, # one-hour loan
+								   		 							:status => 'Requested'
+								 								  })
+							}
+
+							it "sets request options to 'ask at circulation'" do
+								b = Set.new ['circ']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests ask at circ for the service" do
+								@options[0][:service].should == 'circ'
+							end
+
+						end
+					end
+
+					context "item status is 'missing'" do
+						pending
+					end
+
+					context "item status is 'lost'" do
+						pending
+					end
+
+				end
 
 			 end
 

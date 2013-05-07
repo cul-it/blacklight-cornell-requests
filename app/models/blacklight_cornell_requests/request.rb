@@ -188,7 +188,8 @@ module BlacklightCornellRequests
     def get_cornell_delivery_options item
 
       item_loan_type = loan_type item['typeCode']
-      print "item: #{item.inspect}"
+      # print "item: #{item.inspect}"
+      # print "type: #{item_loan_type}"
 
       request_options = []
       if item_loan_type == 'regular' and item[:status] == 'Not Charged'
@@ -216,7 +217,36 @@ module BlacklightCornellRequests
           request_options.push( {:service => 'bd', 'location' => item[:location] } )
         end
         request_options.push({:service => 'purchase', 'location' => item[:location]}, 
-                             {:service => 'ill','location' => item[:location]})     
+                             {:service => 'ill','location' => item[:location]})   
+
+      elsif ((item_loan_type == 'day' and item[:status] == 'Charged') or
+             (item_loan_type == 'day' and item[:status] == 'Requested'))
+
+         # TODO: Test and fix BD check with real params
+        params = {}
+        if borrowDirect_available? params
+          request_options.push( {:service => 'bd', 'location' => item[:location] } )
+        end
+        request_options.push( {:service => 'ill', 'location' => item[:location] } )       
+        request_options.push( {:service => 'hold', 'location' => item[:location] } )
+
+      elsif (item_loan_type == 'day' and item[:status] == 'Not Charged')
+
+        unless Request.no_l2l_day_loan_types.include? item['typeCode']
+          request_options.push( {:service => 'l2l', 'location' => item[:location] } )
+        end
+
+      elsif ((item_loan_type == 'minute' and item[:status] == 'Charged') or
+             (item_loan_type == 'minute' and item[:status] == 'Not Charged') or
+             (item_loan_type == 'minute' and item[:status] == 'Requested'))
+
+        # TODO: Test and fix BD check with real params
+        params = {}
+        if borrowDirect_available? params
+          request_options.push( {:service => 'bd', 'location' => item[:location] } )
+        end        
+        request_options.push( {:service => 'circ', 'location' => item[:location] } )
+
 
       end
 
