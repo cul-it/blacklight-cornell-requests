@@ -30,7 +30,7 @@ http_interactions:
         bWF4LWFnZT0wLCBwcml2YXRlLCBtdXN0LXJldmFsaWRhdGU=
       !binary "WC1SdW50aW1l":
       - !binary |-
-        MC41MzUyOTI=
+        MC43NTM1NDA=
       !binary "Q29udGVudC1MZW5ndGg=":
       - !binary |-
         MTA0Nw==
@@ -39,7 +39,7 @@ http_interactions:
         V0VCcmljay8xLjMuMSAoUnVieS8xLjkuMy8yMDEyLTA0LTIwKQ==
       !binary "RGF0ZQ==":
       - !binary |-
-        VGh1LCAwMiBNYXkgMjAxMyAyMDo0MzoyMiBHTVQ=
+        VHVlLCAwNyBNYXkgMjAxMyAxOTowMToyNiBHTVQ=
       !binary "Q29ubmVjdGlvbg==":
       - !binary |-
         S2VlcC1BbGl2ZQ==
@@ -50,5 +50,5 @@ http_interactions:
         Library","location_id":"99","tempLocation":"","location":"Olin Library","callNumber":"PR6068.O93
         Z73 2009","copy":"c. 1","itemBarcode":"31924109347041","enumeration":"","chron":"","year":"","caption":"","freeText":"","typeCode":"3","typeDesc":"book","tempType":"0","itemStatus":"Requested","spineLabel":"","itemNote":"0","onReserve":"N","exclude_location_id":[181,188]}],"status":"not_available","messages":[{"status_code":"Requested","short_message":"Requested","long_message":"Requested"}],"location_id":"99"},"services":["in_process","borrow_direct","ill","recall_hold"],"current_issues":[],"orders":[],"onotes":[]}]}}'
     http_version: 
-  recorded_at: Thu, 02 May 2013 20:43:22 GMT
+  recorded_at: Tue, 07 May 2013 19:01:26 GMT
 recorded_with: VCR 2.4.0

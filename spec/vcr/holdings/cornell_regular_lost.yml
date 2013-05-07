@@ -1,0 +1,56 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://culsearchdev.library.cornell.edu:8950/holdings/retrieve_detail_raw/6231302
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers: {}
+  response:
+    status:
+      code: 200
+      message: !binary |-
+        T0sg
+    headers:
+      !binary "QWNjZXNzLUNvbnRyb2wtQWxsb3ctT3JpZ2lu":
+      - !binary |-
+        Kg==
+      !binary "Q29udGVudC1UeXBl":
+      - !binary |-
+        YXBwbGljYXRpb24vanNvbjsgY2hhcnNldD11dGYtOA==
+      !binary "WC1VYS1Db21wYXRpYmxl":
+      - !binary |-
+        SUU9RWRnZQ==
+      !binary "RXRhZw==":
+      - !binary |-
+        IjA2NTc5YjM0NDE2MTI3OWMwODc2MjQ1MTY1N2M1YzI1Ig==
+      !binary "Q2FjaGUtQ29udHJvbA==":
+      - !binary |-
+        bWF4LWFnZT0wLCBwcml2YXRlLCBtdXN0LXJldmFsaWRhdGU=
+      !binary "WC1SdW50aW1l":
+      - !binary |-
+        MC44NjkyOTg=
+      !binary "Q29udGVudC1MZW5ndGg=":
+      - !binary |-
+        MTExNQ==
+      !binary "U2VydmVy":
+      - !binary |-
+        V0VCcmljay8xLjMuMSAoUnVieS8xLjkuMy8yMDEyLTA0LTIwKQ==
+      !binary "RGF0ZQ==":
+      - !binary |-
+        VHVlLCAwNyBNYXkgMjAxMyAxOTowMToyOCBHTVQ=
+      !binary "Q29ubmVjdGlvbg==":
+      - !binary |-
+        S2VlcC1BbGl2ZQ==
+    body:
+      encoding: US-ASCII
+      string: ! '{"6231302":{"records":[{"bibid":"6231302","holding_id":"6685750","location_name":"math","call_number":"QA402.5
+        .C457 2008","shelving_title":"","summary_holdings":[],"supplements":[],"indexes":[],"notes":[],"reproduction_note":"","urls":[],"item_count":1,"temp_locations":[],"item_status":{"itemdata":[{"href":"http://catalog-test.library.cornell.edu/vxws/record/6231302/items/8246879","itemid":"8246879","permLocation":"Mathematics
+        Library (Malott Hall)","location_id":"81","tempLocation":"","location":"Mathematics
+        Library (Malott Hall)","callNumber":"QA402.5 .C457 2008","copy":"c. 1","itemBarcode":"31924095860874","enumeration":"","chron":"","year":"","caption":"","freeText":"","typeCode":"3","typeDesc":"book","tempType":"0","itemStatus":"Lost
+        - 2010-09-14","spineLabel":"","itemNote":"1","onReserve":"N","exclude_location_id":[176]}],"status":"not_available","messages":[{"status_code":"Lost
+        - 2010-09-14","short_message":"Lost - 2010-09-14","long_message":"Lost - 2010-09-14"}],"location_id":"81"},"services":["in_process","borrow_direct","ill","recall_hold"],"current_issues":[],"orders":[],"onotes":[]}]}}'
+    http_version: 
+  recorded_at: Tue, 07 May 2013 19:01:28 GMT
+recorded_with: VCR 2.4.0

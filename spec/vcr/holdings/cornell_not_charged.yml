@@ -24,28 +24,33 @@ http_interactions:
         SUU9RWRnZQ==
       !binary "RXRhZw==":
       - !binary |-
-        ImVkNjUxODk3MzdhNjI5Yzg1NGYzYjAzNmEyYTUzZDMwIg==
+        IjA0NmFhZDlkMDc5ZGMxMDg3YzZmODg5NTU5MTM5YzdmIg==
       !binary "Q2FjaGUtQ29udHJvbA==":
       - !binary |-
         bWF4LWFnZT0wLCBwcml2YXRlLCBtdXN0LXJldmFsaWRhdGU=
       !binary "WC1SdW50aW1l":
       - !binary |-
-        MC4wOTE3MDI=
+        MC43NTgxMDg=
       !binary "Q29udGVudC1MZW5ndGg=":
       - !binary |-
-        MjY=
+        OTkz
       !binary "U2VydmVy":
       - !binary |-
         V0VCcmljay8xLjMuMSAoUnVieS8xLjkuMy8yMDEyLTA0LTIwKQ==
       !binary "RGF0ZQ==":
       - !binary |-
-        TW9uLCAwNiBNYXkgMjAxMyAxODo1MDo1NiBHTVQ=
+        VHVlLCAwNyBNYXkgMjAxMyAxOTowMTozMCBHTVQ=
       !binary "Q29ubmVjdGlvbg==":
       - !binary |-
         S2VlcC1BbGl2ZQ==
     body:
       encoding: US-ASCII
-      string: ! '{"1988102":{"records":[]}}'
+      string: ! '{"1988102":{"records":[{"bibid":"1988102","holding_id":"2413886","location_name":"olin","call_number":"F2537.M825
+        A48","shelving_title":"","summary_holdings":[],"supplements":[],"indexes":[],"notes":[],"reproduction_note":"","urls":[],"item_count":1,"temp_locations":[],"item_status":{"itemdata":[{"href":"http://catalog-test.library.cornell.edu/vxws/record/1988102/items/3747294","itemid":"3747294","permLocation":"Olin
+        Library","location_id":"99","tempLocation":"","location":"Olin Library","callNumber":"F2537.M825
+        A48","copy":"c. 1","itemBarcode":"31924020080861","enumeration":"","chron":"","year":"","caption":"","freeText":"","typeCode":"3","typeDesc":"book","tempType":"0","itemStatus":"Not
+        Charged","spineLabel":"","itemNote":"0","onReserve":"N","exclude_location_id":[181,188]}],"status":"available","messages":[{"status_code":"Not
+        Charged","short_message":"Not Charged","long_message":"Not Charged"}],"location_id":"99"},"services":[],"current_issues":[],"orders":[],"onotes":[]}]}}'
     http_version: 
-  recorded_at: Mon, 06 May 2013 18:50:56 GMT
+  recorded_at: Tue, 07 May 2013 19:01:30 GMT
 recorded_with: VCR 2.4.0

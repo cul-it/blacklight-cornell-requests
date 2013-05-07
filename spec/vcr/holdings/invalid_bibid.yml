@@ -30,7 +30,7 @@ http_interactions:
         bWF4LWFnZT0wLCBwcml2YXRlLCBtdXN0LXJldmFsaWRhdGU=
       !binary "WC1SdW50aW1l":
       - !binary |-
-        MC40NTM1ODI=
+        MC4yODM4MzU=
       !binary "Q29udGVudC1MZW5ndGg=":
       - !binary |-
         NDQ=
@@ -39,7 +39,7 @@ http_interactions:
         V0VCcmljay8xLjMuMSAoUnVieS8xLjkuMy8yMDEyLTA0LTIwKQ==
       !binary "RGF0ZQ==":
       - !binary |-
-        VGh1LCAwMiBNYXkgMjAxMyAyMDozMDo0MyBHTVQ=
+        VHVlLCAwNyBNYXkgMjAxMyAxOTowMTozMSBHTVQ=
       !binary "Q29ubmVjdGlvbg==":
       - !binary |-
         S2VlcC1BbGl2ZQ==
@@ -47,5 +47,5 @@ http_interactions:
       encoding: US-ASCII
       string: ! '{"500000000":{"condensed_holdings_full":[]}}'
     http_version: 
-  recorded_at: Thu, 02 May 2013 20:30:43 GMT
+  recorded_at: Tue, 07 May 2013 19:01:31 GMT
 recorded_with: VCR 2.4.0
