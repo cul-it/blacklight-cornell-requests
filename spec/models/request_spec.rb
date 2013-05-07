@@ -244,6 +244,143 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 					end
 
+					context "Item status is 'missing'" do
+
+						before(:all) { 
+							r.bibid = 3955095
+							VCR.use_cassette 'holdings/cornell_regular_missing' do
+								r.get_holdings('retrieve_detail_raw')
+							end					
+						}
+
+						context "available through Borrow Direct" do
+
+							before(:each) {
+								r.stub(:borrowDirect_available?).and_return(true) 
+							}
+
+							it "suggests BD for the service" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Missing'
+								 }
+								services = r.get_delivery_options item
+								services[0][:service].should == 'bd'
+							end
+
+							it "sets request options to 'bd, purchase, ill'" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Missing'
+								 }
+								options = r.get_delivery_options item
+								b = Set.new ['bd', 'purchase', 'ill']
+								options.length.should == b.length
+								options.each do |o|
+									b.should include(o[:service])
+								end
+
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(false) 
+								r.magic_request
+							}
+
+							it "suggests purchase for the service" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Missing'
+								 }
+								services = r.get_delivery_options item
+								services[0][:service].should == 'purchase'
+							end
+
+							it "sets request options to 'ill, purchase'" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Missing'
+								 }
+								options = r.get_delivery_options item
+								b = Set.new ['purchase', 'ill']
+								options.length.should == b.length
+								options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+						end
+
+					end
+
+					context "Item status is 'lost'" do
+
+						before(:all) { 
+							r.bibid = 6231302
+							VCR.use_cassette 'holdings/cornell_regular_lost' do
+								r.get_holdings('retrieve_detail_raw')
+							end					
+						}
+
+						context "available through Borrow Direct" do
+
+							before(:each) {
+								r.stub(:borrowDirect_available?).and_return(true) 
+							}
+
+							it "suggests BD for the service" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Lost'
+								 }
+								services = r.get_delivery_options item
+								services[0][:service].should == 'bd'
+							end
+
+							it "sets request options to 'bd, purchase, ill'" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Lost'
+								 }
+								options = r.get_delivery_options item
+								b = Set.new ['bd', 'purchase', 'ill']
+								options.length.should == b.length
+								options.each do |o|
+									b.should include(o[:service])
+								end
+
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								r.stub(:borrowDirect_available?).and_return(false) 
+								r.magic_request
+							}
+
+							it "suggests purchase for the service" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Lost'
+								 }
+								services = r.get_delivery_options item
+								services[0][:service].should == 'purchase'
+							end
+
+							it "sets request options to 'ill, purchase'" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Lost'
+								 }
+								options = r.get_delivery_options item
+								b = Set.new ['purchase', 'ill']
+								options.length.should == b.length
+								options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+						end
+					end
+
 				end
 
 			# 	context "Loan type is day" do

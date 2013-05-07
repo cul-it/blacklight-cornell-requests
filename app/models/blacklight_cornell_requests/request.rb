@@ -151,7 +151,7 @@ module BlacklightCornellRequests
       elsif item_status.include? 'Lost'
         'Lost'
       else
-      item_status
+        item_status
       end
     end
 
@@ -186,7 +186,7 @@ module BlacklightCornellRequests
 
     # Determine delivery options for a single item if the patron is a Cornell affiliate
     def get_cornell_delivery_options item
-pp "mytest"
+
       item_loan_type = loan_type item['typeCode']
       print "item: #{item.inspect}"
 
@@ -206,6 +206,17 @@ pp "mytest"
         request_options.push({:service => 'ill', 'location' => item[:location]}, 
                              {:service => 'recall','location' => item[:location]},
                              {:service => 'hold', 'location' => item[:location]})
+
+      elsif ((item_loan_type == 'regular' and item[:status] == 'Missing') or
+             (item_loan_type == 'regular' and item[:status] == 'Lost'))
+
+         # TODO: Test and fix BD check with real params
+        params = {}
+        if borrowDirect_available? params
+          request_options.push( {:service => 'bd', 'location' => item[:location] } )
+        end
+        request_options.push({:service => 'purchase', 'location' => item[:location]}, 
+                             {:service => 'ill','location' => item[:location]})     
 
       end
 
