@@ -75,29 +75,18 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 					context "item status is 'not charged'" do
 
-						before(:all) { 
-							r.bibid = 1988102
-							VCR.use_cassette 'holdings/cornell_not_charged' do
-								r.get_holdings('retrieve_detail_raw')
-							end					
+						before(:all) {
+							@services = run_cornell_tests('regular', 'Not Charged', false)
 						}
 
 						it "suggests L2L for the service" do
-							item = { 'typeCode' => 'regular', 
-							   		 :status => 'Not Charged'
-							 }
-							services = r.get_delivery_options item
-							services[0][:service].should == 'l2l'
+							@services[0][:service].should == 'l2l'
 						end
 
 						it "sets request options to 'l2l" do
-							item = { 'typeCode' => 'regular', 
-							   		 :status => 'Not Charged'
-							 }
-							options = r.get_delivery_options item
 							b = Set.new ['l2l']
-							options.length.should == b.length
-							options.each do |o|
+							@services.length.should == b.length
+							@services.each do |o|
 								b.should include(o[:service])
 							end
 
@@ -107,35 +96,21 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 					context "item status is 'charged'" do
 
-						before(:all) { 
-							r.bibid = 3955095
-							VCR.use_cassette 'holdings/cornell_regular_charged' do
-								r.get_holdings('retrieve_detail_raw')
-							end					
-						}
-
 						context "available through Borrow Direct" do
 
-							before(:each) {
-								r.stub(:borrowDirect_available?).and_return(true) 
+							before(:all) { 
+								@services = run_cornell_tests('regular', 'Charged', true)
 							}
 
+
 							it "suggests BD for the service" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Charged'
-								 }
-								services = r.get_delivery_options item
-								services[0][:service].should == 'bd'
+								@services[0][:service].should == 'bd'
 							end
 
 							it "sets request options to 'bd, recall, ill, hold'" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Charged'
-								 }
-								options = r.get_delivery_options item
 								b = Set.new ['bd', 'recall', 'ill', 'hold']
-								options.length.should == b.length
-								options.each do |o|
+								@services.length.should == b.length
+								@services.each do |o|
 									b.should include(o[:service])
 								end
 
@@ -146,16 +121,12 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "not available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(false) 
-								r.magic_request
+								@services = run_cornell_tests('regular', 'Charged', false)
 							}
 
+
 							it "suggests ILL for the service" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Charged'
-								 }
-								services = r.get_delivery_options item
-								services[0][:service].should == 'ill'
+								@services[0][:service].should == 'ill'
 							end
 
 							it "sets request options to 'ill, recall, hold'" do
@@ -164,8 +135,8 @@ require 'blacklight_cornell_requests/borrow_direct'
 								 }
 								options = r.get_delivery_options item
 								b = Set.new ['recall', 'ill', 'hold']
-								options.length.should == b.length
-								options.each do |o|
+								@services.length.should == b.length
+								@services.each do |o|
 									b.should include(o[:service])
 								end
 							end
@@ -176,35 +147,21 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 					context "Item status is 'requested'" do
 
-						before(:all) { 
-							r.bibid = 6370407
-							VCR.use_cassette 'holdings/cornell_regular_requested' do
-								r.get_holdings('retrieve_detail_raw')
-							end					
-						}
-
 						context "available through Borrow Direct" do
 
-							before(:each) {
-								r.stub(:borrowDirect_available?).and_return(true) 
+							before(:all) { 
+								@services = run_cornell_tests('regular', 'Requested', true)
 							}
 
+
 							it "suggests BD for the service" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Charged'
-								 }
-								services = r.get_delivery_options item
-								services[0][:service].should == 'bd'
+								@services[0][:service].should == 'bd'
 							end
 
 							it "sets request options to 'bd, recall, ill, hold'" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Charged'
-								 }
-								options = r.get_delivery_options item
 								b = Set.new ['bd', 'recall', 'ill', 'hold']
-								options.length.should == b.length
-								options.each do |o|
+								@services.length.should == b.length
+								@services.each do |o|
 									b.should include(o[:service])
 								end
 
@@ -215,26 +172,17 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "not available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(false) 
-								r.magic_request
+								@services = run_cornell_tests('regular', 'Requested', false)
 							}
 
 							it "suggests ILL for the service" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Charged'
-								 }
-								services = r.get_delivery_options item
-								services[0][:service].should == 'ill'
+								@services[0][:service].should == 'ill'
 							end
 
 							it "sets request options to 'ill, recall, hold'" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Charged'
-								 }
-								options = r.get_delivery_options item
 								b = Set.new ['recall', 'ill', 'hold']
-								options.length.should == b.length
-								options.each do |o|
+								@services.length.should == b.length
+								@services.each do |o|
 									b.should include(o[:service])
 								end
 							end
@@ -245,35 +193,20 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 					context "Item status is 'missing'" do
 
-						before(:all) { 
-							r.bibid = 3955095
-							VCR.use_cassette 'holdings/cornell_regular_missing' do
-								r.get_holdings('retrieve_detail_raw')
-							end					
-						}
-
 						context "available through Borrow Direct" do
 
-							before(:each) {
-								r.stub(:borrowDirect_available?).and_return(true) 
+							before(:all) { 
+								@services = run_cornell_tests('regular', 'Missing', true)
 							}
 
 							it "suggests BD for the service" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Missing'
-								 }
-								services = r.get_delivery_options item
-								services[0][:service].should == 'bd'
+								@services[0][:service].should == 'bd'
 							end
 
 							it "sets request options to 'bd, purchase, ill'" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Missing'
-								 }
-								options = r.get_delivery_options item
 								b = Set.new ['bd', 'purchase', 'ill']
-								options.length.should == b.length
-								options.each do |o|
+								@services.length.should == b.length
+								@services.each do |o|
 									b.should include(o[:service])
 								end
 
@@ -284,26 +217,17 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "not available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(false) 
-								r.magic_request
+								@services = run_cornell_tests('regular', 'Missing', false)
 							}
 
 							it "suggests purchase for the service" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Missing'
-								 }
-								services = r.get_delivery_options item
-								services[0][:service].should == 'purchase'
+								@services[0][:service].should == 'purchase'
 							end
 
 							it "sets request options to 'ill, purchase'" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Missing'
-								 }
-								options = r.get_delivery_options item
 								b = Set.new ['purchase', 'ill']
-								options.length.should == b.length
-								options.each do |o|
+								@services.length.should == b.length
+								@services.each do |o|
 									b.should include(o[:service])
 								end
 							end
@@ -314,35 +238,20 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 					context "Item status is 'lost'" do
 
-						before(:all) { 
-							r.bibid = 6231302
-							VCR.use_cassette 'holdings/cornell_regular_lost' do
-								r.get_holdings('retrieve_detail_raw')
-							end					
-						}
-
 						context "available through Borrow Direct" do
 
-							before(:each) {
-								r.stub(:borrowDirect_available?).and_return(true) 
+							before(:all) { 
+								@services = run_cornell_tests('regular', 'Lost', true)
 							}
 
 							it "suggests BD for the service" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Lost'
-								 }
-								services = r.get_delivery_options item
-								services[0][:service].should == 'bd'
+								@services[0][:service].should == 'bd'
 							end
 
 							it "sets request options to 'bd, purchase, ill'" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Lost'
-								 }
-								options = r.get_delivery_options item
 								b = Set.new ['bd', 'purchase', 'ill']
-								options.length.should == b.length
-								options.each do |o|
+								@services.length.should == b.length
+								@services.each do |o|
 									b.should include(o[:service])
 								end
 
@@ -353,25 +262,17 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "not available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(false) 
+								@services = run_cornell_tests('regular', 'Lost', false)
 							}
 
-							it "suggests purchase for the service" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Lost'
-								 }
-								services = r.get_delivery_options item
-								services[0][:service].should == 'purchase'
+							it "suggests purchase for the service" do\
+								@services[0][:service].should == 'purchase'
 							end
 
 							it "sets request options to 'ill, purchase'" do
-								item = { 'typeCode' => 'regular', 
-								   		 :status => 'Lost'
-								 }
-								options = r.get_delivery_options item
 								b = Set.new ['purchase', 'ill']
-								options.length.should == b.length
-								options.each do |o|
+								@services.length.should == b.length
+								@services.each do |o|
 									b.should include(o[:service])
 								end
 							end
@@ -393,9 +294,7 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 							# L2L is not available, so there should be no services listed
 							it "has no request options" do
-								options = r.get_delivery_options({ 'typeCode' => 10, # 1-day loan
-							   		 							:status => 'Not Charged'
-							 						  			 })
+								options = run_cornell_tests('day', 'Not Charged', true, true)
 								options.should == []
 							end
 
@@ -403,9 +302,8 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 						context "three- or more-day loan" do
 
-							before(:all) { @options = r.get_delivery_options({ 'typeCode' => 11, # 3-day loan
-							   		 							:status => 'Not Charged'
-							 								  })
+							before(:all) { 
+								@options = run_cornell_tests('day', 'Not Charged', true)
 										 }
 
 							it "sets request options to 'L2L'" do
@@ -429,10 +327,7 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(true)
-								@options = r.get_delivery_options({ 'typeCode' => 11, # 3-day loan
-								   		 							:status => 'Charged'
-								 								  })
+								@options = run_cornell_tests('day', 'Charged', true)
 							}
 
 							it "sets request options to 'BD, ILL, hold'" do
@@ -452,10 +347,7 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "not available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(false)
-								@options = r.get_delivery_options({ 'typeCode' => 11, # 3-day loan
-								   		 							:status => 'Charged'
-								 								  })
+								@options = run_cornell_tests('day', 'Charged', false)
 							}
 
 							it "sets request options to ILL, hold" do
@@ -479,10 +371,7 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(true)
-								@options = r.get_delivery_options({ 'typeCode' => 11, # 3-day loan
-								   		 							:status => 'Requested'
-								 								  })
+								@options = run_cornell_tests('day', 'Requested', true)
 							}
 
 							it "sets request options to 'BD, ILL, hold'" do
@@ -502,11 +391,9 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "not available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(false)
-								@options = r.get_delivery_options({ 'typeCode' => 11, # 3-day loan
-								   		 							:status => 'Requested'
-								 								  })
+								@options = run_cornell_tests('day', 'Requested', false)
 							}
+
 
 							it "sets request options to ILL, hold" do
 								b = Set.new ['ill', 'hold']
@@ -541,10 +428,7 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(true)
-								@options = r.get_delivery_options({ 'typeCode' => 22, # one-hour loan
-								   		 							:status => 'Not Charged'
-								 								  })
+								@options = run_cornell_tests('minute', 'Not Charged', true)
 							}
 
 							it "sets request options to 'BD, ask at circulation'" do
@@ -564,10 +448,7 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "not available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(false)
-								@options = r.get_delivery_options({ 'typeCode' => 22, # one-hour loan
-								   		 							:status => 'Not Charged'
-								 								  })
+								@options = run_cornell_tests('minute', 'Not Charged', false)
 							}
 
 							it "sets request options to 'ask at circulation'" do
@@ -591,10 +472,7 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(true)
-								@options = r.get_delivery_options({ 'typeCode' => 22, # one-hour loan
-								   		 							:status => 'Charged'
-								 								  })
+								@options = run_cornell_tests('minute', 'Charged', true)
 							}
 
 							it "sets request options to 'BD, ask at circulation'" do
@@ -614,10 +492,7 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "not available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(false)
-								@options = r.get_delivery_options({ 'typeCode' => 22, # one-hour loan
-								   		 							:status => 'Charged'
-								 								  })
+								@options = run_cornell_tests('minute', 'Charged', false)
 							}
 
 							it "sets request options to 'ask at circulation'" do
@@ -641,10 +516,8 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(true)
-								@options = r.get_delivery_options({ 'typeCode' => 22, # one-hour loan
-								   		 							:status => 'Requested'
-								 								  })
+								@options = run_cornell_tests('minute', 'Requested', true)
+
 							}
 
 							it "sets request options to 'BD, ask at circulation'" do
@@ -664,10 +537,7 @@ require 'blacklight_cornell_requests/borrow_direct'
 						context "not available through Borrow Direct" do
 
 							before(:all) { 
-								r.stub(:borrowDirect_available?).and_return(false)
-								@options = r.get_delivery_options({ 'typeCode' => 22, # one-hour loan
-								   		 							:status => 'Requested'
-								 								  })
+								@options = run_cornell_tests('minute', 'Requested', false)
 							}
 
 							it "sets request options to 'ask at circulation'" do
@@ -945,6 +815,35 @@ require 'blacklight_cornell_requests/borrow_direct'
 		end
 
 	end
+
+ end
+
+ # Helper function to simplify tests of the main request logic
+ # Returns the result of a call to get_delivery_options
+ #
+ # Parameters:
+ # loan_type = regular|day|minute
+ # status = Charged|Not Charged|Requested|Missing| etc..
+ # bd = true|false (is item available in BD?)
+ # short_day_loan = true|false (is this a one- or two-day loan - i.e., not eligible for L2L delivery?)
+ def run_cornell_tests(loan_type, status, bd, short_day_loan = false)
+
+	r = FactoryGirl.build(:request, bibid: nil) 
+	r.stub(:borrowDirect_available?).and_return(bd)				
+	r.netid = 'sk274' 
+
+	case loan_type
+		when 'regular'
+			type_code =  3 # book
+		when 'day'
+			type_code = short_day_loan ? 10 : 11 # 10 = 1-day, 11 = 3-day
+		when 'minute'
+			type_code = 22 # 1-hour
+		else
+	end
+
+	return r.get_delivery_options({ 'typeCode' => type_code, :status => status })
+
 
  end
 
