@@ -194,8 +194,7 @@ module BlacklightCornellRequests
       request_options = []
       if item_loan_type == 'regular' and item[:status] == 'Not Charged'
 
-        service = 'l2l'
-        request_options = [ {:service => service, 'location' => item[:location] } ]
+        request_options.push({:service => 'l2l', 'location' => item[:location] } )
 
       elsif ((item_loan_type == 'regular' and item[:status] == 'Charged') or
              (item_loan_type == 'regular' and item[:status] == 'Requested'))
@@ -236,9 +235,7 @@ module BlacklightCornellRequests
           request_options.push( {:service => 'l2l', 'location' => item[:location] } )
         end
 
-      elsif ((item_loan_type == 'minute' and item[:status] == 'Charged') or
-             (item_loan_type == 'minute' and item[:status] == 'Not Charged') or
-             (item_loan_type == 'minute' and item[:status] == 'Requested'))
+      elsif item_loan_type == 'minute'
 
         # TODO: Test and fix BD check with real params
         params = {}
@@ -246,7 +243,6 @@ module BlacklightCornellRequests
           request_options.push( {:service => 'bd', 'location' => item[:location] } )
         end        
         request_options.push( {:service => 'circ', 'location' => item[:location] } )
-
 
       end
 
