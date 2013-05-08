@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'blacklight_cornell_requests/request'
 require 'blacklight_cornell_requests/borrow_direct'
  
- describe BlacklightCornellRequests::Request do
+describe BlacklightCornellRequests::Request do
 
  	it "has a valid factory" do
  		FactoryGirl.create(:request).should be_valid
@@ -567,6 +567,325 @@ require 'blacklight_cornell_requests/borrow_direct'
 
 			 end
 
+      context "Patron is a guest" do
+      
+      let(:request) {
+        request = FactoryGirl.build(:request, bibid: nil)
+        request.netid = 'gid-silterrae'
+        request
+      }
+      
+      context "Loan type is regular" do
+        
+        context "item status is 'not charged'" do
+
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 7924013)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 7924013
+            VCR.use_cassette 'holdings/guest_regular_notcharged' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+
+          it "sets best option as 'l2l'" do
+            response[:services][0][:service].should == 'l2l'
+          end
+
+        end
+
+        context "item status is 'charged'" do
+
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 3507368)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 3507368
+            VCR.use_cassette 'holdings/guest_regular_charged' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+          
+          it "sets best option as 'hold'" do
+            response[:services][0][:service].should == 'hold'
+          end
+          
+        end
+
+        context "Item status is 'requested'" do
+
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 6370407)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 6370407
+            VCR.use_cassette 'holdings/guest_regular_requested' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+
+          it "sets best option as 'hold'" do
+            response[:services][0][:service].should == 'hold'
+          end
+
+        end
+        
+        context "Item status is 'missing'" do
+          
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 3955095)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 3955095
+            VCR.use_cassette 'holdings/guest_regular_missing' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+
+          it "sets no best option" do
+            response[:services].size().should == 0
+          end
+          
+        end
+        
+        context "Item status is 'lost'" do
+          
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 3955095)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 784908
+            VCR.use_cassette 'holdings/guest_regular_lost' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+
+          it "sets no best option" do
+            response[:services].size().should == 0
+          end
+          
+        end
+        
+      end
+      
+      context "Loan type is day" do
+        
+        context "item status is 'not charged'" do
+
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 7924013)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 3810267
+            VCR.use_cassette 'holdings/guest_day_notcharged' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+
+          it "sets best option as 'l2l'" do
+            response[:services][0][:service].should == 'l2l'
+          end
+
+        end
+
+        context "item status is 'charged'" do
+
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 3507368)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 1034506
+            VCR.use_cassette 'holdings/guest_day_charged' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+          
+          it "sets best option as 'hold'" do
+            response[:services][0][:service].should == 'hold'
+          end
+          
+        end
+
+        context "Item status is 'requested'" do
+
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 6370407)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 7793514
+            VCR.use_cassette 'holdings/guest_day_requested' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+
+          it "sets best option as 'hold'" do
+            response[:services][0][:service].should == 'hold'
+          end
+
+        end
+        
+        context "Item status is 'missing'" do
+          
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 3955095)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 5817333
+            VCR.use_cassette 'holdings/guest_day_missing' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+
+          it "sets no best option" do
+            response[:services].size().should == 0
+          end
+          
+        end
+        
+        context "Item status is 'lost'" do
+          
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 3955095)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 6167260
+            VCR.use_cassette 'holdings/guest_day_lost' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+
+          it "sets no best option" do
+            response[:services].size().should == 0
+          end
+          
+        end
+        
+      end
+
+      context "Loan type is minute" do
+        
+        context "item status is 'not charged'" do
+          
+          let(:response) do
+            run_tests('minute', 'Not Charged', false, 'gid-silterrae')
+          end
+
+          # let(:response) {
+            # # request = FactoryGirl.build(:request, bibid: 7924013)
+            # # request.netid = 'gid-silterrae'
+            # request.bibid = 952938
+            # VCR.use_cassette 'holdings/cornell_minute_notcharged' do
+              # request.get_holdings('retrieve_detail_raw')
+            # end   
+            # request.magic_request
+            # request.service
+          # }
+
+          it "sets best option as 'circ'" do
+            # puts response.inspect
+            response[0][:service].should == 'circ'
+          end
+
+        end
+
+        context "item status is 'charged'" do
+          
+          let(:response) do
+            run_tests('minute', 'Charged', false, 'gid-silterrae')
+          end
+
+          # let(:response) {
+            # # request = FactoryGirl.build(:request, bibid: 3507368)
+            # # request.netid = 'gid-silterrae'
+            # request.bibid = 2341898
+            # VCR.use_cassette 'holdings/guest_minute_charged' do
+              # request.get_holdings('retrieve_detail_raw')
+            # end   
+            # request.magic_request
+            # request.service
+          # }
+          
+          it "sets best option as 'circ'" do
+            # puts response.inspect
+            response[0][:service].should == 'circ'
+          end
+          
+        end
+
+        ## no good example
+        context "Item status is 'requested'" do
+
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 6370407)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 6370407
+            VCR.use_cassette 'holdings/guest_regular_requested' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+
+          # it "sets best option as 'circ'" do
+            # response[:services][0][:service].should == 'circ'
+          # end
+
+        end
+        
+        context "Item status is 'missing'" do
+          
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 3955095)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 2197742
+            VCR.use_cassette 'holdings/guest_minute_missing' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+
+          it "sets no best option" do
+            response[:services].size().should == 0
+          end
+          
+        end
+        
+        ## don't have good example
+        context "Item status is 'lost'" do
+          
+          let(:response) {
+            # request = FactoryGirl.build(:request, bibid: 3955095)
+            # request.netid = 'gid-silterrae'
+            request.bibid = 5976015
+            VCR.use_cassette 'holdings/guest_minute_lost' do
+              request.get_holdings('retrieve_detail_raw')
+            end   
+            request.magic_request
+            request.service
+          }
+
+          # it "sets no best option" do
+            # response[:services].size().should == 0
+          # end
+          
+        end
+        
+      end
+      
+    end
+
 		end
 
 	end
@@ -842,8 +1161,30 @@ require 'blacklight_cornell_requests/borrow_direct'
 		else
 	end
 
-	return r.get_delivery_options({ 'typeCode' => type_code, :status => status })
+	return r.get_delivery_options({ :typeCode => type_code, :status => status })
 
 
  end
 
+ def run_tests(loan_type, status, bd, netid, short_day_loan = false)
+
+  r = FactoryGirl.build(:request, bibid: nil) 
+  r.stub(:borrowDirect_available?).and_return(bd)       
+  r.netid = netid
+  
+  # puts "#{loan_type}, #{status}, #{bd}, #{netid}"
+
+  case loan_type
+    when 'regular'
+      type_code =  3 # book
+    when 'day'
+      type_code = short_day_loan ? 10 : 11 # 10 = 1-day, 11 = 3-day
+    when 'minute'
+      type_code = 22 # 1-hour
+    else
+  end
+
+  return r.get_delivery_options({ :typeCode => type_code, :status => status })
+
+
+ end

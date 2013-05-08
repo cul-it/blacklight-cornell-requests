@@ -1,0 +1,57 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://culsearchdev.library.cornell.edu:8950/holdings/retrieve_detail_raw/3810267
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers: {}
+  response:
+    status:
+      code: 200
+      message: !binary |-
+        T0sg
+    headers:
+      !binary "QWNjZXNzLUNvbnRyb2wtQWxsb3ctT3JpZ2lu":
+      - !binary |-
+        Kg==
+      !binary "Q29udGVudC1UeXBl":
+      - !binary |-
+        YXBwbGljYXRpb24vanNvbjsgY2hhcnNldD11dGYtOA==
+      !binary "WC1VYS1Db21wYXRpYmxl":
+      - !binary |-
+        SUU9RWRnZQ==
+      !binary "RXRhZw==":
+      - !binary |-
+        ImFiOTlkNDBiY2U5MzZkNGM2ZDc1MWE2N2Y3MmE2ZDZhIg==
+      !binary "Q2FjaGUtQ29udHJvbA==":
+      - !binary |-
+        bWF4LWFnZT0wLCBwcml2YXRlLCBtdXN0LXJldmFsaWRhdGU=
+      !binary "WC1SdW50aW1l":
+      - !binary |-
+        MC41Nzk3MjI=
+      !binary "Q29udGVudC1MZW5ndGg=":
+      - !binary |-
+        MTEwMw==
+      !binary "U2VydmVy":
+      - !binary |-
+        V0VCcmljay8xLjMuMSAoUnVieS8xLjkuMy8yMDEyLTA0LTIwKQ==
+      !binary "RGF0ZQ==":
+      - !binary |-
+        V2VkLCAwOCBNYXkgMjAxMyAxNDoxNjozNSBHTVQ=
+      !binary "Q29ubmVjdGlvbg==":
+      - !binary |-
+        S2VlcC1BbGl2ZQ==
+    body:
+      encoding: US-ASCII
+      string: ! '{"3810267":{"records":[{"bibid":"3810267","holding_id":"4385195","location_name":"rmc","call_number":"Archives
+        3-9-3052","shelving_title":"","summary_holdings":[],"supplements":[],"indexes":[],"notes":[],"reproduction_note":"","urls":[],"item_count":1,"temp_locations":[],"item_status":{"itemdata":[{"href":"http://catalog-test.library.cornell.edu/vxws/record/3810267/items/5903276","itemid":"5903276","permLocation":"Kroch
+        Library Rare & Manuscripts (Non-Circulating)","location_id":"87","tempLocation":"","location":"Kroch
+        Library Rare & Manuscripts (Non-Circulating)","callNumber":"Archives 3-9-3052","copy":"c.
+        1","itemBarcode":"31924065338497","enumeration":"FOLDER IN BOX 34","chron":"","year":"","caption":"","freeText":"","typeCode":"8","typeDesc":"archivmanu","tempType":"0","itemStatus":"Not
+        Charged","spineLabel":"K-107-C-5-B","itemNote":"0","onReserve":"N","exclude_location_id":[186]}],"status":"available","messages":[{"status_code":"Not
+        Charged","short_message":"Not Charged","long_message":"Not Charged"}],"location_id":"87"},"services":[],"current_issues":[],"orders":[],"onotes":[]}]}}'
+    http_version: 
+  recorded_at: Wed, 08 May 2013 14:16:35 GMT
+recorded_with: VCR 2.4.0
