@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'haml-rails'
   s.add_dependency 'httpclient'
   s.add_dependency 'net-ldap'
+  s.add_dependency 'blacklight'
 
   s.add_development_dependency "sqlite3"
 
@@ -29,7 +30,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "guard-spork"
   s.add_development_dependency "guard-rspec"
   s.add_development_dependency "spork"
-  s.add_development_dependency "webmock"
+  # s.add_development_dependency "webmock"
   s.add_development_dependency "vcr"
   s.add_development_dependency 'factory_girl_rails'
 end
