@@ -1,0 +1,57 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://culsearchdev.library.cornell.edu:8950/holdings/retrieve_detail_raw/3955095
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers: {}
+  response:
+    status:
+      code: 200
+      message: !binary |-
+        T0sg
+    headers:
+      !binary "QWNjZXNzLUNvbnRyb2wtQWxsb3ctT3JpZ2lu":
+      - !binary |-
+        Kg==
+      !binary "Q29udGVudC1UeXBl":
+      - !binary |-
+        YXBwbGljYXRpb24vanNvbjsgY2hhcnNldD11dGYtOA==
+      !binary "WC1VYS1Db21wYXRpYmxl":
+      - !binary |-
+        SUU9RWRnZQ==
+      !binary "RXRhZw==":
+      - !binary |-
+        ImVjYWUwZDNhZTdlZTc4NTA3M2JiMDliNzBkOWZmMzJjIg==
+      !binary "Q2FjaGUtQ29udHJvbA==":
+      - !binary |-
+        bWF4LWFnZT0wLCBwcml2YXRlLCBtdXN0LXJldmFsaWRhdGU=
+      !binary "WC1SdW50aW1l":
+      - !binary |-
+        MC45MzA5NDk=
+      !binary "Q29udGVudC1MZW5ndGg=":
+      - !binary |-
+        MTE0Nw==
+      !binary "U2VydmVy":
+      - !binary |-
+        V0VCcmljay8xLjMuMSAoUnVieS8xLjkuMy8yMDEyLTA0LTIwKQ==
+      !binary "RGF0ZQ==":
+      - !binary |-
+        V2VkLCAwOCBNYXkgMjAxMyAxNDoxNjozNSBHTVQ=
+      !binary "Q29ubmVjdGlvbg==":
+      - !binary |-
+        S2VlcC1BbGl2ZQ==
+    body:
+      encoding: US-ASCII
+      string: ! '{"3955095":{"records":[{"bibid":"3955095","holding_id":"4519826","location_name":"olin,av","call_number":"PR6068.O924
+        H37 2000b","shelving_title":"","summary_holdings":["10 sound discs"],"supplements":[],"indexes":[],"notes":[],"reproduction_note":"","urls":[],"item_count":1,"temp_locations":[],"item_status":{"itemdata":[{"href":"http://catalog-test.library.cornell.edu/vxws/record/3955095/items/6029377","itemid":"6029377","permLocation":"Olin
+        Library Media Center","location_id":"216","tempLocation":"","location":"Olin
+        Library Media Center","callNumber":"PR6068.O924 H37 2000b","copy":"c. 1","itemBarcode":"31924090816269","enumeration":"","chron":"","year":"","caption":"","freeText":"","typeCode":"18","typeDesc":"soundrec","tempType":"0","itemStatus":"Missing
+        - 2004-08-17","spineLabel":"","itemNote":"1","onReserve":"N","exclude_location_id":[181,188]}],"status":"not_available","messages":[{"status_code":"Missing
+        - 2004-08-17","short_message":"Missing - 2004-08-17","long_message":"Missing
+        - 2004-08-17"}],"location_id":"216"},"services":["in_process","borrow_direct","ill","recall_hold"],"current_issues":[],"orders":[],"onotes":[]}]}}'
+    http_version: 
+  recorded_at: Wed, 08 May 2013 14:16:35 GMT
+recorded_with: VCR 2.4.0

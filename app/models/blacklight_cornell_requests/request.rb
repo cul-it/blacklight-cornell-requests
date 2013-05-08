@@ -55,7 +55,7 @@ module BlacklightCornellRequests
 
       # Get holdings
       get_holdings 'retrieve_detail_raw' unless self.holdings_data
-       puts self.holdings_data
+       # puts self.holdings_data
 
       # Get item status and location for each item in each holdings record; store in all_items
       all_items = []
@@ -67,7 +67,8 @@ module BlacklightCornellRequests
           status = item_status i['itemStatus']
           all_items.push({ :id => i['itemid'], 
                            :status => status, 
-                           'location' => i[:location]
+                           'location' => i[:location],
+                           :typeCode => i['typeCode']
                          })
         end
       end
@@ -80,7 +81,7 @@ module BlacklightCornellRequests
 
       # TODO: Do something useful with sorted items
 
-      puts "all items: #{all_items.inspect}"
+      # puts "all items: #{all_items.inspect}"
 
       best_choice = all_items.pop
       self.request_options = all_items
@@ -118,22 +119,26 @@ module BlacklightCornellRequests
 
     # Check whether a loan type is a "day" loan
     def day_loan?(loan_code)
-      [1, 5, 6, 7, 8, 10, 11, 13, 14, 15, 17, 18, 19, 20, 21, 23, 24, 25, 28, 33].include? loan_code
+      [1, 5, 6, 7, 8, 10, 11, 13, 14, 15, 17, 18, 19, 20, 21, 23, 24, 25, 28, 33].include? loan_code.to_i
     end
 
     # Check whether a loan type is a "minute" loan
     def minute_loan?(loan_code)
-      [12, 16, 22, 26, 27, 29, 30, 31, 32, 34, 35, 36, 37].include? loan_code
+      [12, 16, 22, 26, 27, 29, 30, 31, 32, 34, 35, 36, 37].include? loan_code.to_i
     end
 
     # Return an array of day loan types with a loan period of 1-2 days (that cannot use L2L)
     def self.no_l2l_day_loan_types
       [10, 17, 23, 24]
     end
+    
+    def no_l2l_day_loan_types?(loan_code)
+      [10, 17, 23, 24].include? loan_code.to_i
+    end
 
     # Check whether a loan type is non-circulating
     def nocirc_loan?(loan_code)
-      [9].include? loan_code
+      [9].include? loan_code.to_i
     end
 
     # Locate and translate the actual item status from the text string in the holdings data
@@ -168,6 +173,7 @@ module BlacklightCornellRequests
     def get_delivery_options item
 
       patron_type = get_patron_type self.netid
+      # puts "#{self.netid}, #{patron_type}"
 
       if patron_type == 'cornell'
         options = get_cornell_delivery_options item
@@ -187,7 +193,7 @@ module BlacklightCornellRequests
     # Determine delivery options for a single item if the patron is a Cornell affiliate
     def get_cornell_delivery_options item
 
-      item_loan_type = loan_type item['typeCode']
+      item_loan_type = loan_type item[:typeCode]
       # print "item: #{item.inspect}"
       # print "type: #{item_loan_type}"
 
@@ -231,7 +237,7 @@ module BlacklightCornellRequests
 
       elsif (item_loan_type == 'day' and item[:status] == 'Not Charged')
 
-        unless Request.no_l2l_day_loan_types.include? item['typeCode']
+        unless Request.no_l2l_day_loan_types.include? item[:typeCode]
           request_options.push( {:service => 'l2l', 'location' => item[:location] } )
         end
 
@@ -251,7 +257,42 @@ module BlacklightCornellRequests
 
     # Determine delivery options for a single item if the patron is a guest (non-Cornell)
     def get_guest_delivery_options item
-      [{:service => 'ask', 'location' => 'Mann'}]
+      item_loan_type = loan_type item[:typeCode]
+      request_options = []
+
+      if item_loan_type == 'regular' and item[:status] == 'Not Charged'
+        request_options = [ { :service => L2L, 'location' => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
+      elsif item_loan_type == 'regular' and item[:status] == 'Charged'
+        request_options = [ { :service => HOLD, 'location' => item[:location] } ]
+      elsif item_loan_type == 'regular' and item[:status] == 'Requested'
+        request_options = [ { :service => HOLD, 'location' => item[:location] } ]
+      elsif item_loan_type == 'regular' and item[:status] == 'Missing'
+        ## do nothing
+      elsif item_loan_type == 'regular' and item[:status] == 'Lost'
+        ## do nothing
+      elsif item_loan_type == 'day' and item[:status] == 'Not Charged'
+        request_options = [ { :service => L2L, 'location' => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
+      elsif item_loan_type == 'day' and item[:status] == 'Charged'
+        request_options = [ { :service => HOLD, 'location' => item[:location] } ]
+      elsif item_loan_type == 'day' and item[:status] == 'Requested'
+        request_options = [ { :service => HOLD, 'location' => item[:location] } ]
+      elsif item_loan_type == 'day' and item[:status] == 'Missing'
+        ## do nothing
+      elsif item_loan_type == 'day' and item[:status] == 'Lost'
+        ## do nothing
+      elsif item_loan_type == 'minute' and item[:status] == 'Not Charged'
+        request_options = [ { :service => ASK_CIRCULATION, 'location' => item[:location] } ]
+      elsif item_loan_type == 'minute' and item[:status] == 'Charged'
+        request_options = [ { :service => ASK_CIRCULATION, 'location' => item[:location] } ]
+      elsif item_loan_type == 'minute' and item[:status] == 'Requested'
+        request_options = [ { :service => ASK_CIRCULATION, 'location' => item[:location] } ]
+      elsif item_loan_type == 'minute' and item[:status] == 'Missing'
+        ## do nothing
+      elsif item_loan_type == 'minute' and item[:status] == 'Lost'
+        ## do nothing
+      end
+
+      return request_options
     end
 
     # Custom sort method: sort by delivery time estimate from a hash

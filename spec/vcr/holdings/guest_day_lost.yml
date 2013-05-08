@@ -1,0 +1,56 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://culsearchdev.library.cornell.edu:8950/holdings/retrieve_detail_raw/6167260
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers: {}
+  response:
+    status:
+      code: 200
+      message: !binary |-
+        T0sg
+    headers:
+      !binary "QWNjZXNzLUNvbnRyb2wtQWxsb3ctT3JpZ2lu":
+      - !binary |-
+        Kg==
+      !binary "Q29udGVudC1UeXBl":
+      - !binary |-
+        YXBwbGljYXRpb24vanNvbjsgY2hhcnNldD11dGYtOA==
+      !binary "WC1VYS1Db21wYXRpYmxl":
+      - !binary |-
+        SUU9RWRnZQ==
+      !binary "RXRhZw==":
+      - !binary |-
+        IjAwYTgyZDVmZDYwNjEwZjNmMzM3MTFjN2Y4ODMzNjkxIg==
+      !binary "Q2FjaGUtQ29udHJvbA==":
+      - !binary |-
+        bWF4LWFnZT0wLCBwcml2YXRlLCBtdXN0LXJldmFsaWRhdGU=
+      !binary "WC1SdW50aW1l":
+      - !binary |-
+        MC41NDQ1ODY=
+      !binary "Q29udGVudC1MZW5ndGg=":
+      - !binary |-
+        MTA4Nw==
+      !binary "U2VydmVy":
+      - !binary |-
+        V0VCcmljay8xLjMuMSAoUnVieS8xLjkuMy8yMDEyLTA0LTIwKQ==
+      !binary "RGF0ZQ==":
+      - !binary |-
+        V2VkLCAwOCBNYXkgMjAxMyAxNDoxNjozNyBHTVQ=
+      !binary "Q29ubmVjdGlvbg==":
+      - !binary |-
+        S2VlcC1BbGl2ZQ==
+    body:
+      encoding: US-ASCII
+      string: ! '{"6167260":{"records":[{"bibid":"6167260","holding_id":"6624738","location_name":"olin,av","call_number":"Videodisc
+        2496","shelving_title":"","summary_holdings":[],"supplements":[],"indexes":[],"notes":[],"reproduction_note":"","urls":[],"item_count":1,"temp_locations":[],"item_status":{"itemdata":[{"href":"http://catalog-test.library.cornell.edu/vxws/record/6167260/items/8190545","itemid":"8190545","permLocation":"Olin
+        Library","location_id":"99","tempLocation":"","location":"Olin Library Media
+        Center","callNumber":"Videodisc 2496","copy":"c. 1","itemBarcode":"31924108122395","enumeration":"","chron":"","year":"","caption":"","freeText":"","typeCode":"7","typeDesc":"visual","tempType":"0","itemStatus":"Lost
+        - 2010-02-17","spineLabel":"","itemNote":"1","onReserve":"N","exclude_location_id":[181,188]}],"status":"not_available","messages":[{"status_code":"Lost
+        - 2010-02-17","short_message":"Lost - 2010-02-17","long_message":"Lost - 2010-02-17"}],"location_id":"99"},"services":["in_process","borrow_direct","ill","recall_hold"],"current_issues":[],"orders":[],"onotes":[]}]}}'
+    http_version: 
+  recorded_at: Wed, 08 May 2013 14:16:37 GMT
+recorded_with: VCR 2.4.0
