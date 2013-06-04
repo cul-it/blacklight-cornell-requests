@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: http://culsearchdev.library.cornell.edu:8950/holdings/retrieve_detail_raw/7793514
+    uri: ***REMOVED***/holdings/retrieve_detail_raw/7793514
     body:
       encoding: US-ASCII
       string: ''
@@ -10,39 +10,44 @@ http_interactions:
   response:
     status:
       code: 200
-      message: !binary |-
-        T0sg
+      message: 
     headers:
+      !binary "RGF0ZQ==":
+      - !binary |-
+        TW9uLCAwMyBKdW4gMjAxMyAxOTo0MzoyMSBHTVQ=
+      !binary "U2VydmVy":
+      - !binary |-
+        QXBhY2hlLzIuMi4xNSAoUmVkIEhhdCk=
+      !binary "WC1Qb3dlcmVkLUJ5":
+      - !binary |-
+        UGh1c2lvbiBQYXNzZW5nZXIgKG1vZF9yYWlscy9tb2RfcmFjaykgMy4wLjE4
       !binary "QWNjZXNzLUNvbnRyb2wtQWxsb3ctT3JpZ2lu":
       - !binary |-
         Kg==
-      !binary "Q29udGVudC1UeXBl":
-      - !binary |-
-        YXBwbGljYXRpb24vanNvbjsgY2hhcnNldD11dGYtOA==
       !binary "WC1VYS1Db21wYXRpYmxl":
       - !binary |-
         SUU9RWRnZQ==
       !binary "RXRhZw==":
       - !binary |-
-        IjEyMGM2NDZiMWZlZjkwNTRmMTNmYjBmOTBlYzI0YTg2Ig==
+        IjQ2NWQ1MjM4Y2M4NjA0OTdlNDhiZjRhNTQ2MjYzYTJjIg==
       !binary "Q2FjaGUtQ29udHJvbA==":
       - !binary |-
         bWF4LWFnZT0wLCBwcml2YXRlLCBtdXN0LXJldmFsaWRhdGU=
       !binary "WC1SdW50aW1l":
       - !binary |-
-        MC41NDcxODA=
+        MC40MTM4OTY=
+      !binary "U3RhdHVz":
+      - !binary |-
+        MjAw
       !binary "Q29udGVudC1MZW5ndGg=":
       - !binary |-
-        MTEyNw==
-      !binary "U2VydmVy":
-      - !binary |-
-        V0VCcmljay8xLjMuMSAoUnVieS8xLjkuMy8yMDEyLTA0LTIwKQ==
-      !binary "RGF0ZQ==":
-      - !binary |-
-        V2VkLCAwOCBNYXkgMjAxMyAxNDoxNjozNyBHTVQ=
+        MTE3MQ==
       !binary "Q29ubmVjdGlvbg==":
       - !binary |-
-        S2VlcC1BbGl2ZQ==
+        Y2xvc2U=
+      !binary "Q29udGVudC1UeXBl":
+      - !binary |-
+        YXBwbGljYXRpb24vanNvbjsgY2hhcnNldD11dGYtOA==
     body:
       encoding: US-ASCII
       string: ! '{"7793514":{"records":[{"bibid":"7793514","holding_id":"8207657","location_name":"olin,av","call_number":"Videodisc
@@ -50,9 +55,9 @@ http_interactions:
         Library Media Center","location_id":"216","tempLocation":"","location":"Olin
         Library Media Center","callNumber":"Videodisc 4921","copy":"c. 1","itemBarcode":"31924117627681","enumeration":"disc
         1-2","chron":"","year":"","caption":"","freeText":"","typeCode":"7","typeDesc":"visual","tempType":"0","itemStatus":"disc
-        1-2  Requested","spineLabel":"","itemNote":"0","onReserve":"N","exclude_location_id":[181,188]}],"status":"not_available","messages":[{"status_code":"disc
-        1-2  Requested","short_message":"disc 1-2  Requested","long_message":"disc
-        1-2  Requested"}],"location_id":"216"},"services":["in_process","borrow_direct","ill","recall_hold"],"current_issues":[],"orders":[],"onotes":[]}]}}'
+        1-2  Missing - 2013-03-05","spineLabel":"","itemNote":"1","onReserve":"N","exclude_location_id":[181,188]}],"status":"not_available","messages":[{"status_code":"disc
+        1-2  Missing - 2013-03-05","short_message":"disc 1-2  Missing - 2013-03-05","long_message":"disc
+        1-2  Missing - 2013-03-05"}],"location_id":"216"},"services":["in_process","borrow_direct","ill","recall_hold"],"current_issues":[],"orders":[],"onotes":[]}]}}'
     http_version: 
-  recorded_at: Wed, 08 May 2013 14:16:37 GMT
+  recorded_at: Mon, 03 Jun 2013 19:43:22 GMT
 recorded_with: VCR 2.4.0

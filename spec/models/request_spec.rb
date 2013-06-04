@@ -18,13 +18,16 @@ describe BlacklightCornellRequests::Request do
 	end
 
 	context "Main request function" do
+	  
+	  let(:multivol_b) { { :multivol_b => 1 } }
+    let(:multivol_c) { { :multivol_b => 0 } }
 
 		it "returns the request options array, service, and Solr document" do
 			req = FactoryGirl.build(:request, bibid: nil)
-			req.magic_request
+			req.magic_request nil
 			
 			req.request_options.class.name.should == "Array"
-			req.service.should == "ask"
+			req.service[:service].should == "ask"
 			req.document.should == nil
 		end
 
@@ -586,7 +589,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_regular_notcharged' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
 
@@ -605,7 +608,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_regular_charged' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
           
@@ -624,7 +627,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_regular_requested' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
 
@@ -643,7 +646,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_regular_missing' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
 
@@ -662,7 +665,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_regular_lost' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
 
@@ -685,7 +688,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_day_notcharged' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
 
@@ -704,7 +707,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_day_charged' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
           
@@ -723,7 +726,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_day_requested' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
 
@@ -742,7 +745,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_day_missing' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
 
@@ -761,7 +764,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_day_lost' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
 
@@ -788,7 +791,7 @@ describe BlacklightCornellRequests::Request do
             # VCR.use_cassette 'holdings/cornell_minute_notcharged' do
               # request.get_holdings('retrieve_detail_raw')
             # end   
-            # request.magic_request
+            # request.magic_request multivol_b
             # request.service
           # }
 
@@ -812,7 +815,7 @@ describe BlacklightCornellRequests::Request do
             # VCR.use_cassette 'holdings/guest_minute_charged' do
               # request.get_holdings('retrieve_detail_raw')
             # end   
-            # request.magic_request
+            # request.magic_request multivol_b
             # request.service
           # }
           
@@ -833,7 +836,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_regular_requested' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
 
@@ -852,7 +855,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_minute_missing' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
 
@@ -872,7 +875,7 @@ describe BlacklightCornellRequests::Request do
             VCR.use_cassette 'holdings/guest_minute_lost' do
               request.get_holdings('retrieve_detail_raw')
             end   
-            request.magic_request
+            request.magic_request multivol_b
             request.service
           }
 

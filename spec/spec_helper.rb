@@ -3,6 +3,7 @@ require 'spork'
 require 'webmock/rspec'
 require 'vcr'
 require "factory_girl_rails"
+require 'blacklight'
 FactoryGirl.find_definitions
 
 ENGINE_RAILS_ROOT=File.join(File.dirname(__FILE__), '../')
