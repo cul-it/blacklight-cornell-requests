@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: http://culsearchdev.library.cornell.edu:8950/holdings/retrieve_detail_raw/7924013
+    uri: ***REMOVED***/holdings/retrieve_detail_raw/7924013
     body:
       encoding: US-ASCII
       string: ''
@@ -10,15 +10,20 @@ http_interactions:
   response:
     status:
       code: 200
-      message: !binary |-
-        T0sg
+      message: 
     headers:
+      !binary "RGF0ZQ==":
+      - !binary |-
+        TW9uLCAwMyBKdW4gMjAxMyAxOTo0MzoxMSBHTVQ=
+      !binary "U2VydmVy":
+      - !binary |-
+        QXBhY2hlLzIuMi4xNSAoUmVkIEhhdCk=
+      !binary "WC1Qb3dlcmVkLUJ5":
+      - !binary |-
+        UGh1c2lvbiBQYXNzZW5nZXIgKG1vZF9yYWlscy9tb2RfcmFjaykgMy4wLjE4
       !binary "QWNjZXNzLUNvbnRyb2wtQWxsb3ctT3JpZ2lu":
       - !binary |-
         Kg==
-      !binary "Q29udGVudC1UeXBl":
-      - !binary |-
-        YXBwbGljYXRpb24vanNvbjsgY2hhcnNldD11dGYtOA==
       !binary "WC1VYS1Db21wYXRpYmxl":
       - !binary |-
         SUU9RWRnZQ==
@@ -30,19 +35,19 @@ http_interactions:
         bWF4LWFnZT0wLCBwcml2YXRlLCBtdXN0LXJldmFsaWRhdGU=
       !binary "WC1SdW50aW1l":
       - !binary |-
-        MC44NDU0NjI=
+        MC43NDgwNzU=
+      !binary "U3RhdHVz":
+      - !binary |-
+        MjAw
       !binary "Q29udGVudC1MZW5ndGg=":
       - !binary |-
         MTAwNw==
-      !binary "U2VydmVy":
-      - !binary |-
-        V0VCcmljay8xLjMuMSAoUnVieS8xLjkuMy8yMDEyLTA0LTIwKQ==
-      !binary "RGF0ZQ==":
-      - !binary |-
-        V2VkLCAwOCBNYXkgMjAxMyAxNDoxNjozMSBHTVQ=
       !binary "Q29ubmVjdGlvbg==":
       - !binary |-
-        S2VlcC1BbGl2ZQ==
+        Y2xvc2U=
+      !binary "Q29udGVudC1UeXBl":
+      - !binary |-
+        YXBwbGljYXRpb24vanNvbjsgY2hhcnNldD11dGYtOA==
     body:
       encoding: US-ASCII
       string: ! '{"7924013":{"records":[{"bibid":"7924013","holding_id":"8317749","location_name":"olin","call_number":"PR6068.O93
@@ -52,5 +57,5 @@ http_interactions:
         Charged","spineLabel":"","itemNote":"0","onReserve":"N","exclude_location_id":[181,188]}],"status":"available","messages":[{"status_code":"Not
         Charged","short_message":"Not Charged","long_message":"Not Charged"}],"location_id":"99"},"services":[],"current_issues":[],"orders":[],"onotes":[]}]}}'
     http_version: 
-  recorded_at: Wed, 08 May 2013 14:16:31 GMT
+  recorded_at: Mon, 03 Jun 2013 19:43:12 GMT
 recorded_with: VCR 2.4.0

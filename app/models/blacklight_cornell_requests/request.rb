@@ -21,7 +21,8 @@ module BlacklightCornellRequests
     include Cornell::LDAP
     include BorrowDirect
 
-    attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :netid
+    attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :netid, :ASK_LIBRARIAN
+    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info
     validates_presence_of :bibid
     def save(validate = true)
       validate ? valid? : true
@@ -40,15 +41,14 @@ module BlacklightCornellRequests
     end
 
     ##################### Calculate optimum request method ##################### 
-    def magic_request
+    def magic_request(document)
 
       request_options = []
       service = 'ask'
-      document = nil
 
       if self.bibid.nil?
         self.request_options = request_options
-        self.service = service
+        self.service = { :service => service }
         self.document = document
         return
       end
@@ -80,6 +80,15 @@ module BlacklightCornellRequests
       end
 
       # TODO: Do something useful with sorted items
+      self.document = document
+      unless document.nil?
+        populate_document_values
+        if self.document[:multivol_b]
+          Rails.logger.info "test_log: multi volume"
+        else
+          Rails.logger.info "test_log: multi copies"
+        end
+      end
 
       # puts "all items: #{all_items.inspect}"
 
@@ -349,7 +358,46 @@ module BlacklightCornellRequests
       end
 
     end
-
+    
+    def populate_document_values
+      unless self.document.nil?
+        self.isbn = self.document[:isbn_display]
+        self.ti = self.document[:title_display]
+        self.au = self.document[:author_display]
+        create_ill_link
+      end
+    end
+    
+    def create_ill_link
+      document = self.document
+      ill_link = '***REMOVED***?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
+      if self.isbn.present?
+        isbns = self.isbn.join(',')
+        ill_link = ill_link + "&rft.isbn=#{isbns}"
+        ill_link = ill_link + "&rft_id=urn%3AISBN%3A#{isbns}"
+      end
+      if !self.ti.blank?
+        ill_link = ill_link + "&rft.btitle=#{self.ti}"
+      end
+      if !document[:author_display].blank?
+        ill_link = ill_link + "&rft.aulast=#{document[:author_display]}"
+      end
+      if document[:pub_info_display].present?
+        pub_info_display = document[:pub_info_display][0]
+        self.pub_info = pub_info_display
+        ill_link = ill_link + "&rft.place=#{pub_info_display}"
+        ill_link = ill_link + "&rft.pub=#{pub_info_display}"
+        ill_link = ill_link + "&rft.date=#{pub_info_display}"
+      end
+      if !document[:format].blank?
+        ill_link = ill_link + "&rft.genre=#{document[:format]}"
+      end
+      if document[:lc_callnum_display].present?
+        ill_link = ill_link + "&rft.identifier=#{document[:lc_callnum_display][0]}"
+      end
+      
+      self.ill_link = ill_link
+    end
 
   end
 

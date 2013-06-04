@@ -11,11 +11,25 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130430193240) do
+ActiveRecord::Schema.define(:version => 20130510145730) do
 
-  create_table "blacklight_cornell_requests_requests", :force => true do |t|
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
+  create_table "bookmarks", :force => true do |t|
+    t.integer  "user_id",     :null => false
+    t.string   "document_id"
+    t.string   "title"
+    t.datetime "created_at",  :null => false
+    t.datetime "updated_at",  :null => false
+    t.string   "user_type"
   end
+
+  create_table "searches", :force => true do |t|
+    t.text     "query_params"
+    t.integer  "user_id"
+    t.datetime "created_at",   :null => false
+    t.datetime "updated_at",   :null => false
+    t.string   "user_type"
+  end
+
+  add_index "searches", ["user_id"], :name => "index_searches_on_user_id"
 
 end
