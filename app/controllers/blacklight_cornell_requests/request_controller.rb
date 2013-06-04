@@ -17,7 +17,7 @@ module BlacklightCornellRequests
       
       @alternate_request_options = req.request_options
       if ! req.service.nil?
-        @service = req.service[:services][0]
+        @service = req.service
       else
         @service = { :service => BlacklightCornellRequests::Request::ASK_LIBRARIAN }
       end
