@@ -77,6 +77,7 @@ module BlacklightCornellRequests
       all_items.each do |item|
         services = get_delivery_options item
         item[:services] = services
+        # Rails.logger.info "sk274_debug: " + services.inspect
       end
 
       # TODO: Do something useful with sorted items
@@ -86,16 +87,25 @@ module BlacklightCornellRequests
         if self.document[:multivol_b]
           Rails.logger.info "test_log: multi volume"
         else
-          Rails.logger.info "test_log: multi copies"
+          Rails.logger.info "test_log: non multi volume"
+          all_items.each do |item|
+            request_options.push *item[:services]
+          end
+          # Rails.logger.info "sk274_debug: request_options: " + request_options.inspect
+          request_options = sort_request_options request_options
         end
       end
 
       # puts "all items: #{all_items.inspect}"
 
-      best_choice = all_items.pop
-      self.request_options = all_items
+      best_choice = request_options.pop
+      ask = {:service => 'ask'}
+      request_options.push ask
+      self.request_options = request_options
       self.service = best_choice
       self.document = document
+      
+      # Rails.logger.info "sk274_debug: best choice: " + best_choice.inspect
 
     end   
 
@@ -112,6 +122,8 @@ module BlacklightCornellRequests
 
       # return nil if there is no meaningful response (e.g., invalid bibid)
       return nil if response[self.bibid.to_s].nil?
+      
+      # Rails.logger.info "sk274_debug: " + response.inspect
 
       self.holdings_data = response
 
@@ -182,7 +194,7 @@ module BlacklightCornellRequests
     def get_delivery_options item
 
       patron_type = get_patron_type self.netid
-      # puts "#{self.netid}, #{patron_type}"
+      # Rails.logger.info "sk274_debug: " + "#{self.netid}, #{patron_type}"
 
       if patron_type == 'cornell'
         options = get_cornell_delivery_options item
@@ -195,7 +207,8 @@ module BlacklightCornellRequests
         option[:estimate] = get_delivery_time(option[:service], option)
       end
 
-      return sort_request_options options
+      #return sort_request_options options
+      return options
 
     end
 
