@@ -21,8 +21,9 @@ module BlacklightCornellRequests
     include Cornell::LDAP
     include BorrowDirect
 
-    attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :netid, :ASK_LIBRARIAN
-    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info
+    attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :alternate_options
+    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate
+    attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN
     validates_presence_of :bibid
     def save(validate = true)
       validate ? valid? : true
@@ -41,10 +42,11 @@ module BlacklightCornellRequests
     end
 
     ##################### Calculate optimum request method ##################### 
-    def magic_request(document)
+    def magic_request(document, target='')
 
       request_options = []
-      service = 'ask'
+      alternate_options = []
+      service = ASK_LIBRARIAN
 
       if self.bibid.nil?
         self.request_options = request_options
@@ -65,10 +67,12 @@ module BlacklightCornellRequests
         items = h['item_status']['itemdata']
         items.each do |i|
           status = item_status i['itemStatus']
+          iid = deep_copy(i)
           all_items.push({ :id => i['itemid'], 
                            :status => status, 
                            'location' => i[:location],
-                           :typeCode => i['typeCode']
+                           :typeCode => i['typeCode'],
+                           :iid => iid
                          })
         end
       end
@@ -95,19 +99,43 @@ module BlacklightCornellRequests
           request_options = sort_request_options request_options
         end
       end
+      
+      Rails.logger.info "sk274_debug: " + request_options.inspect
+      
+      if !target.blank?
+        self.service = target
+      elsif request_options.present?
+        self.service = request_options[0][:service]
+      else
+        self.service = ASK_LIBRARIAN
+      end
+      Rails.logger.info "sk274_debug: " + self.service.inspect
+      self.alternate_options = []
+      self.request_options = []
+      request_options.push ({:service => ASK_LIBRARIAN, :estimate => get_delivery_time(ASK_LIBRARIAN, nil)})
+      populate_options self.service, request_options unless self.service == ASK_LIBRARIAN
 
       # puts "all items: #{all_items.inspect}"
-
-      best_choice = request_options.pop
-      ask = {:service => 'ask'}
-      request_options.push ask
-      self.request_options = request_options
-      self.service = best_choice
       self.document = document
       
       # Rails.logger.info "sk274_debug: best choice: " + best_choice.inspect
 
     end   
+    
+    def populate_options target, request_options
+      seen = {}
+      request_options.each do |option|
+        if option[:service] == target
+          self.estimate = option[:estimate] if self.estimate.blank?
+          self.request_options.push option
+        else
+          if seen[option[:service]].blank?
+            self.alternate_options.push option
+            seen[option[:service]] = 1
+          end
+        end
+      end
+    end
 
     ##################### Manipulate holdings data #####################
 
@@ -205,6 +233,7 @@ module BlacklightCornellRequests
       # Get delivery time estimates for each option
       options.each do |option|
         option[:estimate] = get_delivery_time(option[:service], option)
+        option[:iid] = item[:iid]
       end
 
       #return sort_request_options options
@@ -220,6 +249,8 @@ module BlacklightCornellRequests
       # print "type: #{item_loan_type}"
 
       request_options = []
+      Rails.logger.info "sk274_debug: " + item.inspect
+      params = { :isbn => '', :title => '' }
       if item_loan_type == 'regular' and item[:status] == 'Not Charged'
 
         request_options.push({:service => 'l2l', 'location' => item[:location] } )
@@ -227,7 +258,6 @@ module BlacklightCornellRequests
       elsif ((item_loan_type == 'regular' and item[:status] == 'Charged') or
              (item_loan_type == 'regular' and item[:status] == 'Requested'))
         # TODO: Test and fix BD check with real params
-        params = {}
         if borrowDirect_available? params
           request_options.push( {:service => 'bd', 'location' => item[:location] } )
         end
@@ -239,7 +269,6 @@ module BlacklightCornellRequests
              (item_loan_type == 'regular' and item[:status] == 'Lost'))
 
          # TODO: Test and fix BD check with real params
-        params = {}
         if borrowDirect_available? params
           request_options.push( {:service => 'bd', 'location' => item[:location] } )
         end
@@ -250,7 +279,6 @@ module BlacklightCornellRequests
              (item_loan_type == 'day' and item[:status] == 'Requested'))
 
          # TODO: Test and fix BD check with real params
-        params = {}
         if borrowDirect_available? params
           request_options.push( {:service => 'bd', 'location' => item[:location] } )
         end
@@ -266,7 +294,6 @@ module BlacklightCornellRequests
       elsif item_loan_type == 'minute'
 
         # TODO: Test and fix BD check with real params
-        params = {}
         if borrowDirect_available? params
           request_options.push( {:service => 'bd', 'location' => item[:location] } )
         end        
@@ -326,19 +353,19 @@ module BlacklightCornellRequests
 
       case service 
 
-        when 'l2l'
+        when L2L
           if item_data['location'] == LIBRARY_ANNEX
             1
           else
             2
           end
 
-        when 'bd'
+        when BD
           6
-        when 'ill'
+        when ILL
           14
 
-        when 'hold'
+        when HOLD
           ## if it got to this point, it means it is not available and should have Due on xxxx-xx-xx
           dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data['itemStatus'])
           if ! dueDate.nil?
@@ -356,15 +383,15 @@ module BlacklightCornellRequests
             return 180
           end
 
-        when 'recall'
+        when RECALL
           30
-        when 'pda'
+        when PDA
           5
-        when 'purchase'
+        when PURCHASE
           10
-        when 'ask'
+        when ASK_LIBRARIAN
           9999
-        when 'circ'
+        when ASK_CIRCULATION
           9998
         else
           9999
@@ -376,7 +403,7 @@ module BlacklightCornellRequests
       unless self.document.nil?
         self.isbn = self.document[:isbn_display]
         self.ti = self.document[:title_display]
-        self.au = self.document[:author_display]
+        self.au = self.document[:author_display].split('|')[0]
         create_ill_link
       end
     end
@@ -410,6 +437,10 @@ module BlacklightCornellRequests
       end
       
       self.ill_link = ill_link
+    end
+    
+    def deep_copy(o)
+      Marshal.load(Marshal.dump(o))
     end
 
   end
