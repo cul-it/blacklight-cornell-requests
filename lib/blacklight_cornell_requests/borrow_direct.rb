@@ -16,10 +16,10 @@ module BlacklightCornellRequests
     end
 
     # Assemble and return a usable BD URL
-    def _bd_url request
+    def _bd_url env_http_host
       
       host = Rails.configuration.borrow_direct_webservices_host
-      host = request.env['HTTP_HOST'] if host.blank?
+      host = env_http_host if host.blank?
 
       if !host.starts_with?('http')
         host = "http://#{host}"
@@ -47,13 +47,13 @@ module BlacklightCornellRequests
     # ISBN is best, but title will work if ISBN isn't available.
     def _borrowDirect_available? params
       
-      if (params[:isbn].blank? && params[:title].blank?) || params[:request].nil?
+      if (params[:isbn].blank? && params[:title].blank?) || params[:env_http_host].nil?
         # Rails.logger.info "sk274_debug: No params passed"
         ## no valid params passed
         return false
       end
 
-      base_url = _bd_url params[:request]
+      base_url = _bd_url params[:env_http_host]
 
       session_id = _initialize_session base_url
       # TODO: Matt start here

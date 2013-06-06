@@ -42,7 +42,7 @@ module BlacklightCornellRequests
     end
 
     ##################### Calculate optimum request method ##################### 
-    def magic_request(document, req, target='')
+    def magic_request(document, env_http_host, target='')
 
       request_options = []
       alternate_options = []
@@ -81,7 +81,7 @@ module BlacklightCornellRequests
       self.document = document
       unless document.nil?
         # Iterate through all items and get list of delivery methods
-        bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :request => req }
+        bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
         # Rails.logger.info "sk274_debug: document: " + document.inspect
         # Rails.logger.info "sk274_debug: bd_params: " + bd_params.inspect
         all_items.each do |item|

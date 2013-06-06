@@ -13,7 +13,7 @@ module BlacklightCornellRequests
       
       req = BlacklightCornellRequests::Request.new(@id)
       req.netid = request.env['REMOTE_USER']
-      req.magic_request @document, request, target
+      req.magic_request @document, request.env['HTTP_HOST'], target
       
       if ! req.service.nil?
         @service = req.service
