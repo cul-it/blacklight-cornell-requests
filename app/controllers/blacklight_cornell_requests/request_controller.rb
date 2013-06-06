@@ -13,9 +13,8 @@ module BlacklightCornellRequests
       
       req = BlacklightCornellRequests::Request.new(@id)
       req.netid = request.env['REMOTE_USER']
-      req.magic_request @document, target
+      req.magic_request @document, request, target
       
-      @alternate_request_options = req.alternate_options
       if ! req.service.nil?
         @service = req.service
       else
@@ -44,7 +43,12 @@ module BlacklightCornellRequests
         }
       end
       
-      Rails.logger.info "sk274_debug: " + @alternate_request_options.inspect
+      @alternate_request_options = []
+      req.alternate_options.each do |option|
+        @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
+      end
+      
+      # Rails.logger.info "sk274_debug: " + @alternate_request_options.inspect
       
       render @service
       

@@ -42,7 +42,7 @@ module BlacklightCornellRequests
     end
 
     ##################### Calculate optimum request method ##################### 
-    def magic_request(document, target='')
+    def magic_request(document, req, target='')
 
       request_options = []
       alternate_options = []
@@ -77,16 +77,18 @@ module BlacklightCornellRequests
         end
       end
 
-      # Iterate through all items and get list of delivery methods
-      all_items.each do |item|
-        services = get_delivery_options item
-        item[:services] = services
-        # Rails.logger.info "sk274_debug: " + services.inspect
-      end
-
       # TODO: Do something useful with sorted items
       self.document = document
       unless document.nil?
+        # Iterate through all items and get list of delivery methods
+        bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :request => req }
+        # Rails.logger.info "sk274_debug: document: " + document.inspect
+        # Rails.logger.info "sk274_debug: bd_params: " + bd_params.inspect
+        all_items.each do |item|
+          services = get_delivery_options item, bd_params
+          item[:services] = services
+          # Rails.logger.info "sk274_debug: " + services.inspect
+        end
         populate_document_values
         if self.document[:multivol_b]
           Rails.logger.info "test_log: multi volume"
@@ -100,7 +102,7 @@ module BlacklightCornellRequests
         end
       end
       
-      Rails.logger.info "sk274_debug: " + request_options.inspect
+      # Rails.logger.info "sk274_debug: " + request_options.inspect
       
       if !target.blank?
         self.service = target
@@ -109,11 +111,13 @@ module BlacklightCornellRequests
       else
         self.service = ASK_LIBRARIAN
       end
-      Rails.logger.info "sk274_debug: " + self.service.inspect
+      # Rails.logger.info "sk274_debug: " + self.service.inspect
       self.alternate_options = []
       self.request_options = []
       request_options.push ({:service => ASK_LIBRARIAN, :estimate => get_delivery_time(ASK_LIBRARIAN, nil)})
       populate_options self.service, request_options unless self.service == ASK_LIBRARIAN
+      
+      # Rails.logger.info "sk274_debug: " + self.alternate_options.inspect
 
       # puts "all items: #{all_items.inspect}"
       self.document = document
@@ -219,13 +223,13 @@ module BlacklightCornellRequests
     # { :service => SERVICE NAME, :estimate => ESTIMATED DELIVERY TIME }
     # The array is sorted by delivery time estimate, so the first array item should be 
     # the fastest (i.e., the "best") delivery option.
-    def get_delivery_options item
+    def get_delivery_options item, bd_params = {}
 
       patron_type = get_patron_type self.netid
       # Rails.logger.info "sk274_debug: " + "#{self.netid}, #{patron_type}"
 
       if patron_type == 'cornell'
-        options = get_cornell_delivery_options item
+        options = get_cornell_delivery_options item, bd_params
       else
         options = get_guest_delivery_options item
       end
@@ -242,15 +246,13 @@ module BlacklightCornellRequests
     end
 
     # Determine delivery options for a single item if the patron is a Cornell affiliate
-    def get_cornell_delivery_options item
+    def get_cornell_delivery_options item, params
 
       item_loan_type = loan_type item[:typeCode]
       # print "item: #{item.inspect}"
       # print "type: #{item_loan_type}"
 
       request_options = []
-      Rails.logger.info "sk274_debug: " + item.inspect
-      params = { :isbn => '', :title => '' }
       if item_loan_type == 'regular' and item[:status] == 'Not Charged'
 
         request_options.push({:service => 'l2l', 'location' => item[:location] } )
