@@ -91,9 +91,9 @@ module BlacklightCornellRequests
         end
         populate_document_values
         if self.document[:multivol_b]
-          Rails.logger.info "test_log: multi volume"
+          # Rails.logger.info "test_log: multi volume"
         else
-          Rails.logger.info "test_log: non multi volume"
+          # Rails.logger.info "test_log: non multi volume"
           all_items.each do |item|
             request_options.push *item[:services]
           end
@@ -112,8 +112,6 @@ module BlacklightCornellRequests
         self.service = ASK_LIBRARIAN
       end
       # Rails.logger.info "sk274_debug: " + self.service.inspect
-      self.alternate_options = []
-      self.request_options = []
       request_options.push ({:service => ASK_LIBRARIAN, :estimate => get_delivery_time(ASK_LIBRARIAN, nil)})
       populate_options self.service, request_options unless self.service == ASK_LIBRARIAN
       
@@ -127,6 +125,8 @@ module BlacklightCornellRequests
     end   
     
     def populate_options target, request_options
+      self.alternate_options = []
+      self.request_options = []
       seen = {}
       request_options.each do |option|
         if option[:service] == target
@@ -229,8 +229,10 @@ module BlacklightCornellRequests
       # Rails.logger.info "sk274_debug: " + "#{self.netid}, #{patron_type}"
 
       if patron_type == 'cornell'
+        # Rails.logger.info "sk274_debug: get cornell options"
         options = get_cornell_delivery_options item, bd_params
       else
+        # Rails.logger.info "sk274_debug: get guest options"
         options = get_guest_delivery_options item
       end
 
@@ -251,6 +253,8 @@ module BlacklightCornellRequests
       item_loan_type = loan_type item[:typeCode]
       # print "item: #{item.inspect}"
       # print "type: #{item_loan_type}"
+      # Rails.logger.info "sk274_debug: loan type: #{item_loan_type}"
+      # Rails.logger.info "sk274_debug: item status: #{item[:status]}"
 
       request_options = []
       if item_loan_type == 'regular' and item[:status] == 'Not Charged'
@@ -403,9 +407,16 @@ module BlacklightCornellRequests
     
     def populate_document_values
       unless self.document.nil?
+        # Rails.logger.info "sk274_debug: " + self.document.inspect
         self.isbn = self.document[:isbn_display]
         self.ti = self.document[:title_display]
-        self.au = self.document[:author_display].split('|')[0]
+        if !self.document[:author_display].blank?
+          self.au = self.document[:author_display].split('|')[0]
+        elsif !self.document[:author_addl_display].blank?
+          self.au = self.document[:author_addl_display].map { |author| author.split('|')[0] }.join(', ')
+        else
+          self.au = ''
+        end
         create_ill_link
       end
     end
