@@ -7,7 +7,7 @@
     %div.span8.well
       %h2.item-title-request.blacklight-title_display=@ti
       %div.request-author=@au
-      %form#req.form-horizontal{:method => 'post', :action => request_make_request_path}
+      %form#req.form-horizontal{:method => 'post', :action => blacklight_cornell_request.make_purchase_request_path}
         %input(type="hidden" name="bid" value="#{@id}" id="bid")
         %input(type="hidden" name="request_action" value="purchase" id="request_action")
         .control-group
