@@ -93,6 +93,11 @@ module BlacklightCornellRequests
         populate_document_values
         if self.document[:multivol_b]
           # Rails.logger.info "test_log: multi volume"
+          all_items.each do |item|
+            request_options.push *item[:services]
+          end
+          # Rails.logger.info "sk274_debug: request_options: " + request_options.inspect
+          request_options = sort_request_options request_options
         else
           # Rails.logger.info "test_log: non multi volume"
           all_items.each do |item|
