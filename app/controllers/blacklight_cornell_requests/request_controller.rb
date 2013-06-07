@@ -94,5 +94,25 @@ module BlacklightCornellRequests
       Blacklight.solr_config
     end
     
+    def make_voyager_request
+
+      # Validate the form data
+      if params[:holding_id].blank?
+        flash[:error] = I18n.t('blacklight.requests.errors.holding_id.blank')
+      elsif params[:library_id].blank?
+        flash[:error] = I18n.t('blacklight.requests.errors.library_id.blank')
+      else
+        # Hand off the data to the request model for sending
+        req = BlacklightCornellRequests::Request.new(params[:bibid])
+        req.netid = request.env['REMOTE_USER']
+        response = req.make_voyager_request params
+        flash[response.keys[0]] = response.values[0]
+      end
+        
+      render :partial => '/flash_msg', :layout => false
+
+    end
+    
   end
+  
 end

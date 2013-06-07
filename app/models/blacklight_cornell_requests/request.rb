@@ -22,7 +22,7 @@ module BlacklightCornellRequests
     include BorrowDirect
 
     attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :alternate_options
-    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate
+    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items
     attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN
     validates_presence_of :bibid
     def save(validate = true)
@@ -76,6 +76,7 @@ module BlacklightCornellRequests
                          })
         end
       end
+      self.items = all_items
 
       # TODO: Do something useful with sorted items
       self.document = document
@@ -454,6 +455,53 @@ module BlacklightCornellRequests
     
     def deep_copy(o)
       Marshal.load(Marshal.dump(o))
+    end
+    
+    ###################### Make Voyager requests ################################
+
+    # Handle a request for a Voyager action
+    # action: callslip|hold|recall
+    # params: { :holding_id (actually item id), :request_action, :library_id, 'latest-date', :reqcomments }
+    # Returns a status to be 'flashed' to the user
+    def make_voyager_request params
+
+      # Need bibid, netid, itemid to proceed
+      if self.bibid.nil?
+        return { :error => I18n.t('blacklight.requests.errors.bibid.blank') }
+      elsif netid.nil? 
+        return { :error => I18n.t('blacklight.requests.errors.email.blank') }
+      elsif params[:holding_id].nil?
+        return { :error => I18n.t('blacklight.requests.errors.holding_id.blank') }
+      end
+
+      # Set up Voyager request URL string
+      voyager_request_handler_url = Rails.configuration.voyager_request_handler_host
+      voyager_request_handler_url ||= request.env['HTTP_HOST']
+      unless voyager_request_handler_url.starts_with?('http')
+        voyager_request_handler_url = "http://#{voyager_request_handler_url}"
+      end
+      unless Rails.configuration.voyager_request_handler_port.blank?
+        voyager_request_handler_url += ":" + Rails.configuration.voyager_request_handler_port.to_s
+      end
+
+      # Assemble complete request URL
+      voyager_request_handler_url += "/holdings/#{params[:request_action]}/#{self.netid}/#{self.bibid}/#{params[:library_id]}"
+      unless params[:holding_id].nil?
+        voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
+      end
+
+      # Send the request
+      # puts voyager_request_handler_url
+      body = { 'reqnna' => params['latest-date'], 'reqcomments' => params[:reqcomments] }
+      result = HTTPClient.post(voyager_request_handler_url, body)
+      response = JSON.parse(result.content)
+      # puts response
+      if response['status'] == 'failed'
+        return { :failure => I18n.t('blacklight.requests.errors.voyager.error') }
+      else
+        return { :success => I18n.t('blacklight.requests.success') }
+      end
+
     end
 
   end
