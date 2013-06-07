@@ -13,60 +13,77 @@ module BlacklightCornellRequests
       
       req = BlacklightCornellRequests::Request.new(@id)
       req.netid = request.env['REMOTE_USER']
-      req.magic_request @document
+      req.magic_request @document, request.env['HTTP_HOST'], target
       
-      @alternate_request_options = req.request_options
       if ! req.service.nil?
         @service = req.service
       else
         @service = { :service => BlacklightCornellRequests::Request::ASK_LIBRARIAN }
       end
       
-      @estimate = @service[:estimate]
+      @estimate = req.estimate
       @ti = req.ti
       @au = req.au
       @isbn = req.isbn
       @ill_link = req.ill_link
       @pub_info = req.pub_info
       
-      render @service[:service]
+      @iis = {}
+      req.request_options.each do |item|
+        iid = item[:iid]
+        @iis[iid['itemid']] = {
+            :location => iid['location'],
+            :location_id => iid['location_id'],
+            :call_number => iid['callNumber'],
+            :copy => iid['copy'],
+            :enumeration => iid['enumeration'],
+            :url => iid['url'],
+            :chron => iid['chron'],
+            :exclude_location_id => iid['exclude_location_id']
+        }
+      end
       
-    end
-    
-    def _display request_options, service, doc
+      @alternate_request_options = []
+      req.alternate_options.each do |option|
+        @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
+      end
+      
+      # Rails.logger.info "sk274_debug: " + @alternate_request_options.inspect
+      
+      render @service
       
     end
 
     def l2l
-      return magic_request L2L
+      return magic_request Request::L2L
     end
 
     def hold
-      return magic_request HOLD
+      return magic_request Request::HOLD
     end
 
     def recall
-      return magic_request RECALL
+      return magic_request Request::RECALL
     end
 
     def bd
-      return magic_request BD
+      return magic_request Request::BD
     end
 
     def ill
-      return magic_request ILL
+      return magic_request Request::ILL
     end
 
     def purchase
-      return magic_request PURCHASE
+      return magic_request Request::PURCHASE
     end
 
     def pda
-      return magic_request PDA
+      return magic_request Request::PDA
     end
 
     def ask
-      return magic_request ASK_LIBRARIAN
+      return magic_request Request::ASK_LIBRARIAN
     end
     
     def blacklight_solr
@@ -77,5 +94,25 @@ module BlacklightCornellRequests
       Blacklight.solr_config
     end
     
+    def make_voyager_request
+
+      # Validate the form data
+      if params[:holding_id].blank?
+        flash[:error] = I18n.t('blacklight.requests.errors.holding_id.blank')
+      elsif params[:library_id].blank?
+        flash[:error] = I18n.t('blacklight.requests.errors.library_id.blank')
+      else
+        # Hand off the data to the request model for sending
+        req = BlacklightCornellRequests::Request.new(params[:bibid])
+        req.netid = request.env['REMOTE_USER']
+        response = req.make_voyager_request params
+        flash[response.keys[0]] = response.values[0]
+      end
+        
+      render :partial => '/flash_msg', :layout => false
+
+    end
+    
   end
+  
 end

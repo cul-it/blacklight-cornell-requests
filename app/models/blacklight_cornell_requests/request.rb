@@ -21,8 +21,9 @@ module BlacklightCornellRequests
     include Cornell::LDAP
     include BorrowDirect
 
-    attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :netid, :ASK_LIBRARIAN
-    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info
+    attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :alternate_options
+    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items
+    attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN
     validates_presence_of :bibid
     def save(validate = true)
       validate ? valid? : true
@@ -41,10 +42,11 @@ module BlacklightCornellRequests
     end
 
     ##################### Calculate optimum request method ##################### 
-    def magic_request(document)
+    def magic_request(document, env_http_host, target='')
 
       request_options = []
-      service = 'ask'
+      alternate_options = []
+      service = ASK_LIBRARIAN
 
       if self.bibid.nil?
         self.request_options = request_options
@@ -65,29 +67,34 @@ module BlacklightCornellRequests
         items = h['item_status']['itemdata']
         items.each do |i|
           status = item_status i['itemStatus']
+          iid = deep_copy(i)
           all_items.push({ :id => i['itemid'], 
                            :status => status, 
                            'location' => i[:location],
-                           :typeCode => i['typeCode']
+                           :typeCode => i['typeCode'],
+                           :iid => iid
                          })
         end
       end
-
-      # Iterate through all items and get list of delivery methods
-      all_items.each do |item|
-        services = get_delivery_options item
-        item[:services] = services
-        # Rails.logger.info "sk274_debug: " + services.inspect
-      end
+      self.items = all_items
 
       # TODO: Do something useful with sorted items
       self.document = document
       unless document.nil?
+        # Iterate through all items and get list of delivery methods
+        bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
+        # Rails.logger.info "sk274_debug: document: " + document.inspect
+        # Rails.logger.info "sk274_debug: bd_params: " + bd_params.inspect
+        all_items.each do |item|
+          services = get_delivery_options item, bd_params
+          item[:services] = services
+          # Rails.logger.info "sk274_debug: " + services.inspect
+        end
         populate_document_values
         if self.document[:multivol_b]
-          Rails.logger.info "test_log: multi volume"
+          # Rails.logger.info "test_log: multi volume"
         else
-          Rails.logger.info "test_log: non multi volume"
+          # Rails.logger.info "test_log: non multi volume"
           all_items.each do |item|
             request_options.push *item[:services]
           end
@@ -95,19 +102,45 @@ module BlacklightCornellRequests
           request_options = sort_request_options request_options
         end
       end
+      
+      # Rails.logger.info "sk274_debug: " + request_options.inspect
+      
+      if !target.blank?
+        self.service = target
+      elsif request_options.present?
+        self.service = request_options[0][:service]
+      else
+        self.service = ASK_LIBRARIAN
+      end
+      # Rails.logger.info "sk274_debug: " + self.service.inspect
+      request_options.push ({:service => ASK_LIBRARIAN, :estimate => get_delivery_time(ASK_LIBRARIAN, nil)})
+      populate_options self.service, request_options unless self.service == ASK_LIBRARIAN
+      
+      # Rails.logger.info "sk274_debug: " + self.alternate_options.inspect
 
       # puts "all items: #{all_items.inspect}"
-
-      best_choice = request_options.pop
-      ask = {:service => 'ask'}
-      request_options.push ask
-      self.request_options = request_options
-      self.service = best_choice
       self.document = document
       
       # Rails.logger.info "sk274_debug: best choice: " + best_choice.inspect
 
     end   
+    
+    def populate_options target, request_options
+      self.alternate_options = []
+      self.request_options = []
+      seen = {}
+      request_options.each do |option|
+        if option[:service] == target
+          self.estimate = option[:estimate] if self.estimate.blank?
+          self.request_options.push option
+        else
+          if seen[option[:service]].blank?
+            self.alternate_options.push option
+            seen[option[:service]] = 1
+          end
+        end
+      end
+    end
 
     ##################### Manipulate holdings data #####################
 
@@ -191,20 +224,23 @@ module BlacklightCornellRequests
     # { :service => SERVICE NAME, :estimate => ESTIMATED DELIVERY TIME }
     # The array is sorted by delivery time estimate, so the first array item should be 
     # the fastest (i.e., the "best") delivery option.
-    def get_delivery_options item
+    def get_delivery_options item, bd_params = {}
 
       patron_type = get_patron_type self.netid
       # Rails.logger.info "sk274_debug: " + "#{self.netid}, #{patron_type}"
 
       if patron_type == 'cornell'
-        options = get_cornell_delivery_options item
+        # Rails.logger.info "sk274_debug: get cornell options"
+        options = get_cornell_delivery_options item, bd_params
       else
+        # Rails.logger.info "sk274_debug: get guest options"
         options = get_guest_delivery_options item
       end
 
       # Get delivery time estimates for each option
       options.each do |option|
         option[:estimate] = get_delivery_time(option[:service], option)
+        option[:iid] = item[:iid]
       end
 
       #return sort_request_options options
@@ -213,11 +249,13 @@ module BlacklightCornellRequests
     end
 
     # Determine delivery options for a single item if the patron is a Cornell affiliate
-    def get_cornell_delivery_options item
+    def get_cornell_delivery_options item, params
 
       item_loan_type = loan_type item[:typeCode]
       # print "item: #{item.inspect}"
       # print "type: #{item_loan_type}"
+      # Rails.logger.info "sk274_debug: loan type: #{item_loan_type}"
+      # Rails.logger.info "sk274_debug: item status: #{item[:status]}"
 
       request_options = []
       if item_loan_type == 'regular' and item[:status] == 'Not Charged'
@@ -227,7 +265,6 @@ module BlacklightCornellRequests
       elsif ((item_loan_type == 'regular' and item[:status] == 'Charged') or
              (item_loan_type == 'regular' and item[:status] == 'Requested'))
         # TODO: Test and fix BD check with real params
-        params = {}
         if borrowDirect_available? params
           request_options.push( {:service => 'bd', 'location' => item[:location] } )
         end
@@ -239,7 +276,6 @@ module BlacklightCornellRequests
              (item_loan_type == 'regular' and item[:status] == 'Lost'))
 
          # TODO: Test and fix BD check with real params
-        params = {}
         if borrowDirect_available? params
           request_options.push( {:service => 'bd', 'location' => item[:location] } )
         end
@@ -250,7 +286,6 @@ module BlacklightCornellRequests
              (item_loan_type == 'day' and item[:status] == 'Requested'))
 
          # TODO: Test and fix BD check with real params
-        params = {}
         if borrowDirect_available? params
           request_options.push( {:service => 'bd', 'location' => item[:location] } )
         end
@@ -266,7 +301,6 @@ module BlacklightCornellRequests
       elsif item_loan_type == 'minute'
 
         # TODO: Test and fix BD check with real params
-        params = {}
         if borrowDirect_available? params
           request_options.push( {:service => 'bd', 'location' => item[:location] } )
         end        
@@ -326,19 +360,19 @@ module BlacklightCornellRequests
 
       case service 
 
-        when 'l2l'
+        when L2L
           if item_data['location'] == LIBRARY_ANNEX
             1
           else
             2
           end
 
-        when 'bd'
+        when BD
           6
-        when 'ill'
+        when ILL
           14
 
-        when 'hold'
+        when HOLD
           ## if it got to this point, it means it is not available and should have Due on xxxx-xx-xx
           dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data['itemStatus'])
           if ! dueDate.nil?
@@ -356,15 +390,15 @@ module BlacklightCornellRequests
             return 180
           end
 
-        when 'recall'
+        when RECALL
           30
-        when 'pda'
+        when PDA
           5
-        when 'purchase'
+        when PURCHASE
           10
-        when 'ask'
+        when ASK_LIBRARIAN
           9999
-        when 'circ'
+        when ASK_CIRCULATION
           9998
         else
           9999
@@ -374,9 +408,16 @@ module BlacklightCornellRequests
     
     def populate_document_values
       unless self.document.nil?
+        # Rails.logger.info "sk274_debug: " + self.document.inspect
         self.isbn = self.document[:isbn_display]
         self.ti = self.document[:title_display]
-        self.au = self.document[:author_display]
+        if !self.document[:author_display].blank?
+          self.au = self.document[:author_display].split('|')[0]
+        elsif !self.document[:author_addl_display].blank?
+          self.au = self.document[:author_addl_display].map { |author| author.split('|')[0] }.join(', ')
+        else
+          self.au = ''
+        end
         create_ill_link
       end
     end
@@ -410,6 +451,57 @@ module BlacklightCornellRequests
       end
       
       self.ill_link = ill_link
+    end
+    
+    def deep_copy(o)
+      Marshal.load(Marshal.dump(o))
+    end
+    
+    ###################### Make Voyager requests ################################
+
+    # Handle a request for a Voyager action
+    # action: callslip|hold|recall
+    # params: { :holding_id (actually item id), :request_action, :library_id, 'latest-date', :reqcomments }
+    # Returns a status to be 'flashed' to the user
+    def make_voyager_request params
+
+      # Need bibid, netid, itemid to proceed
+      if self.bibid.nil?
+        return { :error => I18n.t('blacklight.requests.errors.bibid.blank') }
+      elsif netid.nil? 
+        return { :error => I18n.t('blacklight.requests.errors.email.blank') }
+      elsif params[:holding_id].nil?
+        return { :error => I18n.t('blacklight.requests.errors.holding_id.blank') }
+      end
+
+      # Set up Voyager request URL string
+      voyager_request_handler_url = Rails.configuration.voyager_request_handler_host
+      voyager_request_handler_url ||= request.env['HTTP_HOST']
+      unless voyager_request_handler_url.starts_with?('http')
+        voyager_request_handler_url = "http://#{voyager_request_handler_url}"
+      end
+      unless Rails.configuration.voyager_request_handler_port.blank?
+        voyager_request_handler_url += ":" + Rails.configuration.voyager_request_handler_port.to_s
+      end
+
+      # Assemble complete request URL
+      voyager_request_handler_url += "/holdings/#{params[:request_action]}/#{self.netid}/#{self.bibid}/#{params[:library_id]}"
+      unless params[:holding_id].nil?
+        voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
+      end
+
+      # Send the request
+      # puts voyager_request_handler_url
+      body = { 'reqnna' => params['latest-date'], 'reqcomments' => params[:reqcomments] }
+      result = HTTPClient.post(voyager_request_handler_url, body)
+      response = JSON.parse(result.content)
+      # puts response
+      if response['status'] == 'failed'
+        return { :failure => I18n.t('blacklight.requests.errors.voyager.error') }
+      else
+        return { :success => I18n.t('blacklight.requests.success') }
+      end
+
     end
 
   end

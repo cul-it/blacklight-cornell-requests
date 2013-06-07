@@ -7,6 +7,6 @@ BlacklightCornellRequests::Engine.routes.draw do
   match 'ill/:bibid' =>'request#ill', :as =>'request_ill'
   match 'purchase/:bibid' =>'request#purchase', :as =>'request_purchase'
   match 'ask/:bibid' =>'request#ask', :as =>'request_ask'
-  match 'voyager' => 'request#make_request', :as => 'request_make_request', :via => :post
+  match 'voyager/:bibid' => 'request#make_voyager_request', :as => 'make_voyager_request', :via => :post
   match '/:bibid' => 'request#magic_request', :as => 'magic_request'
 end

@@ -21,10 +21,12 @@ describe BlacklightCornellRequests::Request do
 	  
 	  let(:multivol_b) { { :multivol_b => 1 } }
     let(:multivol_c) { { :multivol_b => 0 } }
+    let(:env_http_host) { 'http://localhost' }
+    let(:request_controller) { BlacklightCornellRequests::RequestController.new() }
 
 		it "returns the request options array, service, and Solr document" do
 			req = FactoryGirl.build(:request, bibid: nil)
-			req.magic_request nil
+			req.magic_request nil, env_http_host
 			
 			req.request_options.class.name.should == "Array"
 			req.service[:service].should == "ask"
@@ -37,35 +39,82 @@ describe BlacklightCornellRequests::Request do
 		context "Testing delivery_options functions" do
 
 			let(:req) { FactoryGirl.build(:request, bibid: nil) }
-			before(:each) { 
-				req.stub(:get_cornell_delivery_options).and_return([{:service => 'ill', 'location' => 'Olin'}, {:service => 'l2l', 'location' => 'Library Annex'}])
-				req.stub(:get_guest_delivery_options).and_return([{:service => 'ask', 'location' => 'Mann'}])
+			# before(:each) { 
+				# req.stub(:get_cornell_delivery_options).and_return([{:service => 'ill', 'location' => 'Olin'}, {:service => 'l2l', 'location' => 'Library Annex'}])
+				# req.stub(:get_guest_delivery_options).and_return([{:service => 'ask', 'location' => 'Mann'}])
+			# }
+			# This item is regular and charged
+			# for cornell request, it should be bd
+			# for guest request, it should be hold
+			let(:item) {
+			  {
+          :href => "http://catalog-test.library.cornell.edu/vxws/record/3507363/items/5511982",
+          :itemid => "5511982",
+          :permLocation => "Olin Library",
+          :location_id => "99",
+          :tempLocation => "",
+          :location => "Olin Library",
+          :callNumber => "PR6068.O924 H36 1998",
+          :copy => "c. 1",
+          :itemBarcode => "31924086342510",
+          :enumeration => "",
+          :chron => "",
+          :year => "",
+          :caption => "",
+          :freeText => "",
+          :typeCode => "3",
+          :typeDesc => "book",
+          :tempType => "0",
+          :itemStatus => "Charged - Due on 2013-06-05",
+          :status => req.item_status("Charged - Due on 2013-06-05"),
+          :spineLabel => "",
+          :itemNote => "0",
+          :onReserve => "N",
+          :exclude_location_id => [181, 188]
+        }
+			}
+			let(:bd_params) {
+			  {
+  			  :isbn => ['0747538492'],
+          :title => 'Harry Potter and the chamber of secrets',
+          :env_http_host => 'http://localhost'
+			  }
 			}
 
 			it "should use get_cornell_delivery_options if patron is Cornell" do 
 				req.netid = 'mjc12' 
-				result = req.get_delivery_options(nil)
-				result[0][:service].should == 'l2l'
+				options = req.get_delivery_options(item, bd_params)
+				options = req.sort_request_options options
+				service = options[0][:service]
+				req.populate_options service, options
+				req.request_options[0][:service].should == BlacklightCornellRequests::Request::BD
 			end
 
 			it "should use get_guest_delivery_options if patron is guest" do 
 				req.netid = 'gid-silterrae'
-				result = req.get_delivery_options(nil)
-				result[0][:service].should == 'ask'
+				options = req.get_delivery_options(item, bd_params)
+        options = req.sort_request_options options
+        service = options[0][:service]
+        req.populate_options service, options
+        req.request_options[0][:service].should == BlacklightCornellRequests::Request::HOLD
 			end
 
 			it "should use get_guest_delivery_options if patron is null" do 
 				req.netid = ''
-				result = req.get_delivery_options(nil)
-				result[0][:service].should == 'ask'
+				options = req.get_delivery_options(item, bd_params)
+        options = req.sort_request_options options
+        service = options[0][:service]
+        req.populate_options service, options
+        req.request_options[0][:service].should == BlacklightCornellRequests::Request::HOLD
 			end
 
 			it "sorts the return array by delivery time" do
 				req.netid = 'mjc12' 
-				req.get_holdings
-				options = req.get_delivery_options(nil)
-				options[0][:service].should == 'l2l'
-				options[0][:estimate].should == 1
+				options = req.get_delivery_options(item, bd_params)
+        options = req.sort_request_options options
+        service = options[0][:service]
+        req.populate_options service, options
+        req.request_options[0][:service].should == BlacklightCornellRequests::Request::BD
 			end
 
 			# Next set of tests act on get_cornell_delivery_options
@@ -572,322 +621,222 @@ describe BlacklightCornellRequests::Request do
 
       context "Patron is a guest" do
       
-      let(:request) {
-        request = FactoryGirl.build(:request, bibid: nil)
-        request.netid = 'gid-silterrae'
-        request
-      }
-      
-      context "Loan type is regular" do
+        let(:request) {
+          request = FactoryGirl.build(:request, bibid: nil)
+          request.netid = 'gid-silterrae'
+          request
+        }
         
-        context "item status is 'not charged'" do
-
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 7924013)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 7924013
-            VCR.use_cassette 'holdings/guest_regular_notcharged' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
-
-          it "sets best option as 'l2l'" do
-            response[:services][0][:service].should == 'l2l'
-          end
-
-        end
-
-        context "item status is 'charged'" do
-
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 3507368)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 3507368
-            VCR.use_cassette 'holdings/guest_regular_charged' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
+        context "Loan type is regular" do
           
-          it "sets best option as 'hold'" do
-            response[:services][0][:service].should == 'hold'
+          context "item status is 'not charged'" do
+  
+            let(:response) {
+              req = run_tests(6370407, {}, 'regular', 'Not Charged', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'l2l'" do
+              response.should == BlacklightCornellRequests::Request::L2L
+            end
+  
+          end
+  
+          context "item status is 'charged'" do
+  
+            let(:response) {
+              req = run_tests(6370407, {}, 'regular', 'Charged', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+            
+            it "sets best option as 'hold'" do
+              response.should == BlacklightCornellRequests::Request::HOLD
+            end
+            
+          end
+  
+          context "Item status is 'requested'" do
+
+            let(:response) {
+              req = run_tests(6370407, {}, 'regular', 'Requested', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'hold'" do
+              response.should == BlacklightCornellRequests::Request::HOLD
+            end
+  
           end
           
-        end
-
-        context "Item status is 'requested'" do
-
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 6370407)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 6370407
-            VCR.use_cassette 'holdings/guest_regular_requested' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
-
-          it "sets best option as 'hold'" do
-            response[:services][0][:service].should == 'hold'
+          context "Item status is 'missing'" do
+            
+            let(:response) {
+              req = run_tests(6370407, {}, 'regular', 'Missing', 'gid-silterrae')
+              req.request_options.size
+            }
+  
+            it "sets no best option" do
+              response.should == 0
+            end
+            
           end
-
-        end
-        
-        context "Item status is 'missing'" do
           
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 3955095)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 3955095
-            VCR.use_cassette 'holdings/guest_regular_missing' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
-
-          it "sets no best option" do
-            response[:services].size().should == 0
+          context "Item status is 'lost'" do
+            
+            let(:response) {
+              req = run_tests(6370407, {}, 'regular', 'Lost', 'gid-silterrae')
+              req.request_options.size
+            }
+  
+            it "sets no best option" do
+              response.should == 0
+            end
+            
           end
           
         end
         
-        context "Item status is 'lost'" do
+        context "Loan type is day" do
           
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 3955095)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 784908
-            VCR.use_cassette 'holdings/guest_regular_lost' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
+          context "item status is 'not charged'" do
 
-          it "sets no best option" do
-            response[:services].size().should == 0
+            let(:response) {
+              req = run_tests(6370407, {}, 'day', 'Not Charged', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'l2l'" do
+              response.should == BlacklightCornellRequests::Request::L2L
+            end
+  
+          end
+  
+          context "item status is 'charged'" do
+
+            let(:response) {
+              req = run_tests(6370407, {}, 'day', 'Charged', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'hold'" do
+              response.should == BlacklightCornellRequests::Request::HOLD
+            end
+            
+          end
+  
+          context "Item status is 'requested'" do
+ 
+            let(:response) {
+              req = run_tests(6370407, {}, 'day', 'Requested', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'hold'" do
+              response.should == BlacklightCornellRequests::Request::HOLD
+            end
+  
+          end
+          
+          context "Item status is 'missing'" do
+            
+            let(:response) {
+              req = run_tests(6370407, {}, 'day', 'Missing', 'gid-silterrae')
+              req.request_options.size
+            }
+  
+            it "sets no best option" do
+              response.should == 0
+            end
+            
+          end
+          
+          context "Item status is 'lost'" do
+            
+            let(:response) {
+              req = run_tests(6370407, {}, 'day', 'Lost', 'gid-silterrae')
+              req.request_options.size
+            }
+  
+            it "sets no best option" do
+              response.should == 0
+            end
+            
           end
           
         end
-        
-      end
-      
-      context "Loan type is day" do
-        
-        context "item status is 'not charged'" do
-
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 7924013)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 3810267
-            VCR.use_cassette 'holdings/guest_day_notcharged' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
-
-          it "sets best option as 'l2l'" do
-            response[:services][0][:service].should == 'l2l'
-          end
-
-        end
-
-        context "item status is 'charged'" do
-
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 3507368)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 1034506
-            VCR.use_cassette 'holdings/guest_day_charged' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
+  
+        context "Loan type is minute" do
           
-          it "sets best option as 'hold'" do
-            response[:services][0][:service].should == 'hold'
+          context "item status is 'not charged'" do
+ 
+            let(:response) {
+              req = run_tests(6370407, {}, 'minute', 'Not Charged', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'circ'" do
+              response.should == BlacklightCornellRequests::Request::ASK_CIRCULATION
+            end
+  
           end
-          
-        end
+  
+          context "item status is 'charged'" do
 
-        context "Item status is 'requested'" do
-
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 6370407)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 7793514
-            VCR.use_cassette 'holdings/guest_day_requested' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
-
-          it "sets best option as 'hold'" do
-            response[:services][0][:service].should == 'hold'
+            let(:response) {
+              req = run_tests(6370407, {}, 'minute', 'Charged', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'circ'" do
+              response.should == BlacklightCornellRequests::Request::ASK_CIRCULATION
+            end
+            
           end
-
-        end
-        
-        context "Item status is 'missing'" do
-          
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 3955095)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 5817333
-            VCR.use_cassette 'holdings/guest_day_missing' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
-
-          it "sets no best option" do
-            response[:services].size().should == 0
+  
+          ## no good example
+          context "Item status is 'requested'" do
+ 
+            let(:response) {
+              req = run_tests(6370407, {}, 'minute', 'Requested', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'circ'" do
+              response.should == BlacklightCornellRequests::Request::ASK_CIRCULATION
+            end
+  
           end
           
-        end
-        
-        context "Item status is 'lost'" do
-          
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 3955095)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 6167260
-            VCR.use_cassette 'holdings/guest_day_lost' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
+          context "Item status is 'missing'" do
 
-          it "sets no best option" do
-            response[:services].size().should == 0
+            let(:response) {
+              req = run_tests(6370407, {}, 'minute', 'Missing', 'gid-silterrae')
+              req.request_options.size
+            }
+  
+            it "sets no best option" do
+              response == 0
+            end
+            
           end
           
-        end
-        
-      end
-
-      context "Loan type is minute" do
-        
-        context "item status is 'not charged'" do
-          
-          let(:response) do
-            run_tests('minute', 'Not Charged', false, 'gid-silterrae')
+          ## don't have good example
+          context "Item status is 'lost'" do
+            
+            let(:response) {
+              req = run_tests(6370407, {}, 'minute', 'Lost', 'gid-silterrae')
+              req.request_options.size
+            }
+  
+            it "sets no best option" do
+              response.should == 0
+            end
+            
           end
-
-          # let(:response) {
-            # # request = FactoryGirl.build(:request, bibid: 7924013)
-            # # request.netid = 'gid-silterrae'
-            # request.bibid = 952938
-            # VCR.use_cassette 'holdings/cornell_minute_notcharged' do
-              # request.get_holdings('retrieve_detail_raw')
-            # end   
-            # request.magic_request multivol_b
-            # request.service
-          # }
-
-          it "sets best option as 'circ'" do
-            # puts response.inspect
-            response[0][:service].should == 'circ'
-          end
-
-        end
-
-        context "item status is 'charged'" do
-          
-          let(:response) do
-            run_tests('minute', 'Charged', false, 'gid-silterrae')
-          end
-
-          # let(:response) {
-            # # request = FactoryGirl.build(:request, bibid: 3507368)
-            # # request.netid = 'gid-silterrae'
-            # request.bibid = 2341898
-            # VCR.use_cassette 'holdings/guest_minute_charged' do
-              # request.get_holdings('retrieve_detail_raw')
-            # end   
-            # request.magic_request multivol_b
-            # request.service
-          # }
-          
-          it "sets best option as 'circ'" do
-            # puts response.inspect
-            response[0][:service].should == 'circ'
-          end
-          
-        end
-
-        ## no good example
-        context "Item status is 'requested'" do
-
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 6370407)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 6370407
-            VCR.use_cassette 'holdings/guest_regular_requested' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
-
-          # it "sets best option as 'circ'" do
-            # response[:services][0][:service].should == 'circ'
-          # end
-
-        end
-        
-        context "Item status is 'missing'" do
-          
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 3955095)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 2197742
-            VCR.use_cassette 'holdings/guest_minute_missing' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
-
-          it "sets no best option" do
-            response[:services].size().should == 0
-          end
-          
-        end
-        
-        ## don't have good example
-        context "Item status is 'lost'" do
-          
-          let(:response) {
-            # request = FactoryGirl.build(:request, bibid: 3955095)
-            # request.netid = 'gid-silterrae'
-            request.bibid = 5976015
-            VCR.use_cassette 'holdings/guest_minute_lost' do
-              request.get_holdings('retrieve_detail_raw')
-            end   
-            request.magic_request multivol_b
-            request.service
-          }
-
-          # it "sets no best option" do
-            # response[:services].size().should == 0
-          # end
           
         end
         
       end
-      
-    end
 
 		end
 
@@ -1169,14 +1118,10 @@ describe BlacklightCornellRequests::Request do
 
  end
 
- def run_tests(loan_type, status, bd, netid, short_day_loan = false)
-
-  r = FactoryGirl.build(:request, bibid: nil) 
-  r.stub(:borrowDirect_available?).and_return(bd)       
-  r.netid = netid
+def run_tests(bibid, bd_params, loan_type, status, netid, short_day_loan = false)
   
-  # puts "#{loan_type}, #{status}, #{bd}, #{netid}"
-
+  req = FactoryGirl.build(:request, bibid: bibid)
+  
   case loan_type
     when 'regular'
       type_code =  3 # book
@@ -1186,8 +1131,42 @@ describe BlacklightCornellRequests::Request do
       type_code = 22 # 1-hour
     else
   end
+  
+  item = {
+          :href => "http://catalog-test.library.cornell.edu/vxws/record/3507363/items/5511982",
+          :itemid => "5511982",
+          :permLocation => "Olin Library",
+          :location_id => "99",
+          :tempLocation => "",
+          :location => "Olin Library",
+          :callNumber => "PR6068.O924 H36 1998",
+          :copy => "c. 1",
+          :itemBarcode => "31924086342510",
+          :enumeration => "",
+          :chron => "",
+          :year => "",
+          :caption => "",
+          :freeText => "",
+          :typeCode => type_code,
+          :typeDesc => "book",
+          :tempType => "0",
+          :itemStatus => status,
+          :status => req.item_status(status),
+          :spineLabel => "",
+          :itemNote => "0",
+          :onReserve => "N",
+          :exclude_location_id => [181, 188]
+        }
+  req.netid = netid
+  options = req.get_delivery_options(item, bd_params)
+  options = req.sort_request_options options
+  if options.size > 0
+    service = options[0][:service]
+  else
+    service = ''
+  end
+  req.populate_options service, options
 
-  return r.get_delivery_options({ :typeCode => type_code, :status => status })
+  return req
 
-
- end
+end
