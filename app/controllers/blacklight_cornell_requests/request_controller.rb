@@ -113,6 +113,31 @@ module BlacklightCornellRequests
 
     end
     
+    def make_purchase_request
+      
+      if params[:name].blank?
+        flash[:error] = I18n.t('blacklight.requests.errors.name.blank')
+      elsif params[:reqstatus].blank?
+        flash[:error] = I18n.t('blacklight.requests.errors.status.blank')
+      elsif params[:reqtitle].blank?
+        flash[:error] = I18n.t('blacklight.requests.errors.title.blank')
+      elsif params[:email].blank?
+        flash[:error] = I18n.t('blacklight.requests.errors.email.blank')
+      elsif params[:email].present?
+        if params[:email].match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/)
+          # Email the form contents to the purchase request staff
+          RequestMailer.email_request(request.env['REMOTE_USER'], params)
+          # TODO: check for mail errors, don't assume that things are working!
+          flash[:success] = I18n.t('blacklight.requests.success')
+        else
+          flash[:error] = I18n.t('blacklight.requests.errors.email.invalid')
+        end
+      end
+      
+      render :partial => '/flash_msg', :layout => false
+    
+    end
+    
   end
   
 end

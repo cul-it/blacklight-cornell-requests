@@ -93,6 +93,11 @@ module BlacklightCornellRequests
         populate_document_values
         if self.document[:multivol_b]
           # Rails.logger.info "test_log: multi volume"
+          all_items.each do |item|
+            request_options.push *item[:services]
+          end
+          # Rails.logger.info "sk274_debug: request_options: " + request_options.inspect
+          request_options = sort_request_options request_options
         else
           # Rails.logger.info "test_log: non multi volume"
           all_items.each do |item|
@@ -258,53 +263,65 @@ module BlacklightCornellRequests
       # Rails.logger.info "sk274_debug: item status: #{item[:status]}"
 
       request_options = []
-      if item_loan_type == 'regular' and item[:status] == 'Not Charged'
+      if item_loan_type == 'nocirc'
+        # if borrowDirect_available? bdParams
+          # request_options.push({ :service => BD, :iid => [], :estimate => get_bd_delivery_time })
+          # if target.blank?
+            # target = BD
+          # end
+        # end
+        # request_options.push({ :service => ILL, :iid => [], :estimate => get_ill_delivery_time })
+        if borrowDirect_available? params
+          request_options.push( {:service => BD, 'location' => item[:location] } )
+        end
+        request_options.push({:service => ILL, 'location' => item[:location]})
+      elsif item_loan_type == 'regular' and item[:status] == 'Not Charged'
 
-        request_options.push({:service => 'l2l', 'location' => item[:location] } )
+        request_options.push({:service => L2L, 'location' => item[:location] } )
 
       elsif ((item_loan_type == 'regular' and item[:status] == 'Charged') or
              (item_loan_type == 'regular' and item[:status] == 'Requested'))
         # TODO: Test and fix BD check with real params
         if borrowDirect_available? params
-          request_options.push( {:service => 'bd', 'location' => item[:location] } )
+          request_options.push( {:service => BD, 'location' => item[:location] } )
         end
-        request_options.push({:service => 'ill', 'location' => item[:location]}, 
-                             {:service => 'recall','location' => item[:location]},
-                             {:service => 'hold', 'location' => item[:location]})
+        request_options.push({:service => ILL, 'location' => item[:location]}, 
+                             {:service => RECALL,'location' => item[:location]},
+                             {:service => HOLD, 'location' => item[:location]})
 
       elsif ((item_loan_type == 'regular' and item[:status] == 'Missing') or
              (item_loan_type == 'regular' and item[:status] == 'Lost'))
 
          # TODO: Test and fix BD check with real params
         if borrowDirect_available? params
-          request_options.push( {:service => 'bd', 'location' => item[:location] } )
+          request_options.push( {:service => BD, 'location' => item[:location] } )
         end
-        request_options.push({:service => 'purchase', 'location' => item[:location]}, 
-                             {:service => 'ill','location' => item[:location]})   
+        request_options.push({:service => PURCHASE, 'location' => item[:location]}, 
+                             {:service => ILL,'location' => item[:location]})   
 
       elsif ((item_loan_type == 'day' and item[:status] == 'Charged') or
              (item_loan_type == 'day' and item[:status] == 'Requested'))
 
          # TODO: Test and fix BD check with real params
         if borrowDirect_available? params
-          request_options.push( {:service => 'bd', 'location' => item[:location] } )
+          request_options.push( {:service => BD, 'location' => item[:location] } )
         end
-        request_options.push( {:service => 'ill', 'location' => item[:location] } )       
-        request_options.push( {:service => 'hold', 'location' => item[:location] } )
+        request_options.push( {:service => ILL, 'location' => item[:location] } )       
+        request_options.push( {:service => HOLD, 'location' => item[:location] } )
 
       elsif (item_loan_type == 'day' and item[:status] == 'Not Charged')
 
         unless Request.no_l2l_day_loan_types.include? item[:typeCode]
-          request_options.push( {:service => 'l2l', 'location' => item[:location] } )
+          request_options.push( {:service => L2L, 'location' => item[:location] } )
         end
 
       elsif item_loan_type == 'minute'
 
         # TODO: Test and fix BD check with real params
         if borrowDirect_available? params
-          request_options.push( {:service => 'bd', 'location' => item[:location] } )
+          request_options.push( {:service => BD, 'location' => item[:location] } )
         end        
-        request_options.push( {:service => 'circ', 'location' => item[:location] } )
+        request_options.push( {:service => ASK_CIRCULATION, 'location' => item[:location] } )
 
       end
 
@@ -316,7 +333,9 @@ module BlacklightCornellRequests
       item_loan_type = loan_type item[:typeCode]
       request_options = []
 
-      if item_loan_type == 'regular' and item[:status] == 'Not Charged'
+      if item_loan_type == 'nocirc'
+        # do nothing
+      elsif item_loan_type == 'regular' and item[:status] == 'Not Charged'
         request_options = [ { :service => L2L, 'location' => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
       elsif item_loan_type == 'regular' and item[:status] == 'Charged'
         request_options = [ { :service => HOLD, 'location' => item[:location] } ]

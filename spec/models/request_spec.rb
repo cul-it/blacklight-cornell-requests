@@ -616,6 +616,15 @@ describe BlacklightCornellRequests::Request do
 					end
 
 				end
+				
+				context "Loan type is nocirc" do
+				  before(:all) {
+				    @options = run_cornell_tests('nocirc', 'Not Charged', false)
+				  }
+				  it "sets best option as ill" do
+  				  @options[0][:service].should == BlacklightCornellRequests::Request::ILL
+  				end
+				end
 
 			 end
 
@@ -834,6 +843,19 @@ describe BlacklightCornellRequests::Request do
             
           end
           
+        end
+        
+        context "Loan type is nocirc" do
+          
+          let(:response) {
+            req = run_tests(6370407, {}, 'nocirc', 'Not Charged', 'gid-silterrae')
+            req.request_options.size
+          }
+  
+          it "sets no best option" do
+            response.should == 0
+          end
+            
         end
         
       end
@@ -1110,6 +1132,8 @@ describe BlacklightCornellRequests::Request do
 			type_code = short_day_loan ? 10 : 11 # 10 = 1-day, 11 = 3-day
 		when 'minute'
 			type_code = 22 # 1-hour
+	  when 'nocirc'
+      type_code = 9 # no circulation
 		else
 	end
 
@@ -1129,6 +1153,8 @@ def run_tests(bibid, bd_params, loan_type, status, netid, short_day_loan = false
       type_code = short_day_loan ? 10 : 11 # 10 = 1-day, 11 = 3-day
     when 'minute'
       type_code = 22 # 1-hour
+    when 'nocirc'
+      type_code = 9 # no circulation
     else
   end
   
