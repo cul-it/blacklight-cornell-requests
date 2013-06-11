@@ -4,6 +4,8 @@ require 'blacklight_cornell_requests/borrow_direct'
 module BlacklightCornellRequests
   class Request
 
+    # Following set of constants defines the views that should be rendered
+    # for each library service.
     L2L = 'l2l'
     BD = 'bd'
     HOLD = 'hold'
@@ -13,6 +15,8 @@ module BlacklightCornellRequests
     ILL = 'ill'
     ASK_CIRCULATION = 'circ'
     ASK_LIBRARIAN = 'ask'
+
+
     LIBRARY_ANNEX = 'Library Annex'
     HOLD_PADDING_TIME = 3
 

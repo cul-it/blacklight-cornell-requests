@@ -54,6 +54,8 @@ module BlacklightCornellRequests
       
     end
 
+    # These one-line service functions simply return the name of the view
+    # that should be rendered for each one.
     def l2l
       return magic_request Request::L2L
     end
