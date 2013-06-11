@@ -76,40 +76,41 @@ module BlacklightCornellRequests
                          })
         end
       end
-      self.items = all_items
 
-      # TODO: Do something useful with sorted items
+      self.items = all_items
       self.document = document
+
       unless document.nil?
         # Iterate through all items and get list of delivery methods
         bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
-        # Rails.logger.info "sk274_debug: document: " + document.inspect
-        # Rails.logger.info "sk274_debug: bd_params: " + bd_params.inspect
         all_items.each do |item|
           services = get_delivery_options item, bd_params
           item[:services] = services
-          # Rails.logger.info "sk274_debug: " + services.inspect
         end
         populate_document_values
+
+        # Determine whether this is a multi-volume thing or not (i.e, multi-copy)
+        # They will be handled differently depending
         if self.document[:multivol_b]
-          # Rails.logger.info "test_log: multi volume"
+
+          # Multi-volume
           all_items.each do |item|
             request_options.push *item[:services]
           end
-          # Rails.logger.info "sk274_debug: request_options: " + request_options.inspect
           request_options = sort_request_options request_options
+
         else
-          # Rails.logger.info "test_log: non multi volume"
+
+          # Multi-copy
           all_items.each do |item|
             request_options.push *item[:services]
           end
-          # Rails.logger.info "sk274_debug: request_options: " + request_options.inspect
           request_options = sort_request_options request_options
+        
         end
+
       end
-      
-      # Rails.logger.info "sk274_debug: " + request_options.inspect
-      
+            
       if !target.blank?
         self.service = target
       elsif request_options.present?
@@ -117,17 +118,12 @@ module BlacklightCornellRequests
       else
         self.service = ASK_LIBRARIAN
       end
-      # Rails.logger.info "sk274_debug: " + self.service.inspect
+
       request_options.push ({:service => ASK_LIBRARIAN, :estimate => get_delivery_time(ASK_LIBRARIAN, nil)})
       populate_options self.service, request_options unless self.service == ASK_LIBRARIAN
       
-      # Rails.logger.info "sk274_debug: " + self.alternate_options.inspect
-
-      # puts "all items: #{all_items.inspect}"
       self.document = document
       
-      # Rails.logger.info "sk274_debug: best choice: " + best_choice.inspect
-
     end   
     
     def populate_options target, request_options
@@ -161,8 +157,6 @@ module BlacklightCornellRequests
       # return nil if there is no meaningful response (e.g., invalid bibid)
       return nil if response[self.bibid.to_s].nil?
       
-      # Rails.logger.info "sk274_debug: " + response.inspect
-
       self.holdings_data = response
 
     end
@@ -257,10 +251,6 @@ module BlacklightCornellRequests
     def get_cornell_delivery_options item, params
 
       item_loan_type = loan_type item[:typeCode]
-      # print "item: #{item.inspect}"
-      # print "type: #{item_loan_type}"
-      # Rails.logger.info "sk274_debug: loan type: #{item_loan_type}"
-      # Rails.logger.info "sk274_debug: item status: #{item[:status]}"
 
       request_options = []
       if item_loan_type == 'nocirc'
@@ -427,7 +417,6 @@ module BlacklightCornellRequests
     
     def populate_document_values
       unless self.document.nil?
-        # Rails.logger.info "sk274_debug: " + self.document.inspect
         self.isbn = self.document[:isbn_display]
         self.ti = self.document[:title_display]
         if !self.document[:author_display].blank?

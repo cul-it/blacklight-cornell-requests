@@ -8,7 +8,7 @@
         Select a copy:
       -elsif (@iis.length == 1)
         This copy:
-    -if (@iis.length > 1)
+    -if (@iis.length > 1 and @document[:multivol_b].nil?)
       .controls
         %input(id="copy-any" class="copy-select" type="radio" name="holding_id" value="" data-exclude-location="[]")
         %label.radio-label{ :for => "copy-any"} Any Copy
