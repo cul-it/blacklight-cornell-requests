@@ -88,17 +88,27 @@ module BlacklightCornellRequests
           item[:services] = services
         end
         populate_document_values
+
+        # Determine whether this is a multi-volume thing or not (i.e, multi-copy)
+        # They will be handled differently depending
         if self.document[:multivol_b]
+
+          # Multi-volume
           all_items.each do |item|
             request_options.push *item[:services]
           end
           request_options = sort_request_options request_options
+
         else
+
+          # Multi-copy
           all_items.each do |item|
             request_options.push *item[:services]
           end
           request_options = sort_request_options request_options
+        
         end
+
       end
             
       if !target.blank?
