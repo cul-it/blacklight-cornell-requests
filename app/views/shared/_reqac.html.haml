@@ -19,7 +19,7 @@
         -else
           %input(id="copy-#{copyn}" class="copy-select" type="radio" name="holding_id" value="#{copyn}" data-exclude-location="#{copyd[:exclude_location_id]}")
         %label.radio-label{ :for => "copy-#{copyn}"}
-          = "#{copyd[:location]} #{copyd[:copy]} #{copyd[:enumeration]}"
+          = "#{copyd[:location]} #{copyd[:enumeration]} #{copyd[:copy]}"
           %span.copy-callnumber
             = copyd[:call_number]
           -if copyd[:chron].present?
