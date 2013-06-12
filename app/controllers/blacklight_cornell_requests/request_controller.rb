@@ -29,23 +29,27 @@ module BlacklightCornellRequests
       @pub_info = req.pub_info
       
       @iis = {}
-      req.request_options.each do |item|
-        iid = item[:iid]
-        @iis[iid['itemid']] = {
-            :location => iid['location'],
-            :location_id => iid['location_id'],
-            :call_number => iid['callNumber'],
-            :copy => iid['copy'],
-            :enumeration => iid['enumeration'],
-            :url => iid['url'],
-            :chron => iid['chron'],
-            :exclude_location_id => iid['exclude_location_id']
-        }
+      unless req.request_options.nil?
+        req.request_options.each do |item|
+          iid = item[:iid]
+          @iis[iid['itemid']] = {
+              :location => iid['location'],
+              :location_id => iid['location_id'],
+              :call_number => iid['callNumber'],
+              :copy => iid['copy'],
+              :enumeration => iid['enumeration'],
+              :url => iid['url'],
+              :chron => iid['chron'],
+              :exclude_location_id => iid['exclude_location_id']
+          }
+        end
       end
       
       @alternate_request_options = []
-      req.alternate_options.each do |option|
-        @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
+      unless req.alternate_options.nil?
+        req.alternate_options.each do |option|
+          @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
+        end
       end
       
       # Rails.logger.info "sk274_debug: " + @alternate_request_options.inspect

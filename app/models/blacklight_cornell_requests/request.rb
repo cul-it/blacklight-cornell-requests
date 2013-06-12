@@ -66,18 +66,21 @@ module BlacklightCornellRequests
       # Get item status and location for each item in each holdings record; store in all_items
       all_items = []
       item_status = 'Charged'
-      holdings = self.holdings_data[self.bibid.to_s]['records']
-      holdings.each do |h|
-        items = h['item_status']['itemdata']
-        items.each do |i|
-          status = item_status i['itemStatus']
-          iid = deep_copy(i)
-          all_items.push({ :id => i['itemid'], 
-                           :status => status, 
-                           'location' => i[:location],
-                           :typeCode => i['typeCode'],
-                           :iid => iid
-                         })
+      
+      unless self.holdings_data.nil?
+        holdings = self.holdings_data[self.bibid.to_s]['records']
+        holdings.each do |h|
+          items = h['item_status']['itemdata']
+          items.each do |i|
+            status = item_status i['itemStatus']
+            iid = deep_copy(i)
+            all_items.push({ :id => i['itemid'], 
+                             :status => status, 
+                             'location' => i[:location],
+                             :typeCode => i['typeCode'],
+                             :iid => iid
+                           })
+          end
         end
       end
 
@@ -156,7 +159,12 @@ module BlacklightCornellRequests
 
       return nil unless self.bibid
 
-      response = JSON.parse(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/#{type}/#{self.bibid}"))
+      begin
+        response = JSON.parse(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/#{type}/#{self.bibid}"))
+      rescue HTTPClient::BadResponseError
+        Rails.logger.error 'ERROR: Couldn\'t connect to holdings service'
+        return nil
+      end
 
       # return nil if there is no meaningful response (e.g., invalid bibid)
       return nil if response[self.bibid.to_s].nil?
