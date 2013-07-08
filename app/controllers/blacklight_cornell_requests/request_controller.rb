@@ -98,17 +98,26 @@ module BlacklightCornellRequests
 
       # Validate the form data
       if params[:holding_id].blank?
-        flash[:error] = I18n.t('blacklight.requests.errors.holding_id.blank')
+        flash[:error] = I18n.t('requests.errors.holding_id.blank')
       elsif params[:library_id].blank?
-        flash[:error] = I18n.t('blacklight.requests.errors.library_id.blank')
+        flash[:error] = I18n.t('requests.errors.library_id.blank')
       else
         # Hand off the data to the request model for sending
         req = BlacklightCornellRequests::Request.new(params[:bibid])
         req.netid = request.env['REMOTE_USER']
         response = req.make_voyager_request params
-        flash[response.keys[0]] = response.values[0]
+
+        if response[:failure].blank?
+          flash[:success] = I18n.t('requests.success')
+        else
+          flash[:error] = I18n.t('requests.failure')
+        end
+
       end
-        
+
+
+      Rails.logger.debug "mjc12test: flash = #{flash.inspect}"
+
       render :partial => '/flash_msg', :layout => false
 
     end
@@ -116,13 +125,13 @@ module BlacklightCornellRequests
     def make_purchase_request
       
       if params[:name].blank?
-        flash[:error] = I18n.t('blacklight.requests.errors.name.blank')
+        flash[:error] = I18n.t('requests.errors.name.blank')
       elsif params[:reqstatus].blank?
-        flash[:error] = I18n.t('blacklight.requests.errors.status.blank')
+        flash[:error] = I18n.t('requests.errors.status.blank')
       elsif params[:reqtitle].blank?
-        flash[:error] = I18n.t('blacklight.requests.errors.title.blank')
+        flash[:error] = I18n.t('requests.errors.title.blank')
       elsif params[:email].blank?
-        flash[:error] = I18n.t('blacklight.requests.errors.email.blank')
+        flash[:error] = I18n.t('requests.errors.email.blank')
       elsif params[:email].present?
         if params[:email].match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/)
           # Email the form contents to the purchase request staff
@@ -130,7 +139,7 @@ module BlacklightCornellRequests
           # TODO: check for mail errors, don't assume that things are working!
           flash[:success] = I18n.t('blacklight.requests.success')
         else
-          flash[:error] = I18n.t('blacklight.requests.errors.email.invalid')
+          flash[:error] = I18n.t('requests.errors.email.invalid')
         end
       end
       

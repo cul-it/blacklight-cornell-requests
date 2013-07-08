@@ -123,8 +123,25 @@ module BlacklightCornellRequests
       populate_options self.service, request_options unless self.service == ASK_LIBRARIAN
       
       self.document = document
+      test_vols all_items
       
     end   
+
+    def test_vols items
+
+      sorted_items = {}
+      items.each do |i|
+        Rails.logger.debug "mjc12test: #{i[:iid]['enumeration']}"
+        # sorted_items[i['enumeration']].push i
+      end
+
+      # sorted_items.each do |s|
+
+      #   Rails.logger.debug "mjc12test: #{s}"
+
+      # end
+
+    end
     
     def populate_options target, request_options
       self.alternate_options = []
@@ -475,11 +492,11 @@ module BlacklightCornellRequests
 
       # Need bibid, netid, itemid to proceed
       if self.bibid.nil?
-        return { :error => I18n.t('blacklight.requests.errors.bibid.blank') }
+        return { :error => I18n.t('requests.errors.bibid.blank') }
       elsif netid.nil? 
-        return { :error => I18n.t('blacklight.requests.errors.email.blank') }
+        return { :error => I18n.t('requests.errors.email.blank') }
       elsif params[:holding_id].nil?
-        return { :error => I18n.t('blacklight.requests.errors.holding_id.blank') }
+        return { :error => I18n.t('requests.errors.holding_id.blank') }
       end
 
       # Set up Voyager request URL string
@@ -498,6 +515,9 @@ module BlacklightCornellRequests
         voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
       end
 
+            Rails.logger.debug "mjc12test: fired #{voyager_request_handler_url}"
+
+
       # Send the request
       # puts voyager_request_handler_url
       body = { 'reqnna' => params['latest-date'], 'reqcomments' => params[:reqcomments] }
@@ -505,9 +525,9 @@ module BlacklightCornellRequests
       response = JSON.parse(result.content)
       # puts response
       if response['status'] == 'failed'
-        return { :failure => I18n.t('blacklight.requests.errors.voyager.error') }
+        return { :failure => I18n.t('requests.failure') }
       else
-        return { :success => I18n.t('blacklight.requests.success') }
+        return { :success => I18n.t('requests.success') }
       end
 
     end
