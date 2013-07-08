@@ -1,7 +1,7 @@
 en:
   requests:
     success: 'Your request was submitted successfully.'
-    failure: 'Your request failed, please try again.'
+    failure: 'Your request could not be completed. Please contact a librarian for assistance.'
     errors:
       bibid:
         blank: 'No record has been selected for a request.'
