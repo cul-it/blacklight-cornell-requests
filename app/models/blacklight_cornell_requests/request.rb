@@ -4,6 +4,8 @@ require 'blacklight_cornell_requests/borrow_direct'
 module BlacklightCornellRequests
   class Request
 
+    # Following set of constants defines the views that should be rendered
+    # for each library service.
     L2L = 'l2l'
     BD = 'bd'
     HOLD = 'hold'
@@ -13,6 +15,8 @@ module BlacklightCornellRequests
     ILL = 'ill'
     ASK_CIRCULATION = 'circ'
     ASK_LIBRARIAN = 'ask'
+
+
     LIBRARY_ANNEX = 'Library Annex'
     HOLD_PADDING_TIME = 3
 
@@ -64,25 +68,31 @@ module BlacklightCornellRequests
       # Get item status and location for each item in each holdings record; store in all_items
       all_items = []
       item_status = 'Charged'
-      holdings = self.holdings_data[self.bibid.to_s]['records']
-      holdings.each do |h|
-        items = h['item_status']['itemdata']
-        items.each do |i|
-          # If volume is specified, only populate items with matching enumeration values
-         # Rails.logger.debug "volume: #{volume}, enum: #{i['enumeration']}"
-          next if (!volume.blank? and volume != i['enumeration'])
-               #     Rails.logger.debug "Adding an item"
 
-          status = item_status i['itemStatus']
-          iid = deep_copy(i)
-          all_items.push({ :id => i['itemid'], 
-                           :status => status, 
-                           'location' => i[:location],
-                           :typeCode => i['typeCode'],
-                           :enumeration => i['enumeration'],
-                           :iid => iid
-                         })
+      unless self.holdings_data.nil?
+
+        holdings = self.holdings_data[self.bibid.to_s]['records']
+        holdings.each do |h|
+          items = h['item_status']['itemdata']
+          items.each do |i|
+            # If volume is specified, only populate items with matching enumeration values
+           # Rails.logger.debug "volume: #{volume}, enum: #{i['enumeration']}"
+            next if (!volume.blank? and volume != i['enumeration'])
+                 #     Rails.logger.debug "Adding an item"
+
+            status = item_status i['itemStatus']
+            iid = deep_copy(i)
+            all_items.push({ :id => i['itemid'], 
+                             :status => status, 
+                             'location' => i[:location],
+                             :typeCode => i['typeCode'],
+                             :enumeration => i['enumeration'],
+                             :iid => iid
+                           })
+          end
+        
         end
+
       end
 
       self.items = all_items
@@ -174,7 +184,12 @@ module BlacklightCornellRequests
 
       return nil unless self.bibid
 
-      response = JSON.parse(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/#{type}/#{self.bibid}"))
+      begin
+        response = JSON.parse(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/#{type}/#{self.bibid}"))
+      rescue HTTPClient::BadResponseError
+        Rails.logger.error 'ERROR: Couldn\'t connect to holdings service'
+        return nil
+      end
 
       # return nil if there is no meaningful response (e.g., invalid bibid)
       return nil if response[self.bibid.to_s].nil?
