@@ -22,6 +22,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'httpclient'
   s.add_dependency 'net-ldap'
   s.add_dependency 'blacklight'
+  s.add_dependency 'i18n'
 
   s.add_development_dependency "sqlite3"
 
