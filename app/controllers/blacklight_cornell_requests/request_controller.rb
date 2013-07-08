@@ -13,7 +13,7 @@ module BlacklightCornellRequests
       
       req = BlacklightCornellRequests::Request.new(@id)
       req.netid = request.env['REMOTE_USER']
-      req.magic_request @document, request.env['HTTP_HOST'], target
+      req.magic_request @document, request.env['HTTP_HOST'], {:target => target, :volume => params[:volume]}
       
       if ! req.service.nil?
         @service = req.service
@@ -29,28 +29,36 @@ module BlacklightCornellRequests
       @pub_info = req.pub_info
       
       @iis = {}
-      req.request_options.each do |item|
-        iid = item[:iid]
-        @iis[iid['itemid']] = {
-            :location => iid['location'],
-            :location_id => iid['location_id'],
-            :call_number => iid['callNumber'],
-            :copy => iid['copy'],
-            :enumeration => iid['enumeration'],
-            :url => iid['url'],
-            :chron => iid['chron'],
-            :exclude_location_id => iid['exclude_location_id']
-        }
-      end
+        
+      if req.volumes.present? and params[:volume].blank?
+        @volumes = req.volumes
+        render 'shared/_volume_select'
+        return
+      elsif req.request_options.present?
+        req.request_options.each do |item|
+          iid = item[:iid]
+          @iis[iid['itemid']] = {
+              :location => iid['location'],
+              :location_id => iid['location_id'],
+              :call_number => iid['callNumber'],
+              :copy => iid['copy'],
+              :enumeration => iid['enumeration'],
+              :url => iid['url'],
+              :chron => iid['chron'],
+              :exclude_location_id => iid['exclude_location_id']
+          }
+        end
       
-      @alternate_request_options = []
-      req.alternate_options.each do |option|
-        @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
+        @alternate_request_options = []
+        req.alternate_options.each do |option|
+          @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
+        end
+
       end
       
       # Rails.logger.info "sk274_debug: " + @alternate_request_options.inspect
-      
       render @service
+
       
     end
 

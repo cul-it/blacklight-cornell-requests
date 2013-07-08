@@ -22,7 +22,7 @@ module BlacklightCornellRequests
     include BorrowDirect
 
     attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :alternate_options
-    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items
+    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items, :volumes
     attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN
     validates_presence_of :bibid
     def save(validate = true)
@@ -42,8 +42,10 @@ module BlacklightCornellRequests
     end
 
     ##################### Calculate optimum request method ##################### 
-    def magic_request(document, env_http_host, target='')
+    def magic_request(document, env_http_host, options = {})
 
+      target = options[:target]
+      volume = options[:volume]
       request_options = []
       alternate_options = []
       service = ASK_LIBRARIAN
@@ -66,12 +68,18 @@ module BlacklightCornellRequests
       holdings.each do |h|
         items = h['item_status']['itemdata']
         items.each do |i|
+          # If volume is specified, only populate items with matching enumeration values
+         # Rails.logger.debug "volume: #{volume}, enum: #{i['enumeration']}"
+          next if (!volume.blank? and volume != i['enumeration'])
+               #     Rails.logger.debug "Adding an item"
+
           status = item_status i['itemStatus']
           iid = deep_copy(i)
           all_items.push({ :id => i['itemid'], 
                            :status => status, 
                            'location' => i[:location],
                            :typeCode => i['typeCode'],
+                           :enumeration => i['enumeration'],
                            :iid => iid
                          })
         end
@@ -91,13 +99,14 @@ module BlacklightCornellRequests
 
         # Determine whether this is a multi-volume thing or not (i.e, multi-copy)
         # They will be handled differently depending
-        if self.document[:multivol_b]
+        if self.document[:multivol_b] and volume.blank?
 
           # Multi-volume
+          volumes = {}
           all_items.each do |item|
-            request_options.push *item[:services]
+            volumes[item[:enumeration]] = 1
           end
-          request_options = sort_request_options request_options
+          self.volumes = volumes.keys.sort
 
         else
 
@@ -123,25 +132,8 @@ module BlacklightCornellRequests
       populate_options self.service, request_options unless self.service == ASK_LIBRARIAN
       
       self.document = document
-      test_vols all_items
       
     end   
-
-    def test_vols items
-
-      sorted_items = {}
-      items.each do |i|
-        Rails.logger.debug "mjc12test: #{i[:iid]['enumeration']}"
-        # sorted_items[i['enumeration']].push i
-      end
-
-      # sorted_items.each do |s|
-
-      #   Rails.logger.debug "mjc12test: #{s}"
-
-      # end
-
-    end
     
     def populate_options target, request_options
       self.alternate_options = []
