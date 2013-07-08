@@ -106,7 +106,7 @@ module BlacklightCornellRequests
           all_items.each do |item|
             volumes[item[:enumeration]] = 1
           end
-          self.volumes = volumes.keys.sort
+          self.volumes = sort_volumes(volumes.keys)
 
         else
 
@@ -150,6 +150,19 @@ module BlacklightCornellRequests
           end
         end
       end
+    end
+
+    # Sort volumes in their logical order for display.
+    # Volume strings typically look like 'v.1', 'v21-22', 'index v.1-10', etc.
+    def sort_volumes(volumes)
+
+      volumes = volumes.sort_by do |v|
+        a, b, c = v.split(/[\.\-]/)      
+        [a, Integer(b)]
+      end
+
+      volumes
+
     end
 
     ##################### Manipulate holdings data #####################
