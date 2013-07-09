@@ -70,7 +70,7 @@ module BlacklightCornellRequests
         items.each do |i|
           # If volume is specified, only populate items with matching enumeration values
          # Rails.logger.debug "volume: #{volume}, enum: #{i['enumeration']}"
-          next if (!volume.blank? and volume != i['enumeration'])
+          next if (!volume.blank? and ( volume != i['enumeration'] and volume != i['chron'] and volume != i['year']))
                #     Rails.logger.debug "Adding an item"
 
           status = item_status i['itemStatus']
@@ -80,6 +80,8 @@ module BlacklightCornellRequests
                            'location' => i[:location],
                            :typeCode => i['typeCode'],
                            :enumeration => i['enumeration'],
+                           :chron => i['chron'],
+                           :year => i['year'],
                            :iid => iid
                          })
         end
@@ -89,6 +91,7 @@ module BlacklightCornellRequests
       self.document = document
 
       unless document.nil?
+
         # Iterate through all items and get list of delivery methods
         bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
         all_items.each do |item|
@@ -104,8 +107,11 @@ module BlacklightCornellRequests
           # Multi-volume
           volumes = {}
           all_items.each do |item|
-            volumes[item[:enumeration]] = 1
+            volumes[item[:enumeration]] = 1 unless item[:enumeration].blank? 
+            volumes[item[:chron]] = 1 unless item[:chron].blank?
+            volumes[item[:year]] = 1 unless item[:year].blank?
           end
+
           self.volumes = sort_volumes(volumes.keys)
 
         else
@@ -119,7 +125,7 @@ module BlacklightCornellRequests
         end
 
       end
-            
+  
       if !target.blank?
         self.service = target
       elsif request_options.present?
@@ -157,8 +163,17 @@ module BlacklightCornellRequests
     def sort_volumes(volumes)
 
       volumes = volumes.sort_by do |v|
-        a, b, c = v.split(/[\.\-]/)      
-        [a, Integer(b)]
+
+        if v.is_a? Integer
+          [Integer(v)]
+        else
+          a, b, c = v.split(/[\.\-]/) 
+          if b.nil?
+            [a]
+          else
+            [a, Integer(b)]
+          end
+        end
       end
 
       volumes
@@ -520,7 +535,7 @@ module BlacklightCornellRequests
         voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
       end
 
-            Rails.logger.debug "mjc12test: fired #{voyager_request_handler_url}"
+      #Rails.logger.debug "mjc12test: fired #{voyager_request_handler_url}"
 
 
       # Send the request
