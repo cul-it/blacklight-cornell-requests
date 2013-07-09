@@ -2,108 +2,160 @@ require_dependency "blacklight_cornell_requests/application_controller"
 
 module BlacklightCornellRequests
   
-  L2L = 'l2l'
-  BD = 'bd'
-  HOLD = 'hold'
-  RECALL = 'recall'
-  PURCHASE = 'purchase' # Note: this is a *purchase request*, which is different from a patron-driven acquisition
-  PDA = 'pda'
-  ILL = 'ill'
-  ASK_CIRCULATION = 'circ'
-  ASK_LIBRARIAN = 'ask'
-  ## day after 17, reserve
-  IRREGULAR_LOAN_TYPE = {
-    :DAY => {
-      '1'  => 1,
-      '5'  => 1,
-      '6'  => 1,
-      '7'  => 1,
-      '8'  => 1,
-      '10' => 1,
-      '11' => 1,
-      '13' => 1,
-      '14' => 1,
-      '15' => 1,
-      '17' => 1,
-      '18' => 1,
-      '19' => 1,
-      '20' => 1,
-      '21' => 1,
-      '23' => 1,
-      '24' => 1,
-      '24' => 1,
-      '25' => 1,
-      '28' => 1,
-      '33' => 1
-      },
-    :MINUTE => {
-      '12' => 1,
-      '16' => 1,
-      '22' => 1,
-      '26' => 1,
-      '27' => 1,
-      '29' => 1,
-      '30' => 1,
-      '31' => 1,
-      '32' => 1,
-      '34' => 1,
-      '35' => 1,
-      '36' => 1,
-      '37' => 1
-    },
-    # day loan items with a loan period of 1-2 days cannot use L2L
-    :NO_L2L => {
-      '10' => 1,
-      '17' => 1,
-      '23' => 1,
-      '24' => 1
-    },
-    :NOCIRC => {
-      '9'  => 1
-    }
-  }
-  LIBRARY_ANNEX = 'Library Annex'
-  HOLD_PADDING_TIME = 3
-  
   class RequestController < ApplicationController
-    def request_item target=''
-      target = 'default' if target.blank?
-      render target
-    end
+
+    include Blacklight::SolrHelper
     
-    def _display request_options, service, doc
+    def magic_request target=''
+      
+      @id = params[:bibid]
+      resp, @document = get_solr_response_for_doc_id(@id)
+      
+      req = BlacklightCornellRequests::Request.new(@id)
+      req.netid = request.env['REMOTE_USER']
+      req.magic_request @document, request.env['HTTP_HOST'], {:target => target, :volume => params[:volume]}
+      
+      if ! req.service.nil?
+        @service = req.service
+      else
+        @service = { :service => BlacklightCornellRequests::Request::ASK_LIBRARIAN }
+      end
+      
+      @estimate = req.estimate
+      @ti = req.ti
+      @au = req.au
+      @isbn = req.isbn
+      @ill_link = req.ill_link
+      @pub_info = req.pub_info
+      
+      @iis = {}
+        
+      if req.volumes.present? and params[:volume].blank?
+        @volumes = req.volumes
+        render 'shared/_volume_select'
+        return
+      elsif req.request_options.present?
+        req.request_options.each do |item|
+          iid = item[:iid]
+          @iis[iid['itemid']] = {
+              :location => iid['location'],
+              :location_id => iid['location_id'],
+              :call_number => iid['callNumber'],
+              :copy => iid['copy'],
+              :enumeration => iid['enumeration'],
+              :url => iid['url'],
+              :chron => iid['chron'],
+              :exclude_location_id => iid['exclude_location_id']
+          }
+        end
+      
+        @alternate_request_options = []
+        req.alternate_options.each do |option|
+          @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
+        end
+
+      end
+      
+      render @service
+
+      
     end
 
+    # These one-line service functions simply return the name of the view
+    # that should be rendered for each one.
     def l2l
-      return request_item L2L
+      return magic_request Request::L2L
     end
 
     def hold
-      return request_item HOLD
+      return magic_request Request::HOLD
     end
 
     def recall
-      return request_item RECALL
+      return magic_request Request::RECALL
     end
 
     def bd
-      return request_item BD
+      return magic_request Request::BD
     end
 
     def ill
-      return request_item ILL
+      return magic_request Request::ILL
     end
 
     def purchase
-      return request_item PURCHASE
+      return magic_request Request::PURCHASE
     end
 
     def pda
-      return request_item PDA
+      return magic_request Request::PDA
     end
 
     def ask
-      return request_item ASK_LIBRARIAN
+      return magic_request Request::ASK_LIBRARIAN
     end
+    
+    def blacklight_solr
+      @solr ||=  RSolr.connect(blacklight_solr_config)
+    end
+
+    def blacklight_solr_config
+      Blacklight.solr_config
+    end
+    
+    def make_voyager_request
+
+      # Validate the form data
+      if params[:holding_id].blank?
+        flash[:error] = I18n.t('requests.errors.holding_id.blank')
+      elsif params[:library_id].blank?
+        flash[:error] = I18n.t('requests.errors.library_id.blank')
+      else
+        # Hand off the data to the request model for sending
+        req = BlacklightCornellRequests::Request.new(params[:bibid])
+        req.netid = request.env['REMOTE_USER']
+        response = req.make_voyager_request params
+
+        if response[:failure].blank?
+          flash[:success] = I18n.t('requests.success')
+        else
+          flash[:error] = I18n.t('requests.failure')
+        end
+
+      end
+
+
+      Rails.logger.debug "mjc12test: flash = #{flash.inspect}"
+
+      render :partial => '/flash_msg', :layout => false
+
+    end
+    
+    def make_purchase_request
+      
+      if params[:name].blank?
+        flash[:error] = I18n.t('requests.errors.name.blank')
+      elsif params[:reqstatus].blank?
+        flash[:error] = I18n.t('requests.errors.status.blank')
+      elsif params[:reqtitle].blank?
+        flash[:error] = I18n.t('requests.errors.title.blank')
+      elsif params[:email].blank?
+        flash[:error] = I18n.t('requests.errors.email.blank')
+      elsif params[:email].present?
+        if params[:email].match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/)
+          # Email the form contents to the purchase request staff
+          RequestMailer.email_request(request.env['REMOTE_USER'], params)
+          # TODO: check for mail errors, don't assume that things are working!
+          flash[:success] = I18n.t('blacklight.requests.success')
+        else
+          flash[:error] = I18n.t('requests.errors.email.invalid')
+        end
+      end
+      
+      render :partial => '/flash_msg', :layout => false
+    
+    end
+    
   end
+  
 end

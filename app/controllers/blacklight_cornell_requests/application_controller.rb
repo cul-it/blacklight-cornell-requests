@@ -1,4 +1,5 @@
 module BlacklightCornellRequests
-  class ApplicationController < ActionController::Base
+  class ApplicationController < ApplicationController #ActionController::Base
+    layout 'layouts/blacklight' 
   end
 end

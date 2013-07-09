@@ -1,6 +1,8 @@
 require 'spec_helper'
+require 'blacklight_cornell_requests/request'
+require 'blacklight_cornell_requests/borrow_direct'
  
- describe BlacklightCornellRequests::Request do
+describe BlacklightCornellRequests::Request do
 
  	it "has a valid factory" do
  		FactoryGirl.create(:request).should be_valid
@@ -8,6 +10,858 @@ require 'spec_helper'
 
 	it "is invalid without a bibid" do 
 		FactoryGirl.build(:request, bibid: nil).should_not be_valid
+	end
+
+	it "has a valid initializer" do 
+		request = BlacklightCornellRequests::Request.new(12345)
+		FactoryGirl.build(:request, bibid: 12345).bibid.should == request.bibid 
+	end
+
+	context "Main request function" do
+	  
+	  let(:multivol_b) { { :multivol_b => 1 } }
+    let(:multivol_c) { { :multivol_b => 0 } }
+    let(:env_http_host) { 'http://localhost' }
+    let(:request_controller) { BlacklightCornellRequests::RequestController.new() }
+
+		it "returns the request options array, service, and Solr document" do
+			req = FactoryGirl.build(:request, bibid: nil)
+			req.magic_request nil, env_http_host
+			
+			req.request_options.class.name.should == "Array"
+			req.service[:service].should == "ask"
+			req.document.should == nil
+		end
+
+		# context "Patron is a guest" do
+		# end
+
+		context "Testing delivery_options functions" do
+
+			let(:req) { FactoryGirl.build(:request, bibid: nil) }
+			# before(:each) { 
+				# req.stub(:get_cornell_delivery_options).and_return([{:service => 'ill', 'location' => 'Olin'}, {:service => 'l2l', 'location' => 'Library Annex'}])
+				# req.stub(:get_guest_delivery_options).and_return([{:service => 'ask', 'location' => 'Mann'}])
+			# }
+			# This item is regular and charged
+			# for cornell request, it should be bd
+			# for guest request, it should be hold
+			let(:item) {
+			  {
+          :href => "http://catalog-test.library.cornell.edu/vxws/record/3507363/items/5511982",
+          :itemid => "5511982",
+          :permLocation => "Olin Library",
+          :location_id => "99",
+          :tempLocation => "",
+          :location => "Olin Library",
+          :callNumber => "PR6068.O924 H36 1998",
+          :copy => "c. 1",
+          :itemBarcode => "31924086342510",
+          :enumeration => "",
+          :chron => "",
+          :year => "",
+          :caption => "",
+          :freeText => "",
+          :typeCode => "3",
+          :typeDesc => "book",
+          :tempType => "0",
+          :itemStatus => "Charged - Due on 2013-06-05",
+          :status => req.item_status("Charged - Due on 2013-06-05"),
+          :spineLabel => "",
+          :itemNote => "0",
+          :onReserve => "N",
+          :exclude_location_id => [181, 188]
+        }
+			}
+			let(:bd_params) {
+			  {
+  			  :isbn => ['0747538492'],
+          :title => 'Harry Potter and the chamber of secrets',
+          :env_http_host => 'http://localhost'
+			  }
+			}
+
+			it "should use get_cornell_delivery_options if patron is Cornell" do 
+				req.netid = 'mjc12' 
+				options = req.get_delivery_options(item, bd_params)
+				options = req.sort_request_options options
+				service = options[0][:service]
+				req.populate_options service, options
+				req.request_options[0][:service].should == BlacklightCornellRequests::Request::BD
+			end
+
+			it "should use get_guest_delivery_options if patron is guest" do 
+				req.netid = 'gid-silterrae'
+				options = req.get_delivery_options(item, bd_params)
+        options = req.sort_request_options options
+        service = options[0][:service]
+        req.populate_options service, options
+        req.request_options[0][:service].should == BlacklightCornellRequests::Request::HOLD
+			end
+
+			it "should use get_guest_delivery_options if patron is null" do 
+				req.netid = ''
+				options = req.get_delivery_options(item, bd_params)
+        options = req.sort_request_options options
+        service = options[0][:service]
+        req.populate_options service, options
+        req.request_options[0][:service].should == BlacklightCornellRequests::Request::HOLD
+			end
+
+			it "sorts the return array by delivery time" do
+				req.netid = 'mjc12' 
+				options = req.get_delivery_options(item, bd_params)
+        options = req.sort_request_options options
+        service = options[0][:service]
+        req.populate_options service, options
+        req.request_options[0][:service].should == BlacklightCornellRequests::Request::BD
+			end
+
+			# Next set of tests act on get_cornell_delivery_options
+			context "Patron is Cornell-affiliated" do
+
+				let(:r) { FactoryGirl.build(:request, bibid: nil) }
+				before(:all) { r.netid = 'sk274' }
+
+				context "Loan type is regular" do
+
+					context "item status is 'not charged'" do
+
+						before(:all) {
+							@services = run_cornell_tests('regular', 'Not Charged', false)
+						}
+
+						it "suggests L2L for the service" do
+							@services[0][:service].should == 'l2l'
+						end
+
+						it "sets request options to 'l2l" do
+							b = Set.new ['l2l']
+							@services.length.should == b.length
+							@services.each do |o|
+								b.should include(o[:service])
+							end
+
+						end
+
+					end
+
+					context "item status is 'charged'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								@services = run_cornell_tests('regular', 'Charged', true)
+							}
+
+
+							it "suggests BD for the service" do
+								@services[0][:service].should == 'bd'
+							end
+
+							it "sets request options to 'bd, recall, ill, hold'" do
+								b = Set.new ['bd', 'recall', 'ill', 'hold']
+								@services.length.should == b.length
+								@services.each do |o|
+									b.should include(o[:service])
+								end
+
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								@services = run_cornell_tests('regular', 'Charged', false)
+							}
+
+
+							it "suggests ILL for the service" do
+								@services[0][:service].should == 'ill'
+							end
+
+							it "sets request options to 'ill, recall, hold'" do
+								item = { 'typeCode' => 'regular', 
+								   		 :status => 'Charged'
+								 }
+								options = r.get_delivery_options item
+								b = Set.new ['recall', 'ill', 'hold']
+								@services.length.should == b.length
+								@services.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+						end
+
+					end
+
+					context "Item status is 'requested'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								@services = run_cornell_tests('regular', 'Requested', true)
+							}
+
+
+							it "suggests BD for the service" do
+								@services[0][:service].should == 'bd'
+							end
+
+							it "sets request options to 'bd, recall, ill, hold'" do
+								b = Set.new ['bd', 'recall', 'ill', 'hold']
+								@services.length.should == b.length
+								@services.each do |o|
+									b.should include(o[:service])
+								end
+
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								@services = run_cornell_tests('regular', 'Requested', false)
+							}
+
+							it "suggests ILL for the service" do
+								@services[0][:service].should == 'ill'
+							end
+
+							it "sets request options to 'ill, recall, hold'" do
+								b = Set.new ['recall', 'ill', 'hold']
+								@services.length.should == b.length
+								@services.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+						end
+
+					end
+
+					context "Item status is 'missing'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								@services = run_cornell_tests('regular', 'Missing', true)
+							}
+
+							it "suggests BD for the service" do
+								@services[0][:service].should == 'bd'
+							end
+
+							it "sets request options to 'bd, purchase, ill'" do
+								b = Set.new ['bd', 'purchase', 'ill']
+								@services.length.should == b.length
+								@services.each do |o|
+									b.should include(o[:service])
+								end
+
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								@services = run_cornell_tests('regular', 'Missing', false)
+							}
+
+							it "suggests purchase for the service" do
+								@services[0][:service].should == 'purchase'
+							end
+
+							it "sets request options to 'ill, purchase'" do
+								b = Set.new ['purchase', 'ill']
+								@services.length.should == b.length
+								@services.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+						end
+
+					end
+
+					context "Item status is 'lost'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								@services = run_cornell_tests('regular', 'Lost', true)
+							}
+
+							it "suggests BD for the service" do
+								@services[0][:service].should == 'bd'
+							end
+
+							it "sets request options to 'bd, purchase, ill'" do
+								b = Set.new ['bd', 'purchase', 'ill']
+								@services.length.should == b.length
+								@services.each do |o|
+									b.should include(o[:service])
+								end
+
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								@services = run_cornell_tests('regular', 'Lost', false)
+							}
+
+							it "suggests purchase for the service" do\
+								@services[0][:service].should == 'purchase'
+							end
+
+							it "sets request options to 'ill, purchase'" do
+								b = Set.new ['purchase', 'ill']
+								@services.length.should == b.length
+								@services.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+						end
+					end
+
+				end 
+
+				context "Loan type is day" do
+
+					context "item status is 'not charged'" do
+
+						before(:all) { 
+							r.stub(:borrowDirect_available?).and_return(true)
+						}
+
+						context "one- or two-day loan" do 
+
+							# L2L is not available, so there should be no services listed
+							it "has no request options" do
+								options = run_cornell_tests('day', 'Not Charged', true, true)
+								options.should == []
+							end
+
+						end
+
+						context "three- or more-day loan" do
+
+							before(:all) { 
+								@options = run_cornell_tests('day', 'Not Charged', true)
+										 }
+
+							it "sets request options to 'L2L'" do
+								b = Set.new ['l2l']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests L2L for the service" do
+								@options[0][:service].should == 'l2l'
+							end
+
+						end
+
+					end
+
+					context "item status is 'charged'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								@options = run_cornell_tests('day', 'Charged', true)
+							}
+
+							it "sets request options to 'BD, ILL, hold'" do
+								b = Set.new ['bd', 'ill', 'hold']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests BD for the service" do
+								@options[0][:service].should == 'bd'
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								@options = run_cornell_tests('day', 'Charged', false)
+							}
+
+							it "sets request options to ILL, hold" do
+								b = Set.new ['ill', 'hold']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests ILL for the service" do
+								@options[0][:service].should == 'ill'
+							end
+
+						end
+
+					end
+
+					context "item status is 'requested'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								@options = run_cornell_tests('day', 'Requested', true)
+							}
+
+							it "sets request options to 'BD, ILL, hold'" do
+								b = Set.new ['bd', 'ill', 'hold']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests BD for the service" do
+								@options[0][:service].should == 'bd'
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								@options = run_cornell_tests('day', 'Requested', false)
+							}
+
+
+							it "sets request options to ILL, hold" do
+								b = Set.new ['ill', 'hold']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests ILL for the service" do
+								@options[0][:service].should == 'ill'
+							end
+
+						end
+
+					end
+
+					context "item status is 'missing'" do
+						pending
+					end
+
+					context "item status is 'lost'" do
+						pending
+					end
+
+				end
+
+				context "Loan type is minute" do
+
+					context "item status is 'not charged'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								@options = run_cornell_tests('minute', 'Not Charged', true)
+							}
+
+							it "sets request options to 'BD, ask at circulation'" do
+								b = Set.new ['bd', 'circ']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests BD for the service" do
+								@options[0][:service].should == 'bd'
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								@options = run_cornell_tests('minute', 'Not Charged', false)
+							}
+
+							it "sets request options to 'ask at circulation'" do
+								b = Set.new ['circ']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests ask at circ for the service" do
+								@options[0][:service].should == 'circ'
+							end
+
+						end
+
+					end
+
+					context "item status is 'charged'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								@options = run_cornell_tests('minute', 'Charged', true)
+							}
+
+							it "sets request options to 'BD, ask at circulation'" do
+								b = Set.new ['bd', 'circ']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests BD for the service" do
+								@options[0][:service].should == 'bd'
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								@options = run_cornell_tests('minute', 'Charged', false)
+							}
+
+							it "sets request options to 'ask at circulation'" do
+								b = Set.new ['circ']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests ask at circ for the service" do
+								@options[0][:service].should == 'circ'
+							end
+
+						end
+
+					end
+
+					context "item status is 'requested'" do
+
+						context "available through Borrow Direct" do
+
+							before(:all) { 
+								@options = run_cornell_tests('minute', 'Requested', true)
+
+							}
+
+							it "sets request options to 'BD, ask at circulation'" do
+								b = Set.new ['bd', 'circ']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests BD for the service" do
+								@options[0][:service].should == 'bd'
+							end
+
+						end
+
+						context "not available through Borrow Direct" do
+
+							before(:all) { 
+								@options = run_cornell_tests('minute', 'Requested', false)
+							}
+
+							it "sets request options to 'ask at circulation'" do
+								b = Set.new ['circ']
+								@options.length.should == b.length
+								@options.each do |o|
+									b.should include(o[:service])
+								end
+							end
+
+							it "suggests ask at circ for the service" do
+								@options[0][:service].should == 'circ'
+							end
+
+						end
+					end
+
+					context "item status is 'missing'" do
+						pending
+					end
+
+					context "item status is 'lost'" do
+						pending
+					end
+
+				end
+				
+				context "Loan type is nocirc" do
+				  before(:all) {
+				    @options = run_cornell_tests('nocirc', 'Not Charged', false)
+				  }
+				  it "sets best option as ill" do
+  				  @options[0][:service].should == BlacklightCornellRequests::Request::ILL
+  				end
+				end
+
+			 end
+
+      context "Patron is a guest" do
+      
+        let(:request) {
+          request = FactoryGirl.build(:request, bibid: nil)
+          request.netid = 'gid-silterrae'
+          request
+        }
+        
+        context "Loan type is regular" do
+          
+          context "item status is 'not charged'" do
+  
+            let(:response) {
+              req = run_tests(6370407, {}, 'regular', 'Not Charged', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'l2l'" do
+              response.should == BlacklightCornellRequests::Request::L2L
+            end
+  
+          end
+  
+          context "item status is 'charged'" do
+  
+            let(:response) {
+              req = run_tests(6370407, {}, 'regular', 'Charged', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+            
+            it "sets best option as 'hold'" do
+              response.should == BlacklightCornellRequests::Request::HOLD
+            end
+            
+          end
+  
+          context "Item status is 'requested'" do
+
+            let(:response) {
+              req = run_tests(6370407, {}, 'regular', 'Requested', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'hold'" do
+              response.should == BlacklightCornellRequests::Request::HOLD
+            end
+  
+          end
+          
+          context "Item status is 'missing'" do
+            
+            let(:response) {
+              req = run_tests(6370407, {}, 'regular', 'Missing', 'gid-silterrae')
+              req.request_options.size
+            }
+  
+            it "sets no best option" do
+              response.should == 0
+            end
+            
+          end
+          
+          context "Item status is 'lost'" do
+            
+            let(:response) {
+              req = run_tests(6370407, {}, 'regular', 'Lost', 'gid-silterrae')
+              req.request_options.size
+            }
+  
+            it "sets no best option" do
+              response.should == 0
+            end
+            
+          end
+          
+        end
+        
+        context "Loan type is day" do
+          
+          context "item status is 'not charged'" do
+
+            let(:response) {
+              req = run_tests(6370407, {}, 'day', 'Not Charged', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'l2l'" do
+              response.should == BlacklightCornellRequests::Request::L2L
+            end
+  
+          end
+  
+          context "item status is 'charged'" do
+
+            let(:response) {
+              req = run_tests(6370407, {}, 'day', 'Charged', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'hold'" do
+              response.should == BlacklightCornellRequests::Request::HOLD
+            end
+            
+          end
+  
+          context "Item status is 'requested'" do
+ 
+            let(:response) {
+              req = run_tests(6370407, {}, 'day', 'Requested', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'hold'" do
+              response.should == BlacklightCornellRequests::Request::HOLD
+            end
+  
+          end
+          
+          context "Item status is 'missing'" do
+            
+            let(:response) {
+              req = run_tests(6370407, {}, 'day', 'Missing', 'gid-silterrae')
+              req.request_options.size
+            }
+  
+            it "sets no best option" do
+              response.should == 0
+            end
+            
+          end
+          
+          context "Item status is 'lost'" do
+            
+            let(:response) {
+              req = run_tests(6370407, {}, 'day', 'Lost', 'gid-silterrae')
+              req.request_options.size
+            }
+  
+            it "sets no best option" do
+              response.should == 0
+            end
+            
+          end
+          
+        end
+  
+        context "Loan type is minute" do
+          
+          context "item status is 'not charged'" do
+ 
+            let(:response) {
+              req = run_tests(6370407, {}, 'minute', 'Not Charged', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'circ'" do
+              response.should == BlacklightCornellRequests::Request::ASK_CIRCULATION
+            end
+  
+          end
+  
+          context "item status is 'charged'" do
+
+            let(:response) {
+              req = run_tests(6370407, {}, 'minute', 'Charged', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'circ'" do
+              response.should == BlacklightCornellRequests::Request::ASK_CIRCULATION
+            end
+            
+          end
+  
+          ## no good example
+          context "Item status is 'requested'" do
+ 
+            let(:response) {
+              req = run_tests(6370407, {}, 'minute', 'Requested', 'gid-silterrae')
+              req.request_options[0][:service]
+            }
+  
+            it "sets best option as 'circ'" do
+              response.should == BlacklightCornellRequests::Request::ASK_CIRCULATION
+            end
+  
+          end
+          
+          context "Item status is 'missing'" do
+
+            let(:response) {
+              req = run_tests(6370407, {}, 'minute', 'Missing', 'gid-silterrae')
+              req.request_options.size
+            }
+  
+            it "sets no best option" do
+              response == 0
+            end
+            
+          end
+          
+          ## don't have good example
+          context "Item status is 'lost'" do
+            
+            let(:response) {
+              req = run_tests(6370407, {}, 'minute', 'Lost', 'gid-silterrae')
+              req.request_options.size
+            }
+  
+            it "sets no best option" do
+              response.should == 0
+            end
+            
+          end
+          
+        end
+        
+        context "Loan type is nocirc" do
+          
+          let(:response) {
+            req = run_tests(6370407, {}, 'nocirc', 'Not Charged', 'gid-silterrae')
+            req.request_options.size
+          }
+  
+          it "sets no best option" do
+            response.should == 0
+          end
+            
+        end
+        
+      end
+
+		end
+
 	end
 
 	context "Working with holdings data" do
@@ -150,14 +1004,105 @@ require 'spec_helper'
 			end
 		end
 
-	end
+		context "Getting delivery times" do
 
-	context "Getting eligible services" do
+			let(:req) { FactoryGirl.create(:request) }
 
-		describe "eligible_services" do
+			describe "l2l" do 
 
-			it "returns nil if the bibid is invalid" do
-				FactoryGirl.build(:request, bibid: nil).eligible_services.should == nil
+				it "returns 1 if item is at the annex" do
+					params = { :service => 'l2l', 'location' => 'Library Annex' }
+					req.get_delivery_time('l2l', params).should == 1
+				end
+
+				it "returns 2 if item is not at annex" do
+					params = { :service => 'l2l', 'location' => 'Maui' }
+					req.get_delivery_time('l2l', params).should == 2
+				end
+
+			end
+
+			describe 'bd' do 
+
+				it "returns 6" do
+					req.get_delivery_time('bd', nil).should == 6
+				end
+
+			end
+
+			describe 'hold' do 
+
+				it "returns 180 if there is no hold date" do
+					params = { :service => 'hold', 'itemStatus' => 'Hold' }
+					req.get_delivery_time('hold', params).should == 180
+				end
+
+				it "returns 180 if there is a hold date problem" do
+					params = { :service => 'hold', 'itemStatus' => 'Hold -- Due on 1977-10-15' }
+					req.get_delivery_time('hold', params).should == 180					
+				end
+
+				it "returns the remaining time till due date plus padding time for a valid hold date" do
+					params = { :service => 'hold', 'itemStatus' => "Hold -- Due on #{Date.today + 10}" }
+					req.get_delivery_time('hold', params).should == 10 + req.get_hold_padding						
+				end
+
+			end
+
+			describe 'ill' do 
+
+				it "returns 14" do
+					req.get_delivery_time('ill', nil).should == 14
+				end
+
+			end
+
+			describe 'recall' do 
+
+				it "returns 30" do
+					req.get_delivery_time('recall', nil).should == 30
+				end
+
+			end
+
+			describe 'pda' do 
+
+				it "returns 5" do
+					req.get_delivery_time('pda', nil).should == 5
+				end
+
+			end
+
+			describe 'purchase' do 
+
+				it "returns 10" do
+					req.get_delivery_time('purchase', nil).should == 10
+				end
+
+			end
+
+			describe 'ask' do 
+
+				it "returns 9999" do
+					req.get_delivery_time('ask', nil).should == 9999
+				end
+
+			end
+
+			describe 'circ' do 
+
+				it "returns 9998" do
+					req.get_delivery_time('circ', nil).should == 9998
+				end
+
+			end
+
+			describe 'default' do 
+
+				it "returns 9999 if it doesn't know what else to do" do
+					req.get_delivery_time('help', nil).should == 9999
+				end
+
 			end
 
 		end
@@ -166,3 +1111,88 @@ require 'spec_helper'
 
  end
 
+ # Helper function to simplify tests of the main request logic
+ # Returns the result of a call to get_delivery_options
+ #
+ # Parameters:
+ # loan_type = regular|day|minute
+ # status = Charged|Not Charged|Requested|Missing| etc..
+ # bd = true|false (is item available in BD?)
+ # short_day_loan = true|false (is this a one- or two-day loan - i.e., not eligible for L2L delivery?)
+ def run_cornell_tests(loan_type, status, bd, short_day_loan = false)
+
+	r = FactoryGirl.build(:request, bibid: nil) 
+	r.stub(:borrowDirect_available?).and_return(bd)				
+	r.netid = 'sk274' 
+
+	case loan_type
+		when 'regular'
+			type_code =  3 # book
+		when 'day'
+			type_code = short_day_loan ? 10 : 11 # 10 = 1-day, 11 = 3-day
+		when 'minute'
+			type_code = 22 # 1-hour
+	  when 'nocirc'
+      type_code = 9 # no circulation
+		else
+	end
+
+	return r.get_delivery_options({ :typeCode => type_code, :status => status })
+
+
+ end
+
+def run_tests(bibid, bd_params, loan_type, status, netid, short_day_loan = false)
+  
+  req = FactoryGirl.build(:request, bibid: bibid)
+  
+  case loan_type
+    when 'regular'
+      type_code =  3 # book
+    when 'day'
+      type_code = short_day_loan ? 10 : 11 # 10 = 1-day, 11 = 3-day
+    when 'minute'
+      type_code = 22 # 1-hour
+    when 'nocirc'
+      type_code = 9 # no circulation
+    else
+  end
+  
+  item = {
+          :href => "http://catalog-test.library.cornell.edu/vxws/record/3507363/items/5511982",
+          :itemid => "5511982",
+          :permLocation => "Olin Library",
+          :location_id => "99",
+          :tempLocation => "",
+          :location => "Olin Library",
+          :callNumber => "PR6068.O924 H36 1998",
+          :copy => "c. 1",
+          :itemBarcode => "31924086342510",
+          :enumeration => "",
+          :chron => "",
+          :year => "",
+          :caption => "",
+          :freeText => "",
+          :typeCode => type_code,
+          :typeDesc => "book",
+          :tempType => "0",
+          :itemStatus => status,
+          :status => req.item_status(status),
+          :spineLabel => "",
+          :itemNote => "0",
+          :onReserve => "N",
+          :exclude_location_id => [181, 188]
+        }
+  req.netid = netid
+  options = req.get_delivery_options(item, bd_params)
+  options = req.sort_request_options options
+  if options.size > 0
+    service = options[0][:service]
+  else
+    service = ''
+  end
+  req.populate_options service, options
+
+  return req
+
+end

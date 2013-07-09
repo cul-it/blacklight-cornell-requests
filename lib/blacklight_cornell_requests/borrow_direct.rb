@@ -9,20 +9,20 @@ module BlacklightCornellRequests
       begin
         return _borrowDirect_available? params
       rescue => e
-        logger.warn "Error checking borrow direct availability: exception #{e.class.name} : #{e.message}"
-      return false
+        Rails.logger.info "Error checking borrow direct availability: exception #{e.class.name} : #{e.message}"
+        return false
       end
 
     end
 
     # Assemble and return a usable BD URL
-    def _bd_url
-
+    def _bd_url env_http_host
+      
       host = Rails.configuration.borrow_direct_webservices_host
-      host |= request.env['HTTP_HOST']
+      host = env_http_host if host.blank?
 
       if !host.starts_with?('http')
-        borrow_direct_webservices_url = "http://#{host}"
+        host = "http://#{host}"
       end
       if !Rails.configuration.borrow_direct_webservices_port.blank?
         return host + ":" + Rails.configuration.borrow_direct_webservices_port.to_s
@@ -34,7 +34,7 @@ module BlacklightCornellRequests
 
     # Initialize a new pazpar2 session. Return a session id on success, or nil on failure
     def _initialize_session(url)
-
+      
       request_url = url + '/search.pz2?command=init'
       response = HTTPClient.get_content(request_url)
       response_parsed = Hash.from_xml(response)
@@ -46,16 +46,18 @@ module BlacklightCornellRequests
     # params = { :isbn, :title } - the two parameters that we're using to query Borrow Direct availabiilty.
     # ISBN is best, but title will work if ISBN isn't available.
     def _borrowDirect_available? params
-
-      if params[:isbn].blank? && params[:title].blank?
-      ## no valid params passed
-      return false
+      
+      if (params[:isbn].blank? && params[:title].blank?) || params[:env_http_host].nil?
+        # Rails.logger.info "sk274_debug: No params passed"
+        ## no valid params passed
+        return false
       end
 
-      base_url = _bd_url
+      base_url = _bd_url params[:env_http_host]
 
       session_id = _initialize_session base_url
       # TODO: Matt start here
+      # Rails.logger.info "session id: #{session_id}"
 
       ## make pazpar2 search
       isbn = /([a-zA-Z0-9]+)/.match(params[:isbn][0])
@@ -64,20 +66,21 @@ module BlacklightCornellRequests
       # logger.info "isbn:"
       # logger.info isbn.inspect
       if isbn.blank? && !params[:title].blank?
-        request_url = borrow_direct_webservices_url + "/search.pz2?session=#{session_id}&command=search&query=ti%3D#{params[:title]}"
+        request_url = base_url + "/search.pz2?session=#{session_id}&command=search&query=ti%3D#{params[:title]}"
       elsif !isbn.blank?
-        request_url = borrow_direct_webservices_url + "/search.pz2?session=#{session_id}&command=search&query=isbn%3D#{isbn}"
+        request_url = base_url + "/search.pz2?session=#{session_id}&command=search&query=isbn%3D#{isbn}"
       else
-      return false
+        return false
       end
-      # logger.info "request url: #{request_url}"
+      # Rails.logger.info "request url: #{request_url}"
       response = HTTPClient.get_content(request_url)
       response_parsed = Hash.from_xml(response)
       status = response_parsed['search']['status']
+      # Rails.logger.info "bd response: " + response_parsed.inspect
       if status != 'OK'
         ## invalid search
         logger.info "Invalid search: #{status}"
-      return false
+        return false
       end
 
       ## get pazpar2 recid from show command to get record information
@@ -85,7 +88,7 @@ module BlacklightCornellRequests
       sleep(0.5)
       i = 0
       progress = '0.00'
-      request_url = borrow_direct_webservices_url + "/search.pz2?session=#{session_id}&command=stat"
+      request_url = base_url + "/search.pz2?session=#{session_id}&command=stat"
       while (progress != '1.00' && i < 120)
         response = HTTPClient.get_content(request_url)
         response_parsed = Hash.from_xml(response)
@@ -95,20 +98,20 @@ module BlacklightCornellRequests
       end
       # logger.info "finished search request in #{i} seconds"
       ## make show request to get record id
-      request_url = borrow_direct_webservices_url + "/search.pz2?session=#{session_id}&command=show&start=0&num=2&sort=title:1"
+      request_url = base_url + "/search.pz2?session=#{session_id}&command=show&start=0&num=2&sort=title:1"
       response = HTTPClient.get_content(request_url)
       response_parsed = Hash.from_xml(response)
       hits = response_parsed['show']['hit']
       if hits.blank? || hits.class == String
-      return false
+        return false
       elsif hits.class == Hash
-        return _determine_availablility? borrow_direct_webservices_url, session_id, hits
+        return _determine_availablility? base_url, session_id, hits
       elsif hits.class == Array
         hits.each do |hit|
-          return true if _determine_availablility? borrow_direct_webservices_url, session_id, hit
+          return true if _determine_availablility? base_url, session_id, hit
         end
       else
-      ## error?
+        ## error?
       end
 
       ## get record for each hit returned until we find first available item or there is no more
@@ -123,18 +126,18 @@ module BlacklightCornellRequests
       availabilities = response_parsed['record']['location']['md_available']
       if availabilities.class == String
         if availabilities.strip == 'Available'
-        return true
+          return true
         end
       elsif availabilities.class == Array
         availabilities.each do |availability|
           if availability.strip == 'Available'
-          return true
+            return true
           end
         end
       else
-      ## what is this?
-      # logger.debug availabilities.inspect
-      return false
+        ## what is this?
+        # logger.debug availabilities.inspect
+        return false
       end
     end
 
