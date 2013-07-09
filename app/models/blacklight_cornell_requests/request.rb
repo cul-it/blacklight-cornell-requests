@@ -93,7 +93,6 @@ module BlacklightCornellRequests
         bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
         all_items.each do |item|
           services = get_delivery_options item, bd_params
-          Rails.logger.debug "mjc12test: services: #{services.inspect}"
           item[:services] = services
         end
         populate_document_values
@@ -163,13 +162,18 @@ module BlacklightCornellRequests
       volumes = volumes.sort_by do |v|
 
         if v.is_a? Integer
+          Rails.logger.debug "mjc12test: Simple integer sort for #{v}"
           [Integer(v)]
         else
-          a, b, c = v.split(/[\.\-]/) 
-          if b.nil?
+          a, b, c = v.split(/[\.\-,]/) 
+          Rails.logger.debug "mjc12test: split: a = #{a}, b = #{b}, c = #{c}"
+          b = b.gsub(/[^0-9]/,'') unless b.nil?
+          if b.blank? or b !~ /\d+/
+            Rails.logger.debug "mjc12test: Sorting using a"
             [a]
           else
-            [a, Integer(b)]
+            Rails.logger.debug "mjc12test: Sorting using a and b"
+            [a, Integer(b)] # Note: This forces whatever is left into an integer!
           end
         end
       end
@@ -287,9 +291,6 @@ module BlacklightCornellRequests
 
       item_loan_type = loan_type item[:typeCode]
 
-      Rails.logger.debug "mjc12test: type: #{item_loan_type}"
-      Rails.logger.debug "mjc12test: status: #{item[:status]}"
-
       request_options = []
       if item_loan_type == 'nocirc'
         # if borrowDirect_available? bdParams
@@ -310,7 +311,6 @@ module BlacklightCornellRequests
       elsif ((item_loan_type == 'regular' and item[:status] == 'Charged') or
              (item_loan_type == 'regular' and item[:status] == 'Requested'))
         # TODO: Test and fix BD check with real params
-        Rails.logger.debug "mjc12test: Should see this"
         if borrowDirect_available? params
           request_options.push( {:service => BD, 'location' => item[:location] } )
         end
@@ -471,7 +471,7 @@ module BlacklightCornellRequests
     
     def create_ill_link
       document = self.document
-      ill_link = '***REMOVED***?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
+      ill_link = '***REMOVED***?Action=10&Form=21&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
       if self.isbn.present?
         isbns = self.isbn.join(',')
         ill_link = ill_link + "&rft.isbn=#{isbns}"
@@ -511,6 +511,7 @@ module BlacklightCornellRequests
     # params: { :holding_id (actually item id), :request_action, :library_id, 'latest-date', :reqcomments }
     # Returns a status to be 'flashed' to the user
     def make_voyager_request params
+      Rails.logger.debug "mjc12test: entered function"
 
       # Need bibid, netid, itemid to proceed
       if self.bibid.nil?
@@ -520,6 +521,8 @@ module BlacklightCornellRequests
       elsif params[:holding_id].nil?
         return { :error => I18n.t('requests.errors.holding_id.blank') }
       end
+
+            Rails.logger.debug "mjc12test: still here"
 
       # Set up Voyager request URL string
       voyager_request_handler_url = Rails.configuration.voyager_request_handler_host
@@ -531,13 +534,16 @@ module BlacklightCornellRequests
         voyager_request_handler_url += ":" + Rails.configuration.voyager_request_handler_port.to_s
       end
 
+
+            Rails.logger.debug "mjc12test: still here again"
+
       # Assemble complete request URL
       voyager_request_handler_url += "/holdings/#{params[:request_action]}/#{self.netid}/#{self.bibid}/#{params[:library_id]}"
       unless params[:holding_id].nil?
         voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
       end
 
-      #Rails.logger.debug "mjc12test: fired #{voyager_request_handler_url}"
+      Rails.logger.debug "mjc12test: fired #{voyager_request_handler_url}"
 
 
       # Send the request
@@ -545,7 +551,7 @@ module BlacklightCornellRequests
       body = { 'reqnna' => params['latest-date'], 'reqcomments' => params[:reqcomments] }
       result = HTTPClient.post(voyager_request_handler_url, body)
       response = JSON.parse(result.content)
-      # puts response
+      Rails.logger.debug "mjc12test: response is #{response.inspect}"
       if response['status'] == 'failed'
         return { :failure => I18n.t('requests.failure') }
       else
