@@ -45,6 +45,7 @@ module BlacklightCornellRequests
               :enumeration => iid['enumeration'],
               :url => iid['url'],
               :chron => iid['chron'],
+              :year => iid['year'],
               :exclude_location_id => iid['exclude_location_id']
           }
         end
@@ -125,7 +126,7 @@ module BlacklightCornellRequests
       end
 
 
-      Rails.logger.debug "mjc12test: flash = #{flash.inspect}"
+      #Rails.logger.debug "mjc12test: flash = #{flash.inspect}"
 
       render :partial => '/flash_msg', :layout => false
 

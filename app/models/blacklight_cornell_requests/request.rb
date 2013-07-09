@@ -4,8 +4,6 @@ require 'blacklight_cornell_requests/borrow_direct'
 module BlacklightCornellRequests
   class Request
 
-    # Following set of constants defines the views that should be rendered
-    # for each library service.
     L2L = 'l2l'
     BD = 'bd'
     HOLD = 'hold'
@@ -15,8 +13,6 @@ module BlacklightCornellRequests
     ILL = 'ill'
     ASK_CIRCULATION = 'circ'
     ASK_LIBRARIAN = 'ask'
-
-
     LIBRARY_ANNEX = 'Library Annex'
     HOLD_PADDING_TIME = 3
 
@@ -68,37 +64,34 @@ module BlacklightCornellRequests
       # Get item status and location for each item in each holdings record; store in all_items
       all_items = []
       item_status = 'Charged'
+      holdings = self.holdings_data[self.bibid.to_s]['records']
+      holdings.each do |h|
+        items = h['item_status']['itemdata']
+        items.each do |i|
+          # If volume is specified, only populate items with matching enumeration values
+         # Rails.logger.debug "volume: #{volume}, enum: #{i['enumeration']}"
+          next if (!volume.blank? and ( volume != i['enumeration'] and volume != i['chron'] and volume != i['year']))
+               #     Rails.logger.debug "Adding an item"
 
-      unless self.holdings_data.nil?
-
-        holdings = self.holdings_data[self.bibid.to_s]['records']
-        holdings.each do |h|
-          items = h['item_status']['itemdata']
-          items.each do |i|
-            # If volume is specified, only populate items with matching enumeration values
-           # Rails.logger.debug "volume: #{volume}, enum: #{i['enumeration']}"
-            next if (!volume.blank? and volume != i['enumeration'])
-                 #     Rails.logger.debug "Adding an item"
-
-            status = item_status i['itemStatus']
-            iid = deep_copy(i)
-            all_items.push({ :id => i['itemid'], 
-                             :status => status, 
-                             'location' => i[:location],
-                             :typeCode => i['typeCode'],
-                             :enumeration => i['enumeration'],
-                             :iid => iid
-                           })
-          end
-        
+          status = item_status i['itemStatus']
+          iid = deep_copy(i)
+          all_items.push({ :id => i['itemid'], 
+                           :status => status, 
+                           'location' => i[:location],
+                           :typeCode => i['typeCode'],
+                           :enumeration => i['enumeration'],
+                           :chron => i['chron'],
+                           :year => i['year'],
+                           :iid => iid
+                         })
         end
-
       end
 
       self.items = all_items
       self.document = document
 
       unless document.nil?
+
         # Iterate through all items and get list of delivery methods
         bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
         all_items.each do |item|
@@ -114,8 +107,11 @@ module BlacklightCornellRequests
           # Multi-volume
           volumes = {}
           all_items.each do |item|
-            volumes[item[:enumeration]] = 1
+            volumes[item[:enumeration]] = 1 unless item[:enumeration].blank? 
+            volumes[item[:chron]] = 1 unless item[:chron].blank?
+            volumes[item[:year]] = 1 unless item[:year].blank?
           end
+
           self.volumes = sort_volumes(volumes.keys)
 
         else
@@ -129,7 +125,7 @@ module BlacklightCornellRequests
         end
 
       end
-            
+  
       if !target.blank?
         self.service = target
       elsif request_options.present?
@@ -167,8 +163,17 @@ module BlacklightCornellRequests
     def sort_volumes(volumes)
 
       volumes = volumes.sort_by do |v|
-        a, b, c = v.split(/[\.\-]/)      
-        [a, Integer(b)]
+
+        if v.is_a? Integer
+          [Integer(v)]
+        else
+          a, b, c = v.split(/[\.\-]/) 
+          if b.nil?
+            [a]
+          else
+            [a, Integer(b)]
+          end
+        end
       end
 
       volumes
@@ -184,12 +189,7 @@ module BlacklightCornellRequests
 
       return nil unless self.bibid
 
-      begin
-        response = JSON.parse(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/#{type}/#{self.bibid}"))
-      rescue HTTPClient::BadResponseError
-        Rails.logger.error 'ERROR: Couldn\'t connect to holdings service'
-        return nil
-      end
+      response = JSON.parse(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/#{type}/#{self.bibid}"))
 
       # return nil if there is no meaningful response (e.g., invalid bibid)
       return nil if response[self.bibid.to_s].nil?
@@ -535,7 +535,7 @@ module BlacklightCornellRequests
         voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
       end
 
-            Rails.logger.debug "mjc12test: fired #{voyager_request_handler_url}"
+      #Rails.logger.debug "mjc12test: fired #{voyager_request_handler_url}"
 
 
       # Send the request
