@@ -164,7 +164,7 @@ module BlacklightCornellRequests
         if v.is_a? Integer
           [Integer(v)]
         else
-          a, b, c = v.split(/[\.\-]/) 
+          a, b, c = v.split(/[\.\-,]/) 
           if b.nil?
             [a]
           else
