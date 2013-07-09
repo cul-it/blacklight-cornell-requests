@@ -59,7 +59,6 @@ module BlacklightCornellRequests
 
       # Get holdings
       get_holdings 'retrieve_detail_raw' unless self.holdings_data
-       # puts self.holdings_data
 
       # Get item status and location for each item in each holdings record; store in all_items
       all_items = []
@@ -68,10 +67,8 @@ module BlacklightCornellRequests
       holdings.each do |h|
         items = h['item_status']['itemdata']
         items.each do |i|
-          # If volume is specified, only populate items with matching enumeration values
-         # Rails.logger.debug "volume: #{volume}, enum: #{i['enumeration']}"
+          # If volume is specified, only populate items with matching enum/chron/year values
           next if (!volume.blank? and ( volume != i['enumeration'] and volume != i['chron'] and volume != i['year']))
-               #     Rails.logger.debug "Adding an item"
 
           status = item_status i['itemStatus']
           iid = deep_copy(i)
@@ -96,6 +93,7 @@ module BlacklightCornellRequests
         bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
         all_items.each do |item|
           services = get_delivery_options item, bd_params
+          Rails.logger.debug "mjc12test: services: #{services.inspect}"
           item[:services] = services
         end
         populate_document_values
@@ -235,7 +233,7 @@ module BlacklightCornellRequests
     def item_status item_status
       if item_status.include? 'Not Charged'
         'Not Charged'
-      elsif item_status =~ /^Charged/
+      elsif item_status =~ /Charged/
         'Charged'
       elsif item_status =~ /Renewed/
         'Charged'
@@ -289,6 +287,9 @@ module BlacklightCornellRequests
 
       item_loan_type = loan_type item[:typeCode]
 
+      Rails.logger.debug "mjc12test: type: #{item_loan_type}"
+      Rails.logger.debug "mjc12test: status: #{item[:status]}"
+
       request_options = []
       if item_loan_type == 'nocirc'
         # if borrowDirect_available? bdParams
@@ -309,6 +310,7 @@ module BlacklightCornellRequests
       elsif ((item_loan_type == 'regular' and item[:status] == 'Charged') or
              (item_loan_type == 'regular' and item[:status] == 'Requested'))
         # TODO: Test and fix BD check with real params
+        Rails.logger.debug "mjc12test: Should see this"
         if borrowDirect_available? params
           request_options.push( {:service => BD, 'location' => item[:location] } )
         end
