@@ -162,13 +162,18 @@ module BlacklightCornellRequests
       volumes = volumes.sort_by do |v|
 
         if v.is_a? Integer
+          Rails.logger.debug "mjc12test: Simple integer sort for #{v}"
           [Integer(v)]
         else
           a, b, c = v.split(/[\.\-,]/) 
-          if b.nil?
+          Rails.logger.debug "mjc12test: split: a = #{a}, b = #{b}, c = #{c}"
+          b = b.gsub(/[^0-9]/,'') unless b.nil?
+          if b.blank? or b !~ /\d+/
+            Rails.logger.debug "mjc12test: Sorting using a"
             [a]
           else
-            [a, Integer(b)]
+            Rails.logger.debug "mjc12test: Sorting using a and b"
+            [a, Integer(b)] # Note: This forces whatever is left into an integer!
           end
         end
       end
