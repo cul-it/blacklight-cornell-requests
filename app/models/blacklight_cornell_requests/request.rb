@@ -93,7 +93,6 @@ module BlacklightCornellRequests
         bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
         all_items.each do |item|
           services = get_delivery_options item, bd_params
-          Rails.logger.debug "mjc12test: services: #{services.inspect}"
           item[:services] = services
         end
         populate_document_values
@@ -287,9 +286,6 @@ module BlacklightCornellRequests
 
       item_loan_type = loan_type item[:typeCode]
 
-      Rails.logger.debug "mjc12test: type: #{item_loan_type}"
-      Rails.logger.debug "mjc12test: status: #{item[:status]}"
-
       request_options = []
       if item_loan_type == 'nocirc'
         # if borrowDirect_available? bdParams
@@ -310,7 +306,6 @@ module BlacklightCornellRequests
       elsif ((item_loan_type == 'regular' and item[:status] == 'Charged') or
              (item_loan_type == 'regular' and item[:status] == 'Requested'))
         # TODO: Test and fix BD check with real params
-        Rails.logger.debug "mjc12test: Should see this"
         if borrowDirect_available? params
           request_options.push( {:service => BD, 'location' => item[:location] } )
         end
