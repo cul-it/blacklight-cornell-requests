@@ -466,7 +466,7 @@ module BlacklightCornellRequests
     
     def create_ill_link
       document = self.document
-      ill_link = '***REMOVED***?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
+      ill_link = '***REMOVED***?Action=10&Form=21&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
       if self.isbn.present?
         isbns = self.isbn.join(',')
         ill_link = ill_link + "&rft.isbn=#{isbns}"
