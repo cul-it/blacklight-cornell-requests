@@ -162,17 +162,13 @@ module BlacklightCornellRequests
       volumes = volumes.sort_by do |v|
 
         if v.is_a? Integer
-          Rails.logger.debug "mjc12test: Simple integer sort for #{v}"
           [Integer(v)]
         else
           a, b, c = v.split(/[\.\-,]/) 
-          Rails.logger.debug "mjc12test: split: a = #{a}, b = #{b}, c = #{c}"
           b = b.gsub(/[^0-9]/,'') unless b.nil?
           if b.blank? or b !~ /\d+/
-            Rails.logger.debug "mjc12test: Sorting using a"
             [a]
           else
-            Rails.logger.debug "mjc12test: Sorting using a and b"
             [a, Integer(b)] # Note: This forces whatever is left into an integer!
           end
         end
@@ -471,14 +467,14 @@ module BlacklightCornellRequests
     
     def create_ill_link
       document = self.document
-      ill_link = '***REMOVED***?Action=10&Form=21&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
+      ill_link = '***REMOVED***?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
       if self.isbn.present?
         isbns = self.isbn.join(',')
         ill_link = ill_link + "&rft.isbn=#{isbns}"
         ill_link = ill_link + "&rft_id=urn%3AISBN%3A#{isbns}"
       end
       if !self.ti.blank?
-        ill_link = ill_link + "&rft.btitle=#{self.ti}"
+        ill_link = ill_link + "&rft.btitle=#{CGI.escape(self.ti)}"
       end
       if !document[:author_display].blank?
         ill_link = ill_link + "&rft.aulast=#{document[:author_display]}"
@@ -491,12 +487,11 @@ module BlacklightCornellRequests
         ill_link = ill_link + "&rft.date=#{pub_info_display}"
       end
       if !document[:format].blank?
-        ill_link = ill_link + "&rft.genre=#{document[:format]}"
+        ill_link = ill_link + "&rft.genre=#{document[:format][0]}"
       end
       if document[:lc_callnum_display].present?
         ill_link = ill_link + "&rft.identifier=#{document[:lc_callnum_display][0]}"
       end
-      
       self.ill_link = ill_link
     end
     
@@ -511,18 +506,21 @@ module BlacklightCornellRequests
     # params: { :holding_id (actually item id), :request_action, :library_id, 'latest-date', :reqcomments }
     # Returns a status to be 'flashed' to the user
     def make_voyager_request params
-      Rails.logger.debug "mjc12test: entered function"
 
+      Rails.logger.info "mjc12test: entered function"
+
+      Rails.logger.info "mjc12test: : #{self.bibid}, netid: #{netid}, holdid: #{params[:holding_id]}"
       # Need bibid, netid, itemid to proceed
       if self.bibid.nil?
         return { :error => I18n.t('requests.errors.bibid.blank') }
       elsif netid.nil? 
         return { :error => I18n.t('requests.errors.email.blank') }
       elsif params[:holding_id].nil?
-        return { :error => I18n.t('requests.errors.holding_id.blank') }
+        #return { :error => I18n.t('requests.errors.holding_id.blank') }
+        return { :error => 'test' }
       end
 
-            Rails.logger.debug "mjc12test: still here"
+      Rails.logger.info "mjc12test: still here"
 
       # Set up Voyager request URL string
       voyager_request_handler_url = Rails.configuration.voyager_request_handler_host
@@ -535,7 +533,7 @@ module BlacklightCornellRequests
       end
 
 
-            Rails.logger.debug "mjc12test: still here again"
+            Rails.logger.info "mjc12test: still here again"
 
       # Assemble complete request URL
       voyager_request_handler_url += "/holdings/#{params[:request_action]}/#{self.netid}/#{self.bibid}/#{params[:library_id]}"
@@ -543,7 +541,7 @@ module BlacklightCornellRequests
         voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
       end
 
-      Rails.logger.debug "mjc12test: fired #{voyager_request_handler_url}"
+      Rails.logger.info "mjc12test: fired #{voyager_request_handler_url}"
 
 
       # Send the request
