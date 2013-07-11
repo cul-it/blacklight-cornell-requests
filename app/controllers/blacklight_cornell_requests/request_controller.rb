@@ -106,6 +106,9 @@ module BlacklightCornellRequests
     
     def make_voyager_request
 
+
+
+
       # Validate the form data
       if params[:holding_id].blank?
         flash[:error] = I18n.t('requests.errors.holding_id.blank')
@@ -122,6 +125,10 @@ module BlacklightCornellRequests
         else
           flash[:error] = I18n.t('requests.failure')
         end
+
+        Rails.logger.debug "mjc12test: test #{Rails.application.routes.url_helpers.catalog_path(params[:bibid])}"
+        redirect_to Rails.application.routes.url_helpers.catalog_path(params[:bibid]), :layout => false
+        return
 
       end
 
