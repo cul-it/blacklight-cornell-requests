@@ -162,17 +162,13 @@ module BlacklightCornellRequests
       volumes = volumes.sort_by do |v|
 
         if v.is_a? Integer
-          Rails.logger.debug "mjc12test: Simple integer sort for #{v}"
           [Integer(v)]
         else
           a, b, c = v.split(/[\.\-,]/) 
-          Rails.logger.debug "mjc12test: split: a = #{a}, b = #{b}, c = #{c}"
           b = b.gsub(/[^0-9]/,'') unless b.nil?
           if b.blank? or b !~ /\d+/
-            Rails.logger.debug "mjc12test: Sorting using a"
             [a]
           else
-            Rails.logger.debug "mjc12test: Sorting using a and b"
             [a, Integer(b)] # Note: This forces whatever is left into an integer!
           end
         end
@@ -497,7 +493,6 @@ module BlacklightCornellRequests
         ill_link = ill_link + "&rft.identifier=#{document[:lc_callnum_display][0]}"
       end
       self.ill_link = ill_link
-      Rails.logger.debug "mjc12test: link: #{self.ill_link}"
     end
     
     def deep_copy(o)
@@ -514,6 +509,7 @@ module BlacklightCornellRequests
 
       Rails.logger.info "mjc12test: entered function"
 
+      Rails.logger.info "mjc12test: : #{self.bibid}, netid: #{netid}, holdid: #{params[:holding_id]}"
       # Need bibid, netid, itemid to proceed
       if self.bibid.nil?
         return { :error => I18n.t('requests.errors.bibid.blank') }
@@ -524,7 +520,7 @@ module BlacklightCornellRequests
         return { :error => 'test' }
       end
 
-            Rails.logger.debug "mjc12test: still here"
+      Rails.logger.info "mjc12test: still here"
 
       # Set up Voyager request URL string
       voyager_request_handler_url = Rails.configuration.voyager_request_handler_host
@@ -537,7 +533,7 @@ module BlacklightCornellRequests
       end
 
 
-            Rails.logger.debug "mjc12test: still here again"
+            Rails.logger.info "mjc12test: still here again"
 
       # Assemble complete request URL
       voyager_request_handler_url += "/holdings/#{params[:request_action]}/#{self.netid}/#{self.bibid}/#{params[:library_id]}"
@@ -545,7 +541,7 @@ module BlacklightCornellRequests
         voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
       end
 
-      Rails.logger.debug "mjc12test: fired #{voyager_request_handler_url}"
+      Rails.logger.info "mjc12test: fired #{voyager_request_handler_url}"
 
 
       # Send the request
