@@ -37,17 +37,9 @@ module BlacklightCornellRequests
       elsif req.request_options.present?
         req.request_options.each do |item|
           iid = item[:iid]
-          @iis[iid['itemid']] = {
-              :location => iid['location'],
-              :location_id => iid['location_id'],
-              :call_number => iid['callNumber'],
-              :copy => iid['copy'],
-              :enumeration => iid['enumeration'],
-              :url => iid['url'],
-              :chron => iid['chron'],
-              :year => iid['year'],
-              :exclude_location_id => iid['exclude_location_id']
-          }
+          iid[:id] = iid[:itemid]
+          iid[:call_number] = iid[:callNumber]
+          @iis[iid['itemid']] = iid
         end
 
         @alternate_request_options = []

@@ -70,17 +70,9 @@ module BlacklightCornellRequests
           # If volume is specified, only populate items with matching enum/chron/year values
           next if (!volume.blank? and ( volume != i['enumeration'] and volume != i['chron'] and volume != i['year']))
 
-          status = item_status i['itemStatus']
-          iid = deep_copy(i)
-          all_items.push({ :id => i['itemid'], 
-                           :status => status, 
-                           'location' => i[:location],
-                           :typeCode => i['typeCode'],
-                           :enumeration => i['enumeration'],
-                           :chron => i['chron'],
-                           :year => i['year'],
-                           :iid => iid
-                         })
+          iid = deep_copy i
+          iid[:status] = item_status iid[:itemStatus]
+          all_items.push iid
         end
       end
 
@@ -274,7 +266,7 @@ module BlacklightCornellRequests
       # Get delivery time estimates for each option
       options.each do |option|
         option[:estimate] = get_delivery_time(option[:service], option)
-        option[:iid] = item[:iid]
+        option[:iid] = item
       end
 
       #return sort_request_options options
@@ -496,7 +488,7 @@ module BlacklightCornellRequests
     end
     
     def deep_copy(o)
-      Marshal.load(Marshal.dump(o))
+      Marshal.load(Marshal.dump(o)).with_indifferent_access
     end
     
     ###################### Make Voyager requests ################################
