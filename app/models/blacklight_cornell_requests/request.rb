@@ -4,8 +4,6 @@ require 'blacklight_cornell_requests/borrow_direct'
 module BlacklightCornellRequests
   class Request
 
-    # Following set of constants defines the views that should be rendered
-    # for each library service.
     L2L = 'l2l'
     BD = 'bd'
     HOLD = 'hold'
@@ -15,8 +13,6 @@ module BlacklightCornellRequests
     ILL = 'ill'
     ASK_CIRCULATION = 'circ'
     ASK_LIBRARIAN = 'ask'
-
-
     LIBRARY_ANNEX = 'Library Annex'
     HOLD_PADDING_TIME = 3
 
@@ -63,42 +59,36 @@ module BlacklightCornellRequests
 
       # Get holdings
       get_holdings 'retrieve_detail_raw' unless self.holdings_data
-       # puts self.holdings_data
 
       # Get item status and location for each item in each holdings record; store in all_items
       all_items = []
       item_status = 'Charged'
+      holdings = self.holdings_data[self.bibid.to_s]['records']
+      holdings.each do |h|
+        items = h['item_status']['itemdata']
+        items.each do |i|
+          # If volume is specified, only populate items with matching enum/chron/year values
+          next if (!volume.blank? and ( volume != i['enumeration'] and volume != i['chron'] and volume != i['year']))
 
-      unless self.holdings_data.nil?
-
-        holdings = self.holdings_data[self.bibid.to_s]['records']
-        holdings.each do |h|
-          items = h['item_status']['itemdata']
-          items.each do |i|
-            # If volume is specified, only populate items with matching enumeration values
-           # Rails.logger.debug "volume: #{volume}, enum: #{i['enumeration']}"
-            next if (!volume.blank? and volume != i['enumeration'])
-                 #     Rails.logger.debug "Adding an item"
-
-            status = item_status i['itemStatus']
-            iid = deep_copy(i)
-            all_items.push({ :id => i['itemid'], 
-                             :status => status, 
-                             'location' => i[:location],
-                             :typeCode => i['typeCode'],
-                             :enumeration => i['enumeration'],
-                             :iid => iid
-                           })
-          end
-        
+          status = item_status i['itemStatus']
+          iid = deep_copy(i)
+          all_items.push({ :id => i['itemid'], 
+                           :status => status, 
+                           'location' => i[:location],
+                           :typeCode => i['typeCode'],
+                           :enumeration => i['enumeration'],
+                           :chron => i['chron'],
+                           :year => i['year'],
+                           :iid => iid
+                         })
         end
-
       end
 
       self.items = all_items
       self.document = document
 
       unless document.nil?
+
         # Iterate through all items and get list of delivery methods
         bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
         all_items.each do |item|
@@ -114,8 +104,11 @@ module BlacklightCornellRequests
           # Multi-volume
           volumes = {}
           all_items.each do |item|
-            volumes[item[:enumeration]] = 1
+            volumes[item[:enumeration]] = 1 unless item[:enumeration].blank? 
+            volumes[item[:chron]] = 1 unless item[:chron].blank?
+            volumes[item[:year]] = 1 unless item[:year].blank?
           end
+
           self.volumes = sort_volumes(volumes.keys)
 
         else
@@ -129,7 +122,7 @@ module BlacklightCornellRequests
         end
 
       end
-            
+  
       if !target.blank?
         self.service = target
       elsif request_options.present?
@@ -167,8 +160,18 @@ module BlacklightCornellRequests
     def sort_volumes(volumes)
 
       volumes = volumes.sort_by do |v|
-        a, b, c = v.split(/[\.\-]/)      
-        [a, Integer(b)]
+
+        if v.is_a? Integer
+          [Integer(v)]
+        else
+          a, b, c = v.split(/[\.\-,]/) 
+          b = b.gsub(/[^0-9]/,'') unless b.nil?
+          if b.blank? or b !~ /\d+/
+            [a]
+          else
+            [a, Integer(b)] # Note: This forces whatever is left into an integer!
+          end
+        end
       end
 
       volumes
@@ -184,12 +187,7 @@ module BlacklightCornellRequests
 
       return nil unless self.bibid
 
-      begin
-        response = JSON.parse(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/#{type}/#{self.bibid}"))
-      rescue HTTPClient::BadResponseError
-        Rails.logger.error 'ERROR: Couldn\'t connect to holdings service'
-        return nil
-      end
+      response = JSON.parse(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/#{type}/#{self.bibid}"))
 
       # return nil if there is no meaningful response (e.g., invalid bibid)
       return nil if response[self.bibid.to_s].nil?
@@ -235,7 +233,7 @@ module BlacklightCornellRequests
     def item_status item_status
       if item_status.include? 'Not Charged'
         'Not Charged'
-      elsif item_status =~ /^Charged/
+      elsif item_status =~ /Charged/
         'Charged'
       elsif item_status =~ /Renewed/
         'Charged'
@@ -476,7 +474,7 @@ module BlacklightCornellRequests
         ill_link = ill_link + "&rft_id=urn%3AISBN%3A#{isbns}"
       end
       if !self.ti.blank?
-        ill_link = ill_link + "&rft.btitle=#{self.ti}"
+        ill_link = ill_link + "&rft.btitle=#{CGI.escape(self.ti)}"
       end
       if !document[:author_display].blank?
         ill_link = ill_link + "&rft.aulast=#{document[:author_display]}"
@@ -489,12 +487,11 @@ module BlacklightCornellRequests
         ill_link = ill_link + "&rft.date=#{pub_info_display}"
       end
       if !document[:format].blank?
-        ill_link = ill_link + "&rft.genre=#{document[:format]}"
+        ill_link = ill_link + "&rft.genre=#{document[:format][0]}"
       end
       if document[:lc_callnum_display].present?
         ill_link = ill_link + "&rft.identifier=#{document[:lc_callnum_display][0]}"
       end
-      
       self.ill_link = ill_link
     end
     
@@ -510,14 +507,20 @@ module BlacklightCornellRequests
     # Returns a status to be 'flashed' to the user
     def make_voyager_request params
 
+      Rails.logger.info "mjc12test: entered function"
+
+      Rails.logger.info "mjc12test: : #{self.bibid}, netid: #{netid}, holdid: #{params[:holding_id]}"
       # Need bibid, netid, itemid to proceed
       if self.bibid.nil?
         return { :error => I18n.t('requests.errors.bibid.blank') }
       elsif netid.nil? 
         return { :error => I18n.t('requests.errors.email.blank') }
       elsif params[:holding_id].nil?
-        return { :error => I18n.t('requests.errors.holding_id.blank') }
+        #return { :error => I18n.t('requests.errors.holding_id.blank') }
+        return { :error => 'test' }
       end
+
+      Rails.logger.info "mjc12test: still here"
 
       # Set up Voyager request URL string
       voyager_request_handler_url = Rails.configuration.voyager_request_handler_host
@@ -529,13 +532,16 @@ module BlacklightCornellRequests
         voyager_request_handler_url += ":" + Rails.configuration.voyager_request_handler_port.to_s
       end
 
+
+            Rails.logger.info "mjc12test: still here again"
+
       # Assemble complete request URL
       voyager_request_handler_url += "/holdings/#{params[:request_action]}/#{self.netid}/#{self.bibid}/#{params[:library_id]}"
       unless params[:holding_id].nil?
         voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
       end
 
-            Rails.logger.debug "mjc12test: fired #{voyager_request_handler_url}"
+      Rails.logger.info "mjc12test: fired #{voyager_request_handler_url}"
 
 
       # Send the request
@@ -543,7 +549,7 @@ module BlacklightCornellRequests
       body = { 'reqnna' => params['latest-date'], 'reqcomments' => params[:reqcomments] }
       result = HTTPClient.post(voyager_request_handler_url, body)
       response = JSON.parse(result.content)
-      # puts response
+      Rails.logger.debug "mjc12test: response is #{response.inspect}"
       if response['status'] == 'failed'
         return { :failure => I18n.t('requests.failure') }
       else
