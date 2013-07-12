@@ -118,11 +118,10 @@ module BlacklightCornellRequests
         response = req.make_voyager_request params
 
         if response[:failure].blank?
-          #flash.now[:success] = I18n.t('requests.success')
-          # Redirect to item view on successful request
-          #redirect_to '#{Rails.application.routes.url_helpers.catalog_path(params[:bibid])}'
+          # Note: the :flash=>'success' in this case is not setting the actual flash message,
+          # but instead specifying a URL parameter that acts as a flag in Blacklight's show.html.erb view.
           render js: "window.location = '#{Rails.application.routes.url_helpers.catalog_path(params[:bibid], :flash=>'success')}'"
-        return
+          return
         else
           flash[:error] = I18n.t('requests.failure')
         end
