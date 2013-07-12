@@ -106,9 +106,6 @@ module BlacklightCornellRequests
 
     def make_voyager_request
 
-
-
-
       # Validate the form data
       if params[:holding_id].blank?
         flash[:error] = I18n.t('requests.errors.holding_id.blank')
@@ -121,9 +118,10 @@ module BlacklightCornellRequests
         response = req.make_voyager_request params
 
         if response[:failure].blank?
-          flash[:success] = I18n.t('requests.success')
+          #flash.now[:success] = I18n.t('requests.success')
           # Redirect to item view on successful request
-          render js: "window.location = '#{Rails.application.routes.url_helpers.catalog_path(params[:bibid])}'"
+          #redirect_to '#{Rails.application.routes.url_helpers.catalog_path(params[:bibid])}'
+          render js: "window.location = '#{Rails.application.routes.url_helpers.catalog_path(params[:bibid], :flash=>'success')}'"
         return
         else
           flash[:error] = I18n.t('requests.failure')
