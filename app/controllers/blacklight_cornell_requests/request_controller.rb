@@ -1,35 +1,35 @@
 require_dependency "blacklight_cornell_requests/application_controller"
 
 module BlacklightCornellRequests
-  
+
   class RequestController < ApplicationController
 
     include Blacklight::SolrHelper
-    
+
     def magic_request target=''
-      
+
       @id = params[:bibid]
       resp, @document = get_solr_response_for_doc_id(@id)
-      
+
       req = BlacklightCornellRequests::Request.new(@id)
       req.netid = request.env['REMOTE_USER']
       req.magic_request @document, request.env['HTTP_HOST'], {:target => target, :volume => params[:volume]}
-      
+
       if ! req.service.nil?
         @service = req.service
       else
         @service = { :service => BlacklightCornellRequests::Request::ASK_LIBRARIAN }
       end
-      
+
       @estimate = req.estimate
       @ti = req.ti
       @au = req.au
       @isbn = req.isbn
       @ill_link = req.ill_link
       @pub_info = req.pub_info
-      
+
       @iis = {}
-        
+
       if req.volumes.present? and params[:volume].blank?
         @volumes = req.volumes
         render 'shared/_volume_select'
@@ -49,17 +49,17 @@ module BlacklightCornellRequests
               :exclude_location_id => iid['exclude_location_id']
           }
         end
-      
+
         @alternate_request_options = []
         req.alternate_options.each do |option|
           @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
         end
 
       end
-      
+
       render @service
 
-      
+
     end
 
     # These one-line service functions simply return the name of the view
@@ -95,7 +95,7 @@ module BlacklightCornellRequests
     def ask
       return magic_request Request::ASK_LIBRARIAN
     end
-    
+
     def blacklight_solr
       @solr ||=  RSolr.connect(blacklight_solr_config)
     end
@@ -103,7 +103,7 @@ module BlacklightCornellRequests
     def blacklight_solr_config
       Blacklight.solr_config
     end
-    
+
     def make_voyager_request
 
 
@@ -122,14 +122,12 @@ module BlacklightCornellRequests
 
         if response[:failure].blank?
           flash[:success] = I18n.t('requests.success')
+          # Redirect to item view on successful request
+          render js: "window.location = '#{Rails.application.routes.url_helpers.catalog_path(params[:bibid])}'"
+        return
         else
           flash[:error] = I18n.t('requests.failure')
         end
-
-        Rails.logger.debug "mjc12test: test #{Rails.application.routes.url_helpers.catalog_path(params[:bibid])}"
-        redirect_to Rails.application.routes.url_helpers.catalog_path(params[:bibid]), :layout => false
-        return
-
       end
 
 
@@ -138,9 +136,9 @@ module BlacklightCornellRequests
       render :partial => '/flash_msg', :layout => false
 
     end
-    
+
     def make_purchase_request
-      
+
       if params[:name].blank?
         flash[:error] = I18n.t('requests.errors.name.blank')
       elsif params[:reqstatus].blank?
@@ -159,11 +157,11 @@ module BlacklightCornellRequests
           flash[:error] = I18n.t('requests.errors.email.invalid')
         end
       end
-      
+
       render :partial => '/flash_msg', :layout => false
-    
+
     end
-    
+
   end
-  
+
 end
