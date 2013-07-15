@@ -966,9 +966,9 @@ describe BlacklightCornellRequests::Request do
 					result.should == 'Not Charged'
 				end
 
-				it "returns 'Charged' if item status includes a left-anchored 'Charged'" do
+				it "returns 'Charged' if item status includes 'Charged'" do
 					result = rc.item_status 'status is Charged in this case'
-					result.should_not == 'Charged'
+					result.should == 'Charged'
 				end
 
 				it "returns 'Charged' if item status includes a left-anchored 'Charged'" do
