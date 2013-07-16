@@ -30,8 +30,8 @@ module BlacklightCornellRequests
 
       @iis = {}
 
+      @volumes = req.volumes
       if req.volumes.present? and params[:volume].blank?
-        @volumes = req.volumes
         render 'shared/_volume_select'
         return
       elsif req.request_options.present?
