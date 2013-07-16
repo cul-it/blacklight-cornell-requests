@@ -507,9 +507,6 @@ module BlacklightCornellRequests
     # Returns a status to be 'flashed' to the user
     def make_voyager_request params
 
-      Rails.logger.info "mjc12test: entered function"
-
-      Rails.logger.info "mjc12test: : #{self.bibid}, netid: #{netid}, holdid: #{params[:holding_id]}"
       # Need bibid, netid, itemid to proceed
       if self.bibid.nil?
         return { :error => I18n.t('requests.errors.bibid.blank') }
@@ -520,8 +517,6 @@ module BlacklightCornellRequests
         return { :error => 'test' }
       end
 
-      Rails.logger.info "mjc12test: still here"
-
       # Set up Voyager request URL string
       voyager_request_handler_url = Rails.configuration.voyager_request_handler_host
       voyager_request_handler_url ||= request.env['HTTP_HOST']
@@ -531,9 +526,6 @@ module BlacklightCornellRequests
       unless Rails.configuration.voyager_request_handler_port.blank?
         voyager_request_handler_url += ":" + Rails.configuration.voyager_request_handler_port.to_s
       end
-
-
-            Rails.logger.info "mjc12test: still here again"
 
       # Assemble complete request URL
       voyager_request_handler_url += "/holdings/#{params[:request_action]}/#{self.netid}/#{self.bibid}/#{params[:library_id]}"
@@ -549,7 +541,7 @@ module BlacklightCornellRequests
       body = { 'reqnna' => params['latest-date'], 'reqcomments' => params[:reqcomments] }
       result = HTTPClient.post(voyager_request_handler_url, body)
       response = JSON.parse(result.content)
-      Rails.logger.debug "mjc12test: response is #{response.inspect}"
+
       if response['status'] == 'failed'
         return { :failure => I18n.t('requests.failure') }
       else

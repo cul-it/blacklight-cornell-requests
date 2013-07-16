@@ -8,7 +8,7 @@ module BlacklightCornellRequests
 
 
 		HOLDINGS_URL = "***REMOVED***"
-		REQUEST_URL = "***REMOVED***/SendPatronRequestService"
+		REQUEST_URL = "***REMOVED***"
   	NETID_URL = "***REMOVED***"
   	DB_ID     = '1@***REMOVED***'
 		COOKIE_STORE = "***REMOVED***"
@@ -194,12 +194,13 @@ module BlacklightCornellRequests
 
 	    http_client do |hc|
 	      begin
-	        res = hc.request('POST', Rails.configuration.voyager_request_url,body:@req)
+	       # res = hc.request('POST', Rails.configuration.voyager_request_url,body:@req)
+	       res = hc.request('POST', REQUEST_URL, body:@req)
 	        xml = Nokogiri::XML(res.content())
 	        self.mtype = 'parsed'
 	      rescue
 	        @results= Hash.arbitrary_depth
-	        self.mtype = 'failed'
+	        self.mtype =  xml.inspect#'failed'
 	        return self
 	      end
 	      @results = res.content();
@@ -243,7 +244,7 @@ module BlacklightCornellRequests
 
 		def hold_text_item
      req  = <<EOS
-		<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 		<ser:serviceParameters xmlns:ser="http://www.endinfosys.com/Voyager/serviceParameters">
   	<ser:parameters>
     <ser:parameter key="bibDbName">
