@@ -63,24 +63,17 @@ module BlacklightCornellRequests
       # Get item status and location for each item in each holdings record; store in all_items
       all_items = []
       item_status = 'Charged'
-      holdings = self.holdings_data[self.bibid.to_s]['records']
+      holdings = self.holdings_data[self.bibid.to_s][:records]
       holdings.each do |h|
-        items = h['item_status']['itemdata']
+        items = h[:item_status][:itemdata]
         items.each do |i|
           # If volume is specified, only populate items with matching enum/chron/year values
-          next if (!volume.blank? and ( volume != i['enumeration'] and volume != i['chron'] and volume != i['year']))
+          next if (!volume.blank? and ( volume != i[:enumeration] and volume != i[:chron] and volume != i[:year]))
 
-          status = item_status i['itemStatus']
           iid = deep_copy(i)
-          all_items.push({ :id => i['itemid'], 
-                           :status => status, 
-                           'location' => i[:location],
-                           :typeCode => i['typeCode'],
-                           :enumeration => i['enumeration'],
-                           :chron => i['chron'],
-                           :year => i['year'],
-                           :iid => iid
-                         })
+          iid[:id] = iid[:itemid]
+          iid[:status] = item_status iid[:itemStatus]
+          all_items.push(iid)
         end
       end
 
@@ -192,7 +185,7 @@ module BlacklightCornellRequests
       # return nil if there is no meaningful response (e.g., invalid bibid)
       return nil if response[self.bibid.to_s].nil?
       
-      self.holdings_data = response
+      self.holdings_data = response.with_indifferent_access
 
     end
 
@@ -274,7 +267,7 @@ module BlacklightCornellRequests
       # Get delivery time estimates for each option
       options.each do |option|
         option[:estimate] = get_delivery_time(option[:service], option)
-        option[:iid] = item[:iid]
+        option[:iid] = item
       end
 
       #return sort_request_options options
@@ -405,7 +398,7 @@ module BlacklightCornellRequests
       case service 
 
         when L2L
-          if item_data['location'] == LIBRARY_ANNEX
+          if item_data[:location] == LIBRARY_ANNEX
             1
           else
             2
@@ -418,7 +411,7 @@ module BlacklightCornellRequests
 
         when HOLD
           ## if it got to this point, it means it is not available and should have Due on xxxx-xx-xx
-          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data['itemStatus'])
+          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:itemStatus])
           if ! dueDate.nil?
             estimate = (Date.parse(dueDate[1]) - Date.today).to_i
             if (estimate < 0)
@@ -496,7 +489,7 @@ module BlacklightCornellRequests
     end
     
     def deep_copy(o)
-      Marshal.load(Marshal.dump(o))
+      Marshal.load(Marshal.dump(o)).with_indifferent_access
     end
     
     ###################### Make Voyager requests ################################
@@ -507,9 +500,9 @@ module BlacklightCornellRequests
     # Returns a status to be 'flashed' to the user
     def make_voyager_request params
 
-      Rails.logger.info "mjc12test: entered function"
+      # Rails.logger.info "mjc12test: entered function"
 
-      Rails.logger.info "mjc12test: : #{self.bibid}, netid: #{netid}, holdid: #{params[:holding_id]}"
+      # Rails.logger.info "mjc12test: : #{self.bibid}, netid: #{netid}, holdid: #{params[:holding_id]}"
       # Need bibid, netid, itemid to proceed
       if self.bibid.nil?
         return { :error => I18n.t('requests.errors.bibid.blank') }
@@ -520,7 +513,7 @@ module BlacklightCornellRequests
         return { :error => 'test' }
       end
 
-      Rails.logger.info "mjc12test: still here"
+      # Rails.logger.info "mjc12test: still here"
 
       # Set up Voyager request URL string
       voyager_request_handler_url = Rails.configuration.voyager_request_handler_host
@@ -533,7 +526,7 @@ module BlacklightCornellRequests
       end
 
 
-            Rails.logger.info "mjc12test: still here again"
+      # Rails.logger.info "mjc12test: still here again"
 
       # Assemble complete request URL
       voyager_request_handler_url += "/holdings/#{params[:request_action]}/#{self.netid}/#{self.bibid}/#{params[:library_id]}"
@@ -541,7 +534,7 @@ module BlacklightCornellRequests
         voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
       end
 
-      Rails.logger.info "mjc12test: fired #{voyager_request_handler_url}"
+      # Rails.logger.info "mjc12test: fired #{voyager_request_handler_url}"
 
 
       # Send the request
