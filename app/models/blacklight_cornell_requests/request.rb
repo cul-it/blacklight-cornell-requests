@@ -93,17 +93,8 @@ module BlacklightCornellRequests
         # Determine whether this is a multi-volume thing or not (i.e, multi-copy)
         # They will be handled differently depending
         if self.document[:multivol_b] and volume.blank?
-
           # Multi-volume
-          volumes = {}
-          all_items.each do |item|
-            volumes[item[:enumeration]] = 1 unless item[:enumeration].blank? 
-            volumes[item[:chron]] = 1 unless item[:chron].blank?
-            volumes[item[:year]] = 1 unless item[:year].blank?
-          end
-
-          self.volumes = sort_volumes(volumes.keys)
-
+          self.set_volumes(all_items)
         else
 
           # Multi-copy
@@ -146,6 +137,18 @@ module BlacklightCornellRequests
           end
         end
       end
+    end
+
+    # set the class volumes from a list of item records
+    def set_volumes(items) 
+      volumes = {}
+      items.each do |item|
+        volumes[item[:enumeration]] = 1 unless item[:enumeration].blank? 
+        volumes[item[:chron]] = 1 unless item[:chron].blank?
+        volumes[item[:year]] = 1 unless item[:year].blank?
+      end
+
+      self.volumes = sort_volumes(volumes.keys)
     end
 
     # Sort volumes in their logical order for display.
