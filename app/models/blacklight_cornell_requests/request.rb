@@ -528,9 +528,6 @@ module BlacklightCornellRequests
     # Returns a status to be 'flashed' to the user
     def make_voyager_request params
 
-      # Rails.logger.info "mjc12test: entered function"
-
-      # Rails.logger.info "mjc12test: : #{self.bibid}, netid: #{netid}, holdid: #{params[:holding_id]}"
       # Need bibid, netid, itemid to proceed
       if self.bibid.nil?
         return { :error => I18n.t('requests.errors.bibid.blank') }
@@ -541,41 +538,57 @@ module BlacklightCornellRequests
         return { :error => 'test' }
       end
 
-      # Rails.logger.info "mjc12test: still here"
+      # Use the VoyagerRequest class to submit the request while bypassing the holdings service
+      v = VoyagerRequest.new(self.bibid)
+      v.itemid = params[:holding_id]
+      v.patron(netid)
+      v.libraryid = params[:library_id]
+      v.reqnna = params['latest-date']
+      v.reqcomments = params[:reqcomments]
+      case params[:request_action]
+      when 'hold'
+        v.place_hold_item!
+      when 'recall'
+        v.place_recall_item!
+      when 'callslip'
+        v.place_callslip_item!
+      end
+
+      Rails.logger.debug "mjc12test: v: #{v.inspect}"
+
+      if v.mtype.strip == 'success'
+        return { :success => I18n.t('requests.success') }
+      else
+        return { :failure => I18n.t('requests.failure') }
+      end
 
       # Set up Voyager request URL string
-      voyager_request_handler_url = Rails.configuration.voyager_request_handler_host
-      voyager_request_handler_url ||= request.env['HTTP_HOST']
-      unless voyager_request_handler_url.starts_with?('http')
-        voyager_request_handler_url = "http://#{voyager_request_handler_url}"
-      end
-      unless Rails.configuration.voyager_request_handler_port.blank?
-        voyager_request_handler_url += ":" + Rails.configuration.voyager_request_handler_port.to_s
-      end
+      # voyager_request_handler_url = Rails.configuration.voyager_request_handler_host
+      # voyager_request_handler_url ||= request.env['HTTP_HOST']
+      # unless voyager_request_handler_url.starts_with?('http')
+      #   voyager_request_handler_url = "http://#{voyager_request_handler_url}"
+      # end
+      # unless Rails.configuration.voyager_request_handler_port.blank?
+      #   voyager_request_handler_url += ":" + Rails.configuration.voyager_request_handler_port.to_s
+      # end
 
+      # # Assemble complete request URL
+      # voyager_request_handler_url += "/holdings/#{params[:request_action]}/#{self.netid}/#{self.bibid}/#{params[:library_id]}"
+      # unless params[:holding_id].nil?
+      #   voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
+      # end
 
-      # Rails.logger.info "mjc12test: still here again"
+      # # Send the request
+      # # puts voyager_request_handler_url
+      # body = { 'reqnna' => params['latest-date'], 'reqcomments' => params[:reqcomments] }
+      # result = HTTPClient.post(voyager_request_handler_url, body)
+      #response = JSON.parse(result.content)
 
-      # Assemble complete request URL
-      voyager_request_handler_url += "/holdings/#{params[:request_action]}/#{self.netid}/#{self.bibid}/#{params[:library_id]}"
-      unless params[:holding_id].nil?
-        voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
-      end
-
-      # Rails.logger.info "mjc12test: fired #{voyager_request_handler_url}"
-
-
-      # Send the request
-      # puts voyager_request_handler_url
-      body = { 'reqnna' => params['latest-date'], 'reqcomments' => params[:reqcomments] }
-      result = HTTPClient.post(voyager_request_handler_url, body)
-      response = JSON.parse(result.content)
-      Rails.logger.debug "mjc12test: response is #{response.inspect}"
-      if response['status'] == 'failed'
-        return { :failure => I18n.t('requests.failure') }
-      else
-        return { :success => I18n.t('requests.success') }
-      end
+      # if response['status'] == 'failed'
+      #   return { :failure => I18n.t('requests.failure') }
+      # else
+      #   return { :success => I18n.t('requests.success') }
+      # end
 
     end
 
