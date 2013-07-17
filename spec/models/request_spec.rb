@@ -965,10 +965,25 @@ describe BlacklightCornellRequests::Request do
 					result = rc.item_status 'status is Not Charged in this case'
 					result.should == 'Not Charged'
 				end
+				
+				it "returns 'Not Charged' if item status includes 'Discharged'" do
+          result = rc.item_status 'status is Discharged'
+          result.should == 'Not Charged'
+        end
+        
+        it "returns '' if item status includes 'Cataloging Review'" do
+          result = rc.item_status 'status is Cataloging Review'
+          result.should == 'Not Charged'
+        end
+        
+        it "returns 'Not Charged' if item status includes 'Circulation Review'" do
+          result = rc.item_status 'status is Circulation Review'
+          result.should == 'Not Charged'
+        end
 
-				it "returns 'Charged' if item status includes a left-anchored 'Charged'" do
+				it "returns 'Charged' if item status includes 'Charged' but not 'Not Charged'" do
 					result = rc.item_status 'status is Charged in this case'
-					result.should_not == 'Charged'
+					result.should == 'Charged'
 				end
 
 				it "returns 'Charged' if item status includes a left-anchored 'Charged'" do
@@ -981,20 +996,70 @@ describe BlacklightCornellRequests::Request do
 					result.should == 'Charged'
 				end
 
-				it "returns 'Requested' if item status includes 'Requested'" do
-					result = rc.item_status 'status is Requested in this case'
-					result.should == 'Requested'
-				end
+				it "returns 'Charged' if item status includes 'In transit to (anything then dot) .'" do
+          result = rc.item_status 'status is In transit to 2000-01-01.'
+          result.should == 'Charged'
+        end
+        
+        it "returns 'Charged' if item status includes 'In transit to (anything but dot)'" do
+          result = rc.item_status 'status is In transit to 2000-01-01'
+          result.should == 'Not Charged'
+        end
+        
+        it "returns 'Charged' if item status includes Hold''" do
+          result = rc.item_status 'status is Hold'
+          result.should == 'Charged'
+        end
+        
+        it "returns 'Charged' if item status includes 'Overdue'" do
+          result = rc.item_status 'status is Overdue'
+          result.should == 'Charged'
+        end
+        
+        it "returns 'Charged' if item status includes 'Recall'" do
+          result = rc.item_status 'status is Recall'
+          result.should == 'Charged'
+        end
+        
+        it "returns 'Charged' if item status includes 'Claims'" do
+          result = rc.item_status 'status is Claims'
+          result.should == 'Charged'
+        end
+        
+        it "returns 'Charged' if item status includes 'Damaged'" do
+          result = rc.item_status 'status is Damaged'
+          result.should == 'Charged'
+        end
+        
+        it "returns 'Charged' if item status includes 'Withdrawn'" do
+          result = rc.item_status 'status is Withdrawn'
+          result.should == 'Charged'
+        end
+        
+        it "returns 'Charged' if item status includes 'Call Slip Request'" do
+          result = rc.item_status 'status is Call Slip Request'
+          result.should == 'Charged'
+        end
+        
+        it "returns 'Requested' if item status includes 'Requested'" do
+          result = rc.item_status 'status is Requested in this case'
+          result.should == 'Requested'
+        end
 
-				it "returns 'Missing' if item status includes 'Missing'" do
-					result = rc.item_status 'status is Missing in this case'
-					result.should == 'Missing'
-				end
+        it "returns 'Missing' if item status includes 'Missing'" do
+          result = rc.item_status 'status is Missing in this case'
+          result.should == 'Missing'
+        end
 
-				it "returns 'Lost' if item status includes 'Lost'" do
-					result = rc.item_status 'status is Lost in this case'
-					result.should == 'Lost'
-				end
+        it "returns 'Lost' if item status includes 'Lost'" do
+          result = rc.item_status 'status is Lost in this case'
+          result.should == 'Lost'
+        end
+        
+        it "returns 'At Bindery' if item status includes 'At Bindery'" do
+          result = rc.item_status 'status is At Bindery'
+          result.should == 'At Bindery'
+        end
 
 				it "returns the passed parameter if the status isn't recognized" do
 					result = rc.item_status 'status is Leaving on a Jet Plane in this case'
@@ -1011,12 +1076,12 @@ describe BlacklightCornellRequests::Request do
 			describe "l2l" do 
 
 				it "returns 1 if item is at the annex" do
-					params = { :service => 'l2l', 'location' => 'Library Annex' }
+					params = { :service => 'l2l', :location => 'Library Annex' }
 					req.get_delivery_time('l2l', params).should == 1
 				end
 
 				it "returns 2 if item is not at annex" do
-					params = { :service => 'l2l', 'location' => 'Maui' }
+					params = { :service => 'l2l', :location => 'Maui' }
 					req.get_delivery_time('l2l', params).should == 2
 				end
 
@@ -1033,17 +1098,17 @@ describe BlacklightCornellRequests::Request do
 			describe 'hold' do 
 
 				it "returns 180 if there is no hold date" do
-					params = { :service => 'hold', 'itemStatus' => 'Hold' }
+					params = { :service => 'hold', :itemStatus => 'Hold' }
 					req.get_delivery_time('hold', params).should == 180
 				end
 
 				it "returns 180 if there is a hold date problem" do
-					params = { :service => 'hold', 'itemStatus' => 'Hold -- Due on 1977-10-15' }
+					params = { :service => 'hold', :itemStatus => 'Hold -- Due on 1977-10-15' }
 					req.get_delivery_time('hold', params).should == 180					
 				end
 
 				it "returns the remaining time till due date plus padding time for a valid hold date" do
-					params = { :service => 'hold', 'itemStatus' => "Hold -- Due on #{Date.today + 10}" }
+					params = { :service => 'hold', :itemStatus => "Hold -- Due on #{Date.today + 10}" }
 					req.get_delivery_time('hold', params).should == 10 + req.get_hold_padding						
 				end
 
