@@ -22,7 +22,7 @@ module BlacklightCornellRequests
     include BorrowDirect
 
     attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :alternate_options
-    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items, :volumes
+    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items, :volumes, :all_items
     attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN
     validates_presence_of :bibid
     def save(validate = true)
@@ -60,31 +60,40 @@ module BlacklightCornellRequests
       # Get holdings
       get_holdings 'retrieve_detail_raw' unless self.holdings_data
 
-      # Get item status and location for each item in each holdings record; store in all_items
-      all_items = []
+      # Get item status and location for each item in each holdings record; store in working_items
+      # We now have two item arrays! working_items (which eventually gets set in self.items) is a 
+      # list of all 'active' items, e.g., those for a particular volume or other set. 
+      # self.all_items includes *all* the items in the holdings data for the bibid, so that we can
+      # use that list to, for example, obtain a list of all the volumes in the bibid.
+      working_items = []
+      self.all_items = []
       item_status = 'Charged'
       holdings = self.holdings_data[self.bibid.to_s][:records]
       holdings.each do |h|
         items = h[:item_status][:itemdata]
         items.each do |i|
-          # If volume is specified, only populate items with matching enum/chron/year values
-          next if (!volume.blank? and ( volume != i[:enumeration] and volume != i[:chron] and volume != i[:year]))
-
           iid = deep_copy(i)
           iid[:id] = iid[:itemid]
           iid[:status] = item_status iid[:itemStatus]
-          all_items.push(iid)
+
+          self.all_items.push(iid) # Everything goes into all_items
+          # If volume is specified, only populate items with matching enum/chron/year values
+          next if (!volume.blank? and ( volume != i[:enumeration] and volume != i[:chron] and volume != i[:year]))
+          
+          # Only a subset of all_items gets put into working_items
+          working_items.push(iid)
+
         end
       end
 
-      self.items = all_items
+      self.items = working_items
       self.document = document
 
       unless document.nil?
 
         # Iterate through all items and get list of delivery methods
         bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
-        all_items.each do |item|
+        working_items.each do |item|
           services = get_delivery_options item, bd_params
           item[:services] = services
         end
@@ -93,21 +102,12 @@ module BlacklightCornellRequests
         # Determine whether this is a multi-volume thing or not (i.e, multi-copy)
         # They will be handled differently depending
         if self.document[:multivol_b] and volume.blank?
-
           # Multi-volume
-          volumes = {}
-          all_items.each do |item|
-            volumes[item[:enumeration]] = 1 unless item[:enumeration].blank? 
-            volumes[item[:chron]] = 1 unless item[:chron].blank?
-            volumes[item[:year]] = 1 unless item[:year].blank?
-          end
-
-          self.volumes = sort_volumes(volumes.keys)
-
+          self.set_volumes(working_items)
         else
 
           # Multi-copy
-          all_items.each do |item|
+          working_items.each do |item|
             request_options.push *item[:services]
           end
           request_options = sort_request_options request_options
@@ -146,6 +146,18 @@ module BlacklightCornellRequests
           end
         end
       end
+    end
+
+    # set the class volumes from a list of item records
+    def set_volumes(items) 
+      volumes = {}
+      items.each do |item|
+        volumes[item[:enumeration]] = 1 unless item[:enumeration].blank? 
+        volumes[item[:chron]] = 1 unless item[:chron].blank?
+        volumes[item[:year]] = 1 unless item[:year].blank?
+      end
+
+      self.volumes = sort_volumes(volumes.keys)
     end
 
     # Sort volumes in their logical order for display.
@@ -553,8 +565,6 @@ module BlacklightCornellRequests
       when 'callslip'
         v.place_callslip_item!
       end
-
-      Rails.logger.debug "mjc12test: v: #{v.inspect}"
 
       if v.mtype.strip == 'success'
         return { :success => I18n.t('requests.success') }
