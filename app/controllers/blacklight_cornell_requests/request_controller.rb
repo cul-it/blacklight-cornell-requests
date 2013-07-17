@@ -30,7 +30,7 @@ module BlacklightCornellRequests
 
       @iis = {}
 
-      @volumes = req.volumes
+      @volumes = req.set_volumes(req.all_items)
       if req.volumes.present? and params[:volume].blank?
         render 'shared/_volume_select'
         return
@@ -40,6 +40,7 @@ module BlacklightCornellRequests
           iid[:call_number] = iid[:callNumber]
           @iis[iid[:itemid]] = iid
         end
+        @volumes = req.volumes
 
         @alternate_request_options = []
         req.alternate_options.each do |option|
@@ -117,9 +118,6 @@ module BlacklightCornellRequests
           flash[:error] = I18n.t('requests.failure')
         end
       end
-
-
-      #Rails.logger.debug "mjc12test: flash = #{flash.inspect}"
 
       render :partial => '/flash_msg', :layout => false
 
