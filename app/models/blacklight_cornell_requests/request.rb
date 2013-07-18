@@ -343,7 +343,7 @@ module BlacklightCornellRequests
         end
         request_options.push({:service => ILL, :location => item[:location]},
                              {:service => RECALL,:location => item[:location]},
-                             {:service => HOLD, :location => item[:location]})
+                             {:service => HOLD, :location => item[:location], :status => item[:itemStatus]})
 
       elsif ((item_loan_type == 'regular' and item[:status] == 'Missing') or
              (item_loan_type == 'regular' and item[:status] == 'Lost'))
@@ -363,7 +363,7 @@ module BlacklightCornellRequests
           request_options.push( {:service => BD, :location => item[:location] } )
         end
         request_options.push( {:service => ILL, :location => item[:location] } )
-        request_options.push( {:service => HOLD, :location => item[:location] } )
+        request_options.push( {:service => HOLD, :location => item[:location], :status => item[:itemStatus] } )
 
       elsif (item_loan_type == 'day' and item[:status] == 'Not Charged')
 
@@ -396,9 +396,9 @@ module BlacklightCornellRequests
       elsif item_loan_type == 'regular' and item[:status] == 'Not Charged'
         request_options = [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
       elsif item_loan_type == 'regular' and item[:status] == 'Charged'
-        request_options = [ { :service => HOLD, :location => item[:location] } ]
+        request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
       elsif item_loan_type == 'regular' and item[:status] == 'Requested'
-        request_options = [ { :service => HOLD, :location => item[:location] } ]
+        request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
       elsif item_loan_type == 'regular' and item[:status] == 'Missing'
         ## do nothing
       elsif item_loan_type == 'regular' and item[:status] == 'Lost'
@@ -406,9 +406,9 @@ module BlacklightCornellRequests
       elsif item_loan_type == 'day' and item[:status] == 'Not Charged'
         request_options = [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
       elsif item_loan_type == 'day' and item[:status] == 'Charged'
-        request_options = [ { :service => HOLD, :location => item[:location] } ]
+        request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
       elsif item_loan_type == 'day' and item[:status] == 'Requested'
-        request_options = [ { :service => HOLD, :location => item[:location] } ]
+        request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
       elsif item_loan_type == 'day' and item[:status] == 'Missing'
         ## do nothing
       elsif item_loan_type == 'day' and item[:status] == 'Lost'
@@ -451,9 +451,9 @@ module BlacklightCornellRequests
 
         when HOLD
           ## if it got to this point, it means it is not available and should have Due on xxxx-xx-xx
-          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:itemStatus])
+          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])[1]
           if ! dueDate.nil?
-            estimate = (Date.parse(dueDate[1]) - Date.today).to_i
+            estimate = (Date.parse(dueDate) - Date.today).to_i
             if (estimate < 0)
               ## this item is overdue
               ## use default value instead
@@ -468,7 +468,7 @@ module BlacklightCornellRequests
           end
 
         when RECALL
-          30
+          15
         when PDA
           5
         when PURCHASE
