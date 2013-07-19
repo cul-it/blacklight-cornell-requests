@@ -10,10 +10,9 @@
     %form#req.l2l-request.form-horizontal{:method => 'post', :action => make_voyager_request_path({:bibid =>@id})}
       -if @volumes.present?
         .control-group
-          %label.control-label
+          %label.control-label{:for => "volume-selection"} 
             Current Volume: 
           .controls.delivery-estimate
-            =params[:volume]
             = render :partial =>'shared/volume_select'
       %input(type="hidden" name="bid" value="#{@id}" id="bid")
       %input(type="hidden" name="request_action" value="callslip" id="request_action")

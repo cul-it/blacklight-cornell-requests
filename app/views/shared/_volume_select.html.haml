@@ -1,11 +1,7 @@
 -if @selected_volume.present?
-	%div#per_page_dropdown.dropdown
-		%select#volume-select{@volumes, :onchange=>"redirectVol(this);", :name => "volume-selection"}
-			%option Choose a different volume
-			-@volumes.each do |v|
-				%option{:value => volume_request_path(@id, v)}
-					=@ti
-					=v
+	%select#volume-selection{@volumes, :onchange=>"redirectVol(this);", :name => "volume-selection"}
+		=options_for_select(@volumes, selected = @selected_volume)
+
 -else
 	= link_to catalog_path(@id), {:title => @ti} do
 		%i.icon-circle-arrow-left
