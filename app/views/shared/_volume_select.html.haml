@@ -1,7 +1,23 @@
-Select a volume:
-
-%div.row
-  %div.span8.well
-    -@volumes.each do |v|
-      %div.volume
-      = link_to v, volume_request_path(@id, v)
+-if @selected_volume.present?
+	%div#per_page_dropdown.dropdown
+		%select#volume-select{@volumes, :onchange=>"redirectVol(this);", :name => "volume-selection"}
+			%option Choose a different volume
+			-@volumes.each do |v|
+				%option{:value => volume_request_path(@id, v)}
+					=@ti
+					=v
+-else
+	= link_to catalog_path(@id), {:title => @ti} do
+		%i.icon-circle-arrow-left
+		Back to item
+	%div.row
+		%div.span8.well
+			%h2
+				=@ti
+			%div#per_page_dropdown.dropdown
+				%select#volume-select{@volumes, :onchange=>"redirectVol(this);", :name => "volume-selection"}
+					%option Choose a volume
+					-@volumes.each do |v|
+						%option{:value => volume_request_path(@id, v)}
+							=@ti
+							=v
