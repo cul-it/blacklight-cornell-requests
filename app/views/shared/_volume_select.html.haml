@@ -1,5 +1,5 @@
 -if @selected_volume.present?
-	%select#volume-selection{@volumes, :onchange=>"redirectVol(this);", :name => "volume-selection"}
+	%select#volume-selection{:name => "volume-selection", :data =>{:request_path =>magic_request_path(@id)}}
 		=options_for_select(@volumes, selected = @selected_volume)
 
 -else
@@ -11,9 +11,6 @@
 			%h2
 				=@ti
 			%div#per_page_dropdown.dropdown
-				%select#volume-select{@volumes, :onchange=>"redirectVol(this);", :name => "volume-selection"}
+				%select#volume-selection{@volumes, :name => "volume-selection", :data =>{:request_path =>magic_request_path(@id)}}
 					%option Choose a volume
-					-@volumes.each do |v|
-						%option{:value => volume_request_path(@id, v)}
-							=@ti
-							=v
+					=options_for_select(@volumes, selected = @selected_volume)
