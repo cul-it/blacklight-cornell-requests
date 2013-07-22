@@ -28,27 +28,19 @@ module BlacklightCornellRequests
       @ill_link = req.ill_link
       @pub_info = req.pub_info
 
-      @iis = {}
+      @iis = ActiveSupport::HashWithIndifferentAccess.new
 
+      @volumes = req.set_volumes(req.all_items)
       if req.volumes.present? and params[:volume].blank?
-        @volumes = req.volumes
         render 'shared/_volume_select'
         return
       elsif req.request_options.present?
         req.request_options.each do |item|
           iid = item[:iid]
-          @iis[iid['itemid']] = {
-              :location => iid['location'],
-              :location_id => iid['location_id'],
-              :call_number => iid['callNumber'],
-              :copy => iid['copy'],
-              :enumeration => iid['enumeration'],
-              :url => iid['url'],
-              :chron => iid['chron'],
-              :year => iid['year'],
-              :exclude_location_id => iid['exclude_location_id']
-          }
+          iid[:call_number] = iid[:callNumber]
+          @iis[iid[:itemid]] = iid
         end
+        @volumes = req.volumes
 
         @alternate_request_options = []
         req.alternate_options.each do |option|
@@ -126,9 +118,6 @@ module BlacklightCornellRequests
           flash[:error] = I18n.t('requests.failure')
         end
       end
-
-
-      #Rails.logger.debug "mjc12test: flash = #{flash.inspect}"
 
       render :partial => '/flash_msg', :layout => false
 

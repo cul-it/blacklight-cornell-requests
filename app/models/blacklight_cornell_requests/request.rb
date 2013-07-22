@@ -22,7 +22,7 @@ module BlacklightCornellRequests
     include BorrowDirect
 
     attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :alternate_options
-    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items, :volumes
+    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items, :volumes, :all_items
     attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN
     validates_presence_of :bibid
     def save(validate = true)
@@ -60,61 +60,94 @@ module BlacklightCornellRequests
       # Get holdings
       get_holdings 'retrieve_detail_raw' unless self.holdings_data
 
-      # Get item status and location for each item in each holdings record; store in all_items
-      all_items = []
+      # Get item status and location for each item in each holdings record; store in working_items
+      # We now have two item arrays! working_items (which eventually gets set in self.items) is a 
+      # list of all 'active' items, e.g., those for a particular volume or other set. 
+      # self.all_items includes *all* the items in the holdings data for the bibid, so that we can
+      # use that list to, for example, obtain a list of all the volumes in the bibid.
+      working_items = []
+      self.all_items = []
       item_status = 'Charged'
-      holdings = self.holdings_data[self.bibid.to_s]['records']
+      holdings = self.holdings_data[self.bibid.to_s][:records]
       holdings.each do |h|
-        items = h['item_status']['itemdata']
+        items = h[:item_status][:itemdata]
         items.each do |i|
-          # If volume is specified, only populate items with matching enum/chron/year values
-          next if (!volume.blank? and ( volume != i['enumeration'] and volume != i['chron'] and volume != i['year']))
-
-          status = item_status i['itemStatus']
           iid = deep_copy(i)
-          all_items.push({ :id => i['itemid'], 
-                           :status => status, 
-                           'location' => i[:location],
-                           :typeCode => i['typeCode'],
-                           :enumeration => i['enumeration'],
-                           :chron => i['chron'],
-                           :year => i['year'],
-                           :iid => iid
-                         })
+          iid[:id] = iid[:itemid]
+          iid[:status] = item_status iid[:itemStatus]
+
+          self.all_items.push(iid) # Everything goes into all_items
+          # If volume is specified, only populate items with matching enum/chron/year values
+          next if (!volume.blank? and ( volume != i[:enumeration] and volume != i[:chron] and volume != i[:year]))
+          
+          # Only a subset of all_items gets put into working_items
+          working_items.push(iid)
+
         end
       end
 
-      self.items = all_items
+      self.items = working_items
       self.document = document
 
       unless document.nil?
 
         # Iterate through all items and get list of delivery methods
         bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
-        all_items.each do |item|
+        working_items.each do |item|
           services = get_delivery_options item, bd_params
           item[:services] = services
         end
         populate_document_values
+        
+        
+        # handle pda
+        patron_type = get_patron_type self.netid
+        if patron_type == 'cornell' && !document['url_pda_display'].blank?
+          self.document = document
+          
+          pda_url = document['url_pda_display'][0]
+          pda_url, note = pda_url.split('|')
+          iids = { :itemid => 'pda', :url => pda_url, :note => note }
+          pda_entry = { :service => PDA, :iid => iids, :estimate => get_delivery_time(PDA, nil) }
+          
+          bd_entry = nil
+          if borrowDirect_available? bd_params
+            bd_entry = { :service => BD, :iid => {}, :estimate => get_delivery_time(BD, nil) }
+          end
+          ill_entry = { :service => ILL, :iid => {}, :estimate => get_delivery_time(ILL, nil) }
+          self.request_options = request_options
+          if target.blank? or target == PDA
+            self.service = PDA
+            request_options.push pda_entry
+            alternate_options.push bd_entry unless bd_entry.nil?
+            alternate_options.push ill_entry
+          elsif target == BD
+            self.service = BD
+            request_options.push bd_entry
+            alternate_options.push pda_entry
+            alternate_options.push ill_entry
+          elsif target == ILL
+            self.service = ILL
+            request_options.push ill_entry
+            alternate_options.push pda_entry
+            alternate_options.push bd_entry unless bd_entry.nil?
+          end
+          
+          self.request_options = request_options
+          self.alternate_options = alternate_options
+          
+          return
+        end
 
         # Determine whether this is a multi-volume thing or not (i.e, multi-copy)
         # They will be handled differently depending
         if self.document[:multivol_b] and volume.blank?
-
           # Multi-volume
-          volumes = {}
-          all_items.each do |item|
-            volumes[item[:enumeration]] = 1 unless item[:enumeration].blank? 
-            volumes[item[:chron]] = 1 unless item[:chron].blank?
-            volumes[item[:year]] = 1 unless item[:year].blank?
-          end
-
-          self.volumes = sort_volumes(volumes.keys)
-
+          self.set_volumes(working_items)
         else
 
           # Multi-copy
-          all_items.each do |item|
+          working_items.each do |item|
             request_options.push *item[:services]
           end
           request_options = sort_request_options request_options
@@ -155,6 +188,18 @@ module BlacklightCornellRequests
       end
     end
 
+    # set the class volumes from a list of item records
+    def set_volumes(items) 
+      volumes = {}
+      items.each do |item|
+        volumes[item[:enumeration]] = 1 unless item[:enumeration].blank? 
+        volumes[item[:chron]] = 1 unless item[:chron].blank?
+        volumes[item[:year]] = 1 unless item[:year].blank?
+      end
+
+      self.volumes = sort_volumes(volumes.keys)
+    end
+
     # Sort volumes in their logical order for display.
     # Volume strings typically look like 'v.1', 'v21-22', 'index v.1-10', etc.
     def sort_volumes(volumes)
@@ -192,7 +237,7 @@ module BlacklightCornellRequests
       # return nil if there is no meaningful response (e.g., invalid bibid)
       return nil if response[self.bibid.to_s].nil?
       
-      self.holdings_data = response
+      self.holdings_data = response.with_indifferent_access
 
     end
 
@@ -233,9 +278,15 @@ module BlacklightCornellRequests
     def item_status item_status
       if item_status.include? 'Not Charged'
         'Not Charged'
-      elsif item_status =~ /Charged/
+      elsif item_status.include? 'Discharged'
+        'Not Charged'
+      elsif item_status.include? 'Cataloging Review'
+        return 'Not Charged'
+      elsif item_status.include? 'Circulation Review'
+        return 'Not Charged'
+      elsif item_status.include? 'Charged'
         'Charged'
-      elsif item_status =~ /Renewed/
+      elsif item_status.include? 'Renewed'
         'Charged'
       elsif item_status.include? 'Requested'
         'Requested'
@@ -243,6 +294,26 @@ module BlacklightCornellRequests
         'Missing'
       elsif item_status.include? 'Lost'
         'Lost'
+      elsif item_status =~ /In transit to(.*)\./
+        return 'Charged'
+      elsif item_status.include? 'In transit'
+        return 'Not Charged'
+      elsif item_status.include? 'Hold'
+        return 'Charged'
+      elsif item_status.include? 'Overdue'
+        return 'Charged'
+      elsif item_status.include? 'Recall'
+        return 'Charged'
+      elsif item_status.include? 'Claims'
+        return 'Charged'
+      elsif item_status.include? 'Damaged'
+        return 'Charged'
+      elsif item_status.include? 'Withdrawn'
+        return 'Charged'
+      elsif item_status.include? 'Call Slip Request'
+        return 'Charged'
+      elsif item_status.include? 'At Bindery'
+        return 'At Bindery'
       else
         item_status
       end
@@ -274,7 +345,7 @@ module BlacklightCornellRequests
       # Get delivery time estimates for each option
       options.each do |option|
         option[:estimate] = get_delivery_time(option[:service], option)
-        option[:iid] = item[:iid]
+        option[:iid] = item
       end
 
       #return sort_request_options options
@@ -297,57 +368,59 @@ module BlacklightCornellRequests
         # end
         # request_options.push({ :service => ILL, :iid => [], :estimate => get_ill_delivery_time })
         if borrowDirect_available? params
-          request_options.push( {:service => BD, 'location' => item[:location] } )
+          request_options.push( {:service => BD, :location => item[:location] } )
         end
-        request_options.push({:service => ILL, 'location' => item[:location]})
+        request_options.push({:service => ILL, :location => item[:location]})
       elsif item_loan_type == 'regular' and item[:status] == 'Not Charged'
 
-        request_options.push({:service => L2L, 'location' => item[:location] } )
+        request_options.push({:service => L2L, :location => item[:location] } )
 
       elsif ((item_loan_type == 'regular' and item[:status] == 'Charged') or
              (item_loan_type == 'regular' and item[:status] == 'Requested'))
         # TODO: Test and fix BD check with real params
         if borrowDirect_available? params
-          request_options.push( {:service => BD, 'location' => item[:location] } )
+          request_options.push( {:service => BD, :location => item[:location] } )
         end
-        request_options.push({:service => ILL, 'location' => item[:location]}, 
-                             {:service => RECALL,'location' => item[:location]},
-                             {:service => HOLD, 'location' => item[:location]})
+        request_options.push({:service => ILL, :location => item[:location]},
+                             {:service => RECALL,:location => item[:location]},
+                             {:service => HOLD, :location => item[:location], :status => item[:itemStatus]})
 
       elsif ((item_loan_type == 'regular' and item[:status] == 'Missing') or
              (item_loan_type == 'regular' and item[:status] == 'Lost'))
 
          # TODO: Test and fix BD check with real params
         if borrowDirect_available? params
-          request_options.push( {:service => BD, 'location' => item[:location] } )
+          request_options.push( {:service => BD, :location => item[:location] } )
         end
-        request_options.push({:service => PURCHASE, 'location' => item[:location]}, 
-                             {:service => ILL,'location' => item[:location]})   
+        request_options.push({:service => PURCHASE, :location => item[:location]},
+                             {:service => ILL,:location => item[:location]})
 
       elsif ((item_loan_type == 'day' and item[:status] == 'Charged') or
              (item_loan_type == 'day' and item[:status] == 'Requested'))
 
          # TODO: Test and fix BD check with real params
         if borrowDirect_available? params
-          request_options.push( {:service => BD, 'location' => item[:location] } )
+          request_options.push( {:service => BD, :location => item[:location] } )
         end
-        request_options.push( {:service => ILL, 'location' => item[:location] } )       
-        request_options.push( {:service => HOLD, 'location' => item[:location] } )
+        request_options.push( {:service => ILL, :location => item[:location] } )
+        request_options.push( {:service => HOLD, :location => item[:location], :status => item[:itemStatus] } )
 
       elsif (item_loan_type == 'day' and item[:status] == 'Not Charged')
 
         unless Request.no_l2l_day_loan_types.include? item[:typeCode]
-          request_options.push( {:service => L2L, 'location' => item[:location] } )
+          request_options.push( {:service => L2L, :location => item[:location] } )
         end
 
       elsif item_loan_type == 'minute'
 
         # TODO: Test and fix BD check with real params
         if borrowDirect_available? params
-          request_options.push( {:service => BD, 'location' => item[:location] } )
-        end        
-        request_options.push( {:service => ASK_CIRCULATION, 'location' => item[:location] } )
-
+          request_options.push( {:service => BD, :location => item[:location] } )
+        end
+        request_options.push( {:service => ASK_CIRCULATION, :location => item[:location] } )
+        
+      elsif item[:status] == 'At Bindery'
+        request_options.push( {:service => ILL, :location => item[:location] } )
       end
 
       return request_options
@@ -361,31 +434,31 @@ module BlacklightCornellRequests
       if item_loan_type == 'nocirc'
         # do nothing
       elsif item_loan_type == 'regular' and item[:status] == 'Not Charged'
-        request_options = [ { :service => L2L, 'location' => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
+        request_options = [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
       elsif item_loan_type == 'regular' and item[:status] == 'Charged'
-        request_options = [ { :service => HOLD, 'location' => item[:location] } ]
+        request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
       elsif item_loan_type == 'regular' and item[:status] == 'Requested'
-        request_options = [ { :service => HOLD, 'location' => item[:location] } ]
+        request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
       elsif item_loan_type == 'regular' and item[:status] == 'Missing'
         ## do nothing
       elsif item_loan_type == 'regular' and item[:status] == 'Lost'
         ## do nothing
       elsif item_loan_type == 'day' and item[:status] == 'Not Charged'
-        request_options = [ { :service => L2L, 'location' => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
+        request_options = [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
       elsif item_loan_type == 'day' and item[:status] == 'Charged'
-        request_options = [ { :service => HOLD, 'location' => item[:location] } ]
+        request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
       elsif item_loan_type == 'day' and item[:status] == 'Requested'
-        request_options = [ { :service => HOLD, 'location' => item[:location] } ]
+        request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
       elsif item_loan_type == 'day' and item[:status] == 'Missing'
         ## do nothing
       elsif item_loan_type == 'day' and item[:status] == 'Lost'
         ## do nothing
       elsif item_loan_type == 'minute' and item[:status] == 'Not Charged'
-        request_options = [ { :service => ASK_CIRCULATION, 'location' => item[:location] } ]
+        request_options = [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
       elsif item_loan_type == 'minute' and item[:status] == 'Charged'
-        request_options = [ { :service => ASK_CIRCULATION, 'location' => item[:location] } ]
+        request_options = [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
       elsif item_loan_type == 'minute' and item[:status] == 'Requested'
-        request_options = [ { :service => ASK_CIRCULATION, 'location' => item[:location] } ]
+        request_options = [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
       elsif item_loan_type == 'minute' and item[:status] == 'Missing'
         ## do nothing
       elsif item_loan_type == 'minute' and item[:status] == 'Lost'
@@ -405,7 +478,7 @@ module BlacklightCornellRequests
       case service 
 
         when L2L
-          if item_data['location'] == LIBRARY_ANNEX
+          if item_data[:location] == LIBRARY_ANNEX
             1
           else
             2
@@ -418,9 +491,9 @@ module BlacklightCornellRequests
 
         when HOLD
           ## if it got to this point, it means it is not available and should have Due on xxxx-xx-xx
-          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data['itemStatus'])
+          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])[1]
           if ! dueDate.nil?
-            estimate = (Date.parse(dueDate[1]) - Date.today).to_i
+            estimate = (Date.parse(dueDate) - Date.today).to_i
             if (estimate < 0)
               ## this item is overdue
               ## use default value instead
@@ -435,7 +508,7 @@ module BlacklightCornellRequests
           end
 
         when RECALL
-          30
+          15
         when PDA
           5
         when PURCHASE
@@ -496,7 +569,7 @@ module BlacklightCornellRequests
     end
     
     def deep_copy(o)
-      Marshal.load(Marshal.dump(o))
+      Marshal.load(Marshal.dump(o)).with_indifferent_access
     end
     
     ###################### Make Voyager requests ################################
@@ -507,9 +580,6 @@ module BlacklightCornellRequests
     # Returns a status to be 'flashed' to the user
     def make_voyager_request params
 
-      Rails.logger.info "mjc12test: entered function"
-
-      Rails.logger.info "mjc12test: : #{self.bibid}, netid: #{netid}, holdid: #{params[:holding_id]}"
       # Need bibid, netid, itemid to proceed
       if self.bibid.nil?
         return { :error => I18n.t('requests.errors.bibid.blank') }
@@ -520,41 +590,55 @@ module BlacklightCornellRequests
         return { :error => 'test' }
       end
 
-      Rails.logger.info "mjc12test: still here"
+      # Use the VoyagerRequest class to submit the request while bypassing the holdings service
+      v = VoyagerRequest.new(self.bibid)
+      v.itemid = params[:holding_id]
+      v.patron(netid)
+      v.libraryid = params[:library_id]
+      v.reqnna = params['latest-date']
+      v.reqcomments = params[:reqcomments]
+      case params[:request_action]
+      when 'hold'
+        v.place_hold_item!
+      when 'recall'
+        v.place_recall_item!
+      when 'callslip'
+        v.place_callslip_item!
+      end
+
+      if v.mtype.strip == 'success'
+        return { :success => I18n.t('requests.success') }
+      else
+        return { :failure => I18n.t('requests.failure') }
+      end
 
       # Set up Voyager request URL string
-      voyager_request_handler_url = Rails.configuration.voyager_request_handler_host
-      voyager_request_handler_url ||= request.env['HTTP_HOST']
-      unless voyager_request_handler_url.starts_with?('http')
-        voyager_request_handler_url = "http://#{voyager_request_handler_url}"
-      end
-      unless Rails.configuration.voyager_request_handler_port.blank?
-        voyager_request_handler_url += ":" + Rails.configuration.voyager_request_handler_port.to_s
-      end
+      # voyager_request_handler_url = Rails.configuration.voyager_request_handler_host
+      # voyager_request_handler_url ||= request.env['HTTP_HOST']
+      # unless voyager_request_handler_url.starts_with?('http')
+      #   voyager_request_handler_url = "http://#{voyager_request_handler_url}"
+      # end
+      # unless Rails.configuration.voyager_request_handler_port.blank?
+      #   voyager_request_handler_url += ":" + Rails.configuration.voyager_request_handler_port.to_s
+      # end
 
+      # # Assemble complete request URL
+      # voyager_request_handler_url += "/holdings/#{params[:request_action]}/#{self.netid}/#{self.bibid}/#{params[:library_id]}"
+      # unless params[:holding_id].nil?
+      #   voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
+      # end
 
-            Rails.logger.info "mjc12test: still here again"
+      # # Send the request
+      # # puts voyager_request_handler_url
+      # body = { 'reqnna' => params['latest-date'], 'reqcomments' => params[:reqcomments] }
+      # result = HTTPClient.post(voyager_request_handler_url, body)
+      #response = JSON.parse(result.content)
 
-      # Assemble complete request URL
-      voyager_request_handler_url += "/holdings/#{params[:request_action]}/#{self.netid}/#{self.bibid}/#{params[:library_id]}"
-      unless params[:holding_id].nil?
-        voyager_request_handler_url += "/#{params[:holding_id]}" # holding_id is actually item id!
-      end
-
-      Rails.logger.info "mjc12test: fired #{voyager_request_handler_url}"
-
-
-      # Send the request
-      # puts voyager_request_handler_url
-      body = { 'reqnna' => params['latest-date'], 'reqcomments' => params[:reqcomments] }
-      result = HTTPClient.post(voyager_request_handler_url, body)
-      response = JSON.parse(result.content)
-      Rails.logger.debug "mjc12test: response is #{response.inspect}"
-      if response['status'] == 'failed'
-        return { :failure => I18n.t('requests.failure') }
-      else
-        return { :success => I18n.t('requests.success') }
-      end
+      # if response['status'] == 'failed'
+      #   return { :failure => I18n.t('requests.failure') }
+      # else
+      #   return { :success => I18n.t('requests.success') }
+      # end
 
     end
 
