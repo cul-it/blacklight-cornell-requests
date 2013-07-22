@@ -28,7 +28,7 @@ module BlacklightCornellRequests
       @ill_link = req.ill_link
       @pub_info = req.pub_info
 
-      @iis = {}
+      @iis = ActiveSupport::HashWithIndifferentAccess.new
 
       @volumes = req.set_volumes(req.all_items)
       if req.volumes.present? and params[:volume].blank?

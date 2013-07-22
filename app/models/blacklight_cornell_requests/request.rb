@@ -98,6 +98,46 @@ module BlacklightCornellRequests
           item[:services] = services
         end
         populate_document_values
+        
+        
+        # handle pda
+        patron_type = get_patron_type self.netid
+        if patron_type == 'cornell' && !document['url_pda_display'].blank?
+          self.document = document
+          
+          pda_url = document['url_pda_display'][0]
+          pda_url, note = pda_url.split('|')
+          iids = { :itemid => 'pda', :url => pda_url, :note => note }
+          pda_entry = { :service => PDA, :iid => iids, :estimate => get_delivery_time(PDA, nil) }
+          
+          bd_entry = nil
+          if borrowDirect_available? bd_params
+            bd_entry = { :service => BD, :iid => {}, :estimate => get_delivery_time(BD, nil) }
+          end
+          ill_entry = { :service => ILL, :iid => {}, :estimate => get_delivery_time(ILL, nil) }
+          self.request_options = request_options
+          if target.blank? or target == PDA
+            self.service = PDA
+            request_options.push pda_entry
+            alternate_options.push bd_entry unless bd_entry.nil?
+            alternate_options.push ill_entry
+          elsif target == BD
+            self.service = BD
+            request_options.push bd_entry
+            alternate_options.push pda_entry
+            alternate_options.push ill_entry
+          elsif target == ILL
+            self.service = ILL
+            request_options.push ill_entry
+            alternate_options.push pda_entry
+            alternate_options.push bd_entry unless bd_entry.nil?
+          end
+          
+          self.request_options = request_options
+          self.alternate_options = alternate_options
+          
+          return
+        end
 
         # Determine whether this is a multi-volume thing or not (i.e, multi-copy)
         # They will be handled differently depending
