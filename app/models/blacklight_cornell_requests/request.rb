@@ -491,7 +491,10 @@ module BlacklightCornellRequests
 
         when HOLD
           ## if it got to this point, it means it is not available and should have Due on xxxx-xx-xx
-          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])[1]
+          dueDate = nil;
+          if (!item_data[:status].nil?) && /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])
+            dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])[1]
+          end
           if ! dueDate.nil?
             estimate = (Date.parse(dueDate) - Date.today).to_i
             if (estimate < 0)

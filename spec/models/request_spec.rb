@@ -1098,17 +1098,17 @@ describe BlacklightCornellRequests::Request do
 			describe 'hold' do 
 
 				it "returns 180 if there is no hold date" do
-					params = { :service => 'hold', :itemStatus => 'Hold' }
+					params = { :service => 'hold', :status => 'Hold' }
 					req.get_delivery_time('hold', params).should == 180
 				end
 
 				it "returns 180 if there is a hold date problem" do
-					params = { :service => 'hold', :itemStatus => 'Hold -- Due on 1977-10-15' }
+					params = { :service => 'hold', :status => 'Hold -- Due on 1977-10-15' }
 					req.get_delivery_time('hold', params).should == 180					
 				end
 
 				it "returns the remaining time till due date plus padding time for a valid hold date" do
-					params = { :service => 'hold', :itemStatus => "Hold -- Due on #{Date.today + 10}" }
+					params = { :service => 'hold', :status => "Hold -- Due on #{Date.today + 10}" }
 					req.get_delivery_time('hold', params).should == 10 + req.get_hold_padding						
 				end
 
@@ -1124,8 +1124,8 @@ describe BlacklightCornellRequests::Request do
 
 			describe 'recall' do 
 
-				it "returns 30" do
-					req.get_delivery_time('recall', nil).should == 30
+				it "returns 15" do
+					req.get_delivery_time('recall', nil).should == 15 
 				end
 
 			end
