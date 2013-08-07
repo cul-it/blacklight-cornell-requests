@@ -474,7 +474,7 @@ module BlacklightCornellRequests
     end
 
     def get_delivery_time service, item_data
-
+Rails.logger.debug "mjc12test: service = #{service}, data = #{item_data}"
       case service 
 
         when L2L
@@ -491,8 +491,9 @@ module BlacklightCornellRequests
 
         when HOLD
           ## if it got to this point, it means it is not available and should have Due on xxxx-xx-xx
-          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])[1]
+          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])
           if ! dueDate.nil?
+            dueDate = dueDate[1]
             estimate = (Date.parse(dueDate) - Date.today).to_i
             if (estimate < 0)
               ## this item is overdue
