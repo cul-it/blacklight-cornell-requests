@@ -75,6 +75,16 @@
               Check Circulation
         %td
           This item is a short-term loan. Please check at the circulation desk.
+    - elsif option[:option] == 'document_delivery'
+      %tr
+        %td
+          = link_to request_document_delivery_path(@id), {:title => @ti} do
+            %h2.blacklight-title_display
+              %i.icon-circle-arrow-right &nbsp;
+              Document Delivery
+        %td
+          = option[:estimate]
+          working days
 %p 
   If you need further help, please 
   =link_to 'Ask a Librarian','http://ask.library.cornell.edu'

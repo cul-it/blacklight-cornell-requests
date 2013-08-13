@@ -14,6 +14,7 @@ module BlacklightCornellRequests
     ASK_CIRCULATION = 'circ'
     ASK_LIBRARIAN = 'ask'
     LIBRARY_ANNEX = 'Library Annex'
+    DOCUMENT_DELIVERY = 'document_delivery'
     HOLD_PADDING_TIME = 3
 
     # attr_accessible :title, :body
@@ -23,7 +24,7 @@ module BlacklightCornellRequests
 
     attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :alternate_options
     attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items, :volumes, :all_items
-    attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN
+    attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN, :DOCUMENT_DELIVERY
     validates_presence_of :bibid
     def save(validate = true)
       validate ? valid? : true
@@ -164,12 +165,31 @@ module BlacklightCornellRequests
         self.service = ASK_LIBRARIAN
       end
 
-      request_options.push ({:service => ASK_LIBRARIAN, :estimate => get_delivery_time(ASK_LIBRARIAN, nil)})
+      request_options.push ( { :service => ASK_LIBRARIAN, :estimate => get_delivery_time( ASK_LIBRARIAN, nil ) } )
       populate_options self.service, request_options unless self.service == ASK_LIBRARIAN
-      
+
+      if document[:format].present? and document[:format].include? 'Journal'
+        if self.alternate_options.nil?
+          self.alternate_options = []
+        end
+        # this article form cannot be prepopulated...
+        dd_link = '***REMOVED***?Action=10&Form=22'
+        dd_estimate = get_delivery_time DOCUMENT_DELIVERY, nil
+        if self.service != DOCUMENT_DELIVERY
+          dd_iids = { :itemid => 'document_delivery', :url => dd_link }
+          self.alternate_options.unshift ( { :service => DOCUMENT_DELIVERY, :iid => dd_iids, :estimate => dd_estimate } )
+        else
+          dd_iids = { :itemid => 'document_delivery', :url => dd_link }
+          if !self.request_options.nil?
+            self.alternate_options.unshift *self.request_options
+          end
+          self.request_options = [ { :service => DOCUMENT_DELIVERY, :iid => dd_iids, :estimate => dd_estimate } ]
+        end
+      end
+
       self.document = document
-      
-    end   
+
+    end
     
     def populate_options target, request_options
       self.alternate_options = []
@@ -516,6 +536,21 @@ module BlacklightCornellRequests
           5
         when PURCHASE
           10
+        when DOCUMENT_DELIVERY
+          # for others, item_data is a single item
+          # for DD, it is the entire holdings data since it matters whether the item is available as a whole or not
+          available = false
+          self.all_items.each do |item|
+            if item[:status] == 'Not Charged'
+              available = true
+              break
+            end
+          end
+          if available == true
+            2
+          else
+            2 + ( get_delivery_time ILL, nil )
+          end
         when ASK_LIBRARIAN
           9999
         when ASK_CIRCULATION
