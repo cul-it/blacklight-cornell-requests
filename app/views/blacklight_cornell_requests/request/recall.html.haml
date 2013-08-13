@@ -1,3 +1,4 @@
+- @selected_volume = params[:volume]
 = link_to catalog_path(@id), {:title => @ti} do
   %i.icon-circle-arrow-left
   Back to item
@@ -7,6 +8,12 @@
     %h2.item-title-request.blacklight-title_display=@ti
     %div.request-author=@au
     %form#req.form-horizontal{:method => 'post', :action => make_voyager_request_path}
+      -if @volumes.present?
+        .control-group
+          %label.control-label{:for => "volume-selection"} 
+            Current Volume: 
+          .controls.delivery-estimate
+            = render :partial =>'shared/volume_select'
       %input(type="hidden" name="bid" value="#{@id}" id="bid")
       %input(type="hidden" name="request_action" value="recall" id="request_action")
       = render :partial => 'shared/reqac'
