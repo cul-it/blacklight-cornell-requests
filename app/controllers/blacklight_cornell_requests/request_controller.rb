@@ -88,6 +88,10 @@ module BlacklightCornellRequests
       return magic_request Request::ASK_LIBRARIAN
     end
 
+    def document_delivery
+      return magic_request Request::DOCUMENT_DELIVERY
+    end
+
     def blacklight_solr
       @solr ||=  RSolr.connect(blacklight_solr_config)
     end
