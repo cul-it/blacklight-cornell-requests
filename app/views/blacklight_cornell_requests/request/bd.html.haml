@@ -1,11 +1,15 @@
+-title = the_vernaculator('title_display', 'title_vern_display')
+-subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
+-responsibility = render_document_show_field_value :document => @document, :field => 'title_responsibility_display'
+- @selected_volume = params[:volume]
 = link_to catalog_path(@id), {:title => @ti} do
   %i.icon-circle-arrow-left
   Back to item
 %h1.request-type Borrow Direct Request
 %div.row
   %div.span8.well
-    %h2.item-title-request.blacklight-title_display=@ti
-    %div.request-author=@au
+    %h2.item-title-request.blacklight-title_display=title
+    %div.request-author=responsibility
     %p
       Click the button below to locate your item in the  Borrow Direct catalog and place a request.
     %p
