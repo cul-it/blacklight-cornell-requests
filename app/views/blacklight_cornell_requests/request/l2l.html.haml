@@ -1,3 +1,6 @@
+-title = the_vernaculator('title_display', 'title_vern_display')
+-subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
+-responsibility = render_document_show_field_value :document => @document, :field => 'title_responsibility_display'
 - @selected_volume = params[:volume]
 = link_to catalog_path(@id), {:title => @ti} do
   %i.icon-circle-arrow-left
@@ -5,8 +8,9 @@
 %h1.request-type Request library to library delivery
 %div.row
   %div.span8.well
-    %h2.blacklight-title_display.item-title-request=@ti
-    %div.request-author=@au
+    %h2.blacklight-title_display.item-title-request
+      =title
+    %div.request-author=responsibility
     %form#req.l2l-request.form-horizontal{:method => 'post', :action => make_voyager_request_path({:bibid =>@id})}
       -if @volumes.present?
         .control-group
