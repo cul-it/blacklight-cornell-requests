@@ -27,6 +27,7 @@ module BlacklightCornellRequests
       @isbn = req.isbn
       @ill_link = req.ill_link
       @pub_info = req.pub_info
+      @volume = params[:volume]
 
       @iis = ActiveSupport::HashWithIndifferentAccess.new
 
