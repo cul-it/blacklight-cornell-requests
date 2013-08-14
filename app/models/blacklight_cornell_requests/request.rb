@@ -77,8 +77,9 @@ module BlacklightCornellRequests
           iid[:status] = item_status iid[:itemStatus]
 
           self.all_items.push(iid) # Everything goes into all_items
+
           # If volume is specified, only populate items with matching enum/chron/year values
-          Rails.logger.debug "mjc12test: volume = #{volume}"
+
           # Unpack volume if necessary
           if volume.present?
             parts = volume.split '|'
@@ -86,22 +87,14 @@ module BlacklightCornellRequests
             c = parts[2] || ''
             y = parts[3] || ''
 
-            Rails.logger.debug "mjc12test: tests: y='#{y}'; '#{i[:year]}', c='#{c}'; '#{i[:chron]}', e='#{e}'; '#{i[:enumeration]}'"
-            Rails.logger.debug "mjc12test: year ok" if y == i[:year]
-            Rails.logger.debug "mjc12test: chron ok" if c == i[:chron]
-            Rails.logger.debug "mjc12test: enum ok" if e == i[:enumeration]
-            Rails.logger.debug "mjc12test: y nil" if y.nil?
-            Rails.logger.debug "mjc12test: year empty" if i[:year].empty?
-            Rails.logger.debug "mjc12test: year nil" if i[:year].nil?
+            # Require a match on all three iterator values to determine a match
             next if ( y != i[:year] or c != i[:chron] or e != i[:enumeration])
-            Rails.logger.debug "mjc12test: Still going - no next"
           end
           
           # Only a subset of all_items gets put into working_items
           working_items.push(iid)
 
         end
-                  Rails.logger.debug "mjc12test: working_items: #{working_items}"
       end
 
       self.items = working_items
@@ -514,7 +507,6 @@ module BlacklightCornellRequests
     end
 
     def get_delivery_time service, item_data
-Rails.logger.debug "mjc12test: service = #{service}, data = #{item_data}"
       case service 
 
         when L2L
