@@ -78,12 +78,30 @@ module BlacklightCornellRequests
 
           self.all_items.push(iid) # Everything goes into all_items
           # If volume is specified, only populate items with matching enum/chron/year values
-          next if (!volume.blank? and ( volume != i[:enumeration] and volume != i[:chron] and volume != i[:year]))
+          Rails.logger.debug "mjc12test: volume = #{volume}"
+          # Unpack volume if necessary
+          if volume.present?
+            parts = volume.split '|'
+            e = parts[1] || ''
+            c = parts[2] || ''
+            y = parts[3] || ''
+
+            Rails.logger.debug "mjc12test: tests: y='#{y}'; '#{i[:year]}', c='#{c}'; '#{i[:chron]}', e='#{e}'; '#{i[:enumeration]}'"
+            Rails.logger.debug "mjc12test: year ok" if y == i[:year]
+            Rails.logger.debug "mjc12test: chron ok" if c == i[:chron]
+            Rails.logger.debug "mjc12test: enum ok" if e == i[:enumeration]
+            Rails.logger.debug "mjc12test: y nil" if y.nil?
+            Rails.logger.debug "mjc12test: year empty" if i[:year].empty?
+            Rails.logger.debug "mjc12test: year nil" if i[:year].nil?
+            next if ( y != i[:year] or c != i[:chron] or e != i[:enumeration])
+            Rails.logger.debug "mjc12test: Still going - no next"
+          end
           
           # Only a subset of all_items gets put into working_items
           working_items.push(iid)
 
         end
+                  Rails.logger.debug "mjc12test: working_items: #{working_items}"
       end
 
       self.items = working_items
@@ -192,36 +210,58 @@ module BlacklightCornellRequests
     def set_volumes(items) 
       volumes = {}
       items.each do |item|
-        volumes[item[:enumeration]] = 1 unless item[:enumeration].blank? 
-        volumes[item[:chron]] = 1 unless item[:chron].blank?
-        volumes[item[:year]] = 1 unless item[:year].blank?
+        e = item[:enumeration]
+        c = item[:chron]
+        y = item[:year]
+        id = item[:itemid]
+
+        if e.present? and c.empty? and y.empty?
+          volumes[e] = "|#{e}|||"
+        elsif c.present? and e.empty? and y.empty?
+          volumes[c] = "||#{c}||"
+        elsif y.present? and e.empty? and c.empty?
+          volumes[y] = "|||#{y}|"
+        else
+          label = ''
+          [e, c, y].each do |element|
+            if element.present?
+              label += ' - ' unless label == ''
+              label += element
+            end
+          end
+          volumes[label] = "|#{e}|#{c}|#{y}|"
+        end
+
       end
 
-      self.volumes = sort_volumes(volumes.keys)
+      #self.volumes = sort_volumes(volumes.keys)
+      self.volumes = volumes.sort_by { |k, v| k }
     end
 
     # Sort volumes in their logical order for display.
     # Volume strings typically look like 'v.1', 'v21-22', 'index v.1-10', etc.
-    def sort_volumes(volumes)
+    # def sort_volumes(volumes)
 
-      volumes = volumes.sort_by do |v|
+    #   Rails.logger.debug "mjc12test: v1: #{volumes}"
+    #   volumes = volumes.sort_by do |v|
 
-        if v.is_a? Integer
-          [Integer(v)]
-        else
-          a, b, c = v.split(/[\.\-,]/) 
-          b = b.gsub(/[^0-9]/,'') unless b.nil?
-          if b.blank? or b !~ /\d+/
-            [a]
-          else
-            [a, Integer(b)] # Note: This forces whatever is left into an integer!
-          end
-        end
-      end
+    #     if v.is_a? Integer
+    #       [Integer(v)]
+    #     else
+    #       a, b, c = v.split(/[\.\-,]/) 
+    #       b = b.gsub(/[^0-9]/,'') unless b.nil?
+    #       if b.blank? or b !~ /\d+/
+    #         [a]
+    #       else
+    #         [a, Integer(b)] # Note: This forces whatever is left into an integer!
+    #       end
+    #     end
+    #   end
+    #   Rails.logger.debug "mjc12test: v2: #{volumes}"
 
-      volumes
+    #   volumes
 
-    end
+    # end
 
     ##################### Manipulate holdings data #####################
 
