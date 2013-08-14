@@ -28,6 +28,12 @@ requests =
       requests.submitPurchaseForm()
       return false
 
+    # Listener for volume selection
+    $('#volume-selection').change ->
+      requestPath = $(this).data('request-path')
+      requests.redirectVolume($(this).val(), requestPath)
+      return false
+
   # Event listeners for library to library (l2l) location suppression
   bindPickupEventListeners: () ->
     # Listener for copy selection
@@ -137,6 +143,10 @@ requests =
         desc = (st == 'success') ? 'succeeded' : 'failed'
         act_desc = ($("#request_action").val() == 'callslip') ? 'delivery' : $("#request_action").val()
         $('#result').html("Your request for " + act_desc + " has " + desc)
+
+  redirectVolume: (selectedVolume, requestPath) ->
+    redirectPath = requestPath + '/' + selectedVolume
+    window.location = redirectPath
 
   scrollToTop: () ->
     # Make sure we're at the top of the page so the flash messge is visible

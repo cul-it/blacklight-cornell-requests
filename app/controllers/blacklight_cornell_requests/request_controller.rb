@@ -27,13 +27,21 @@ module BlacklightCornellRequests
       @isbn = req.isbn
       @ill_link = req.ill_link
       @pub_info = req.pub_info
+      @volume = params[:volume]
 
       @iis = ActiveSupport::HashWithIndifferentAccess.new
 
       @volumes = req.set_volumes(req.all_items)
       if req.volumes.present? and params[:volume].blank?
-        render 'shared/_volume_select'
-        return
+        if req.volumes.count != 1
+          render 'shared/_volume_select'
+          return
+        else
+          # a bit hacky solution here to get to request path
+          # will need more rails compliant solution down the road...
+          redirect_to '/request' + request.env['PATH_INFO'] + "/#{req.volumes[0][1]}"
+          return
+        end
       elsif req.request_options.present?
         req.request_options.each do |item|
           iid = item[:iid]
@@ -86,6 +94,10 @@ module BlacklightCornellRequests
 
     def ask
       return magic_request Request::ASK_LIBRARIAN
+    end
+
+    def document_delivery
+      return magic_request Request::DOCUMENT_DELIVERY
     end
 
     def blacklight_solr

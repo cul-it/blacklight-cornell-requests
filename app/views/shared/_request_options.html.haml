@@ -9,10 +9,16 @@
     - if option[:option] == 'l2l'
       %tr
         %td
-          = link_to request_l2l_path(@id), {:title => @ti} do 
-            %h2.blacklight-title_display 
-              %i.icon-circle-arrow-right 
-              Library to Library
+          - if @volume.blank?
+            = link_to request_l2l_path(@id), {:title => @ti} do 
+              %h2.blacklight-title_display 
+                %i.icon-circle-arrow-right 
+                Library to Library
+          - else
+            = link_to request_l2l_vol_path(:bibid => @id, :volume => @volume), {:title => @ti} do 
+              %h2.blacklight-title_display 
+                %i.icon-circle-arrow-right 
+                Library to Library
         %td  
           = option[:estimate]
           working day(s).
@@ -29,20 +35,32 @@
     - elsif option[:option] == 'hold'
       %tr
         %td
-          = link_to request_hold_path(@id), {:title => @ti} do 
-            %h2.blacklight-title_display 
-              %i.icon-circle-arrow-right 
-              Hold
+          - if @volume.blank?
+            = link_to request_hold_path(@id), {:title => @ti} do 
+              %h2.blacklight-title_display 
+                %i.icon-circle-arrow-right 
+                Hold
+          - else
+            = link_to request_hold_vol_path(:bibid => @id, :volume => @volume), {:title => @ti} do 
+              %h2.blacklight-title_display 
+                %i.icon-circle-arrow-right 
+                Hold
         %td
           = option[:estimate]
           working days       
     - elsif option[:option] == 'recall'
       %tr
         %td
-          = link_to request_recall_path(@id), {:title => @ti} do 
-            %h2.blacklight-title_display 
-              %i.icon-circle-arrow-right 
-              Recall
+          - if @volume.blank?
+            = link_to request_recall_path(@id), {:title => @ti} do 
+              %h2.blacklight-title_display 
+                %i.icon-circle-arrow-right 
+                Recall
+          - else
+            = link_to request_recall_vol_path(:bibid => @id, :volume => @volume), {:title => @ti} do 
+              %h2.blacklight-title_display 
+                %i.icon-circle-arrow-right 
+                Recall
         %td
           = option[:estimate]
           working days
@@ -71,15 +89,22 @@
         %td
           = link_to request_circ_path(@id), {:title => @ti} do
             %h2.blacklight-title_display
-              %i.icon-circle-arrow-right &nbsp;Check Circulation
+              %i.icon-circle-arrow-right
+              Check Circulation
         %td
           This item is a short-term loan. Please check at the circulation desk.
-    - else
+    - elsif option[:option] == 'document_delivery'
       %tr
         %td
-          = link_to 'http://ask.library.cornell.edu', {:title => @ti} do 
-            %h2.blacklight-title_display 
-              %i.icon-circle-arrow-right 
-              Ask a Librarian
+          = link_to request_document_delivery_path(@id), {:title => @ti} do
+            %h2.blacklight-title_display
+              %i.icon-circle-arrow-right &nbsp;
+              Document Delivery
         %td
-          N/A
+          = option[:estimate]
+          working days
+%p 
+  If you need further help, please 
+  =link_to 'Ask a Librarian','http://ask.library.cornell.edu'
+  &#046;
+
