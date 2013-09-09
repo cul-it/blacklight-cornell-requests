@@ -16,6 +16,7 @@ module BlacklightCornellRequests
     LIBRARY_ANNEX = 'Library Annex'
     DOCUMENT_DELIVERY = 'document_delivery'
     HOLD_PADDING_TIME = 3
+    OCLC_TYPE_ID = 'OCoLC'
 
     # attr_accessible :title, :body
     include ActiveModel::Validations
@@ -635,6 +636,19 @@ module BlacklightCornellRequests
       if document[:lc_callnum_display].present?
         ill_link = ill_link + "&rft.identifier=#{document[:lc_callnum_display][0]}"
       end
+      if document[:other_id_display]
+        oclc = []
+        document[:other_id_display].each do |other_id|
+          if match = other_id.match(/\(#{OCLC_TYPE_ID}\)([0-9]+)/)
+            id_value = match.captures[0]
+            oclc.push id_value
+          end
+        end
+        if oclc.count > 0
+          ill_link = ill_link + "&rfe_dat=#{oclc.join(',')}"
+        end
+      end
+      
       self.ill_link = ill_link
     end
     
