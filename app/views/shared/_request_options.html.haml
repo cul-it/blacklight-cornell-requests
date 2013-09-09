@@ -103,6 +103,16 @@
         %td
           = option[:estimate]
           working days
+    - elsif option[:option] == 'pda'
+      %tr
+        %td
+          = link_to request_pda_path(@id), {:title => @ti} do
+            %h2.blacklight-title_display
+              %i.icon-circle-arrow-right &nbsp;
+              Patron Driven Acquisition
+        %td
+          = option[:estimate]
+          working days
 %p 
   If you need further help, please 
   =link_to 'Ask a Librarian','http://ask.library.cornell.edu'
