@@ -16,6 +16,7 @@ module BlacklightCornellRequests
     LIBRARY_ANNEX = 'Library Annex'
     DOCUMENT_DELIVERY = 'document_delivery'
     HOLD_PADDING_TIME = 3
+    OCLC_TYPE_ID = 'OCoLC'
 
     # attr_accessible :title, :body
     include ActiveModel::Validations
@@ -78,8 +79,19 @@ module BlacklightCornellRequests
           iid[:status] = item_status iid[:itemStatus]
 
           self.all_items.push(iid) # Everything goes into all_items
+
           # If volume is specified, only populate items with matching enum/chron/year values
-          next if (!volume.blank? and ( volume != i[:enumeration] and volume != i[:chron] and volume != i[:year]))
+
+          # Unpack volume if necessary
+          if volume.present?
+            parts = volume.split '|'
+            e = parts[1] || ''
+            c = parts[2] || ''
+            y = parts[3] || ''
+
+            # Require a match on all three iterator values to determine a match
+            next if ( y != i[:year] or c != i[:chron] or e != i[:enumeration])
+          end
           
           # Only a subset of all_items gets put into working_items
           working_items.push(iid)
@@ -212,36 +224,60 @@ module BlacklightCornellRequests
     def set_volumes(items) 
       volumes = {}
       items.each do |item|
-        volumes[item[:enumeration]] = 1 unless item[:enumeration].blank? 
-        volumes[item[:chron]] = 1 unless item[:chron].blank?
-        volumes[item[:year]] = 1 unless item[:year].blank?
+        e = item[:enumeration]
+        c = item[:chron]
+        y = item[:year]
+        id = item[:itemid]
+        
+        next if e.blank? and c.blank? and y.blank?
+
+        if e.present? and c.empty? and y.empty?
+          volumes[e] = "|#{e}|||"
+        elsif c.present? and e.empty? and y.empty?
+          volumes[c] = "||#{c}||"
+        elsif y.present? and e.empty? and c.empty?
+          volumes[y] = "|||#{y}|"
+        else
+          label = ''
+          [e, c, y].each do |element|
+            if element.present?
+              label += ' - ' unless label == ''
+              label += element
+            end
+          end
+          volumes[label] = "|#{e}|#{c}|#{y}|"
+        end
+
       end
 
-      self.volumes = sort_volumes(volumes.keys)
+      #self.volumes = sort_volumes(volumes.keys)
+      self.volumes = volumes.sort_by { |k, v| k }
     end
 
     # Sort volumes in their logical order for display.
     # Volume strings typically look like 'v.1', 'v21-22', 'index v.1-10', etc.
-    def sort_volumes(volumes)
+    # def sort_volumes(volumes)
 
-      volumes = volumes.sort_by do |v|
+    #   Rails.logger.debug "mjc12test: v1: #{volumes}"
+    #   volumes = volumes.sort_by do |v|
 
-        if v.is_a? Integer
-          [Integer(v)]
-        else
-          a, b, c = v.split(/[\.\-,]/) 
-          b = b.gsub(/[^0-9]/,'') unless b.nil?
-          if b.blank? or b !~ /\d+/
-            [a]
-          else
-            [a, Integer(b)] # Note: This forces whatever is left into an integer!
-          end
-        end
-      end
+    #     if v.is_a? Integer
+    #       [Integer(v)]
+    #     else
+    #       a, b, c = v.split(/[\.\-,]/) 
+    #       b = b.gsub(/[^0-9]/,'') unless b.nil?
+    #       if b.blank? or b !~ /\d+/
+    #         [a]
+    #       else
+    #         [a, Integer(b)] # Note: This forces whatever is left into an integer!
+    #       end
+    #     end
+    #   end
+    #   Rails.logger.debug "mjc12test: v2: #{volumes}"
 
-      volumes
+    #   volumes
 
-    end
+    # end
 
     ##################### Manipulate holdings data #####################
 
@@ -494,7 +530,6 @@ module BlacklightCornellRequests
     end
 
     def get_delivery_time service, item_data
-
       case service 
 
         when L2L
@@ -511,11 +546,9 @@ module BlacklightCornellRequests
 
         when HOLD
           ## if it got to this point, it means it is not available and should have Due on xxxx-xx-xx
-          dueDate = nil;
-          if (!item_data[:status].nil?) && /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])
-            dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])[1]
-          end
+          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])
           if ! dueDate.nil?
+            dueDate = dueDate[1]
             estimate = (Date.parse(dueDate) - Date.today).to_i
             if (estimate < 0)
               ## this item is overdue
@@ -603,6 +636,19 @@ module BlacklightCornellRequests
       if document[:lc_callnum_display].present?
         ill_link = ill_link + "&rft.identifier=#{document[:lc_callnum_display][0]}"
       end
+      if document[:other_id_display]
+        oclc = []
+        document[:other_id_display].each do |other_id|
+          if match = other_id.match(/\(#{OCLC_TYPE_ID}\)([0-9]+)/)
+            id_value = match.captures[0]
+            oclc.push id_value
+          end
+        end
+        if oclc.count > 0
+          ill_link = ill_link + "&rfe_dat=#{oclc.join(',')}"
+        end
+      end
+      
       self.ill_link = ill_link
     end
     
