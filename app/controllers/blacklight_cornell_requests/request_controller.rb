@@ -39,7 +39,7 @@ module BlacklightCornellRequests
         else
           # a bit hacky solution here to get to request path
           # will need more rails compliant solution down the road...
-          redirect_to '/request' + request.env['PATH_INFO'] + "/#{req.volumes[0][1]}"
+          redirect_to '/request' + request.env['PATH_INFO'] + "/#{req.volumes[req.volumes.keys[0]]}"
           return
         end
       elsif req.request_options.present?

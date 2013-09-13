@@ -223,35 +223,111 @@ module BlacklightCornellRequests
     # set the class volumes from a list of item records
     def set_volumes(items) 
       volumes = {}
+      num_enum = 0
+      num_chron = 0
+      num_year = 0
+      
+      ## take first integer from each of enum, chron and year
+      ## if not populated, use big number to rank low
+      ## if the field is blank, use 'z' to rank low
+      ## record number of occurances for each of the 
       items.each do |item|
+        item[:numeric_enumeration] = item[:enumeration][/\d+/]
+        item[:enumeration] = item[:enumeration]
+        if !item[:numeric_enumeration].blank?
+          item[:numeric_enumeration] = item[:numeric_enumeration].to_i
+          num_enum = num_enum + 1
+        else
+          item[:numeric_enumeration] = 999999999
+        end
+        item[:numeric_chron] = item[:chron][/\d+/]
+        if !item[:numeric_chron].blank?
+          item[:numeric_chron] = item[:numeric_chron].to_i
+          num_chron = num_chron + 1
+        else
+          item[:numeric_chron] = 999999999
+        end
+        item[:numeric_year] = item[:year][/\d+/]
+        if !item[:numeric_year].blank?
+          item[:numeric_year] = item[:numeric_year].to_i
+          num_year = num_year + 1
+        else
+          item[:numeric_year] = 999999999
+        end
+        
+        if item[:chron].blank?
+          item[:chron_compare] = 'z'
+        else
+          item[:chron_compare] = item[:chron]
+        end
+        
+        if item[:year].blank?
+          item[:year_compare] = 'z'
+        else
+          item[:year_compare] = item[:year]
+        end
+      end
+      
+      ## sort based on number of occurances of each of three fields
+      ## when tied, year has highest weight followed by enum
+      sorted_items = {}
+      if num_year >= num_enum and num_year >= num_chron
+        if num_enum >= num_chron
+          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:numeric_chron],h[:chron_compare] ]}
+        else
+          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_compare],h[:numeric_enumeration] ]}
+        end
+      elsif num_enum >= num_chron and num_enum >= num_year
+        if num_year >= num_chron
+          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_compare] ]}
+        else
+          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:numeric_chron],h[:chron_compare],h[:numeric_year],h[:year_compare] ]}
+        end
+      else
+        if num_year >= num_enum
+          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_compare],h[:numeric_year],h[:year_compare],h[:numeric_enumeration] ]}
+        else
+          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_compare],h[:numeric_enumeration],h[:numeric_year],h[:year_compare] ]}
+        end
+      end
+      
+      ## as of ruby 1.9, hash preserves insertion order
+      sorted_items.each do |item|
         e = item[:enumeration]
         c = item[:chron]
         y = item[:year]
-        id = item[:itemid]
         
         next if e.blank? and c.blank? and y.blank?
 
-        if e.present? and c.empty? and y.empty?
-          volumes[e] = "|#{e}|||"
-        elsif c.present? and e.empty? and y.empty?
-          volumes[c] = "||#{c}||"
-        elsif y.present? and e.empty? and c.empty?
-          volumes[y] = "|||#{y}|"
-        else
-          label = ''
-          [e, c, y].each do |element|
-            if element.present?
-              label += ' - ' unless label == ''
-              label += element
-            end
+        # if e.present? and c.blank? and y.blank?
+          # volumes[e] = "|#{e}|||"
+        # elsif c.present? and e.blank? and y.blank?
+          # volumes[c] = "||#{c}||"
+        # elsif y.present? and e.blank? and c.blank?
+          # volumes[y] = "|||#{y}|"
+        # else
+          # label = ''
+          # [e, c, y].each do |element|
+            # if element.present?
+              # label += ' - ' unless label == ''
+              # label += element
+            # end
+          # end
+          # volumes[label] = "|#{e}|#{c}|#{y}|"
+        # end
+        
+        label = ''
+        [e, c, y].each do |element|
+          if element.present?
+            label += ' - ' unless label == ''
+            label += element
           end
-          volumes[label] = "|#{e}|#{c}|#{y}|"
         end
+        volumes[label] = "|#{e}|#{c}|#{y}|"
 
       end
-
-      #self.volumes = sort_volumes(volumes.keys)
-      self.volumes = volumes.sort_by { |k, v| k }
+      
+      self.volumes = volumes
     end
 
     # Sort volumes in their logical order for display.
