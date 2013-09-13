@@ -13,12 +13,12 @@
             = link_to request_l2l_path(@id), {:title => @ti} do 
               %h2.blacklight-title_display 
                 %i.icon-circle-arrow-right 
-                Library to Library
+                Library to library
           - else
             = link_to request_l2l_vol_path(:bibid => @id, :volume => @volume), {:title => @ti} do 
               %h2.blacklight-title_display 
                 %i.icon-circle-arrow-right 
-                Library to Library
+                Library to library
         %td  
           = option[:estimate]
           working day(s).
@@ -70,7 +70,7 @@
           = link_to request_purchase_path(@id), {:title => @ti} do 
             %h2.blacklight-title_display 
               %i.icon-circle-arrow-right 
-              Purchase Request
+              Purchase request
         %td
           = option[:estimate]
           working days
@@ -90,7 +90,7 @@
           = link_to request_circ_path(@id), {:title => @ti} do
             %h2.blacklight-title_display
               %i.icon-circle-arrow-right
-              Check Circulation
+              Check circulation
         %td
           This item is a short-term loan. Please check at the circulation desk.
     - elsif option[:option] == 'document_delivery'
@@ -99,7 +99,7 @@
           = link_to request_document_delivery_path(@id), {:title => @ti} do
             %h2.blacklight-title_display
               %i.icon-circle-arrow-right &nbsp;
-              Document Delivery
+              Document delivery
         %td
           = option[:estimate]
           working days
@@ -109,7 +109,7 @@
           = link_to request_pda_path(@id), {:title => @ti} do
             %h2.blacklight-title_display
               %i.icon-circle-arrow-right &nbsp;
-              Patron Driven Acquisition
+              Purchase request
         %td
           = option[:estimate]
           working days
