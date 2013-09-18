@@ -25,13 +25,14 @@
         %label.control-label{:for => 'reqcomments'} Notes to library staff:
         .controls
           %textarea#reqcomments{:name => 'reqcomments'}
+      = render :partial => 'shared/request_date'
       .control-group
         %label.control-label Delivery time:
         .controls.delivery-estimate 
           Approximately
           =@estimate 
           days
-      -if @alternate_request_options.count >= 2
+      -if @alternate_request_options and @alternate_request_options.count >= 2
         .control-group
           .controls.clearfix
             %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit delivery request")
