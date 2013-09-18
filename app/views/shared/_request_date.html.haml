@@ -1,0 +1,12 @@
+.control-group
+  %label.control-label{:for => 'latest-date'} If item remains unavailable, cancel hold after:
+  #latest-date.controls
+    %label.radio{ :for => "30 days"}
+      %input(type="radio" name="latest-date" value="#{d30.strftime("%Y-%m-%d")}" id="30 days")
+      30 days (#{d30.strftime("%m-%d-%Y")})
+    %label.radio{ :for => "60 days"}
+      %input(type="radio" name="latest-date" value="#{d60.strftime("%Y-%m-%d")}" id="60 days")
+      60 days (#{d60.strftime("%m-%d-%Y")})
+    %label.radio{ :for => "180 days"}
+      %input(type="radio" name="latest-date" value="#{d180.strftime("%Y-%m-%d")}" id="180 days")
+      180 days (#{d180.strftime("%m-%d-%Y")})
