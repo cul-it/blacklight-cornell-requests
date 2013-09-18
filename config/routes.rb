@@ -11,6 +11,7 @@ BlacklightCornellRequests::Engine.routes.draw do
   match 'ill/:bibid' =>'request#ill', :as =>'request_ill'
   match 'purchase/:bibid' =>'request#purchase', :as =>'request_purchase'
   match 'purchase_request/:bibid' =>'request#make_purchase_request', :as =>'make_purchase_request'
+  match 'pda/:bibid' =>'request#pda', :as =>'request_pda'
   match 'circ/:bibid' =>'request#circ', :as =>'request_circ'
   match 'ask/:bibid' =>'request#ask', :as =>'request_ask'
   match 'document_delivery/:bibid/:volume' => 'request#document_delivery', :as => 'request_document_delivery', :constraints => { :volume => /.*/ }
