@@ -83,6 +83,7 @@ describe BlacklightCornellRequests::Request do
 
       it "should use get_cornell_delivery_options if patron is Cornell" do 
         req.netid = 'mjc12' 
+        req.stub(:borrowDirect_available?).and_return(true)
         options = req.get_delivery_options(item, bd_params)
         options = req.sort_request_options options
         service = options[0][:service]
@@ -110,6 +111,7 @@ describe BlacklightCornellRequests::Request do
 
       it "sorts the return array by delivery time" do
         req.netid = 'mjc12' 
+        req.stub(:borrowDirect_available?).and_return(true)
         options = req.get_delivery_options(item, bd_params)
         options = req.sort_request_options options
         service = options[0][:service]
