@@ -156,7 +156,8 @@ module BlacklightCornellRequests
         # They will be handled differently depending
         if self.document[:multivol_b] and volume.blank?
           # Multi-volume
-          self.set_volumes(working_items)
+          # self.set_volumes_simple(working_items)
+          self.set_volumes(self.all_items)
         else
 
           # Multi-copy
@@ -221,6 +222,30 @@ module BlacklightCornellRequests
     end
 
     # set the class volumes from a list of item records
+    def set_volumes_simple(items)
+      volumes = {}
+      
+      items.each do |item|
+        e = item[:enumeration]
+        c = item[:chron]
+        y = item[:year]
+        
+        next if e.blank? and c.blank? and y.blank?
+        
+        label = ''
+        [e, c, y].each do |element|
+          if element.present?
+            label += ' - ' unless label == ''
+            label += element
+          end
+        end
+        volumes[label] = "|#{e}|#{c}|#{y}|"
+
+      end
+      
+      self.volumes = volumes
+    end
+    
     def set_volumes(items) 
       volumes = {}
       num_enum = 0
@@ -232,13 +257,17 @@ module BlacklightCornellRequests
       ## if the field is blank, use 'z' to rank low
       ## record number of occurances for each of the 
       items.each do |item|
-        item[:numeric_enumeration] = item[:enumeration][/\d+/]
-        item[:enumeration] = item[:enumeration]
-        if !item[:numeric_enumeration].blank?
-          item[:numeric_enumeration] = item[:numeric_enumeration].to_i
+        # item[:numeric_enumeration] = item[:enumeration][/\d+/]
+        enums = item[:enumeration].scan(/\d+/)
+        if enums.count > 0
+          numeric_enumeration = ''
+          enums.each do |enum|
+            numeric_enumeration = numeric_enumeration + enum.rjust(9,'0')
+          end
+          item[:numeric_enumeration] = numeric_enumeration
           num_enum = num_enum + 1
         else
-          item[:numeric_enumeration] = 999999999
+          item[:numeric_enumeration] = '999999999'
         end
         item[:numeric_chron] = item[:chron][/\d+/]
         if !item[:numeric_chron].blank?
@@ -255,10 +284,17 @@ module BlacklightCornellRequests
           item[:numeric_year] = 999999999
         end
         
+        if item[:enumeration].blank?
+          item[:enumeration_compare] = 'z'
+        else
+          item[:enumeration_compare] = item[:enumeration]
+        end
         if item[:chron].blank?
           item[:chron_compare] = 'z'
+          item[:chron_month] = 13
         else
-          item[:chron_compare] = item[:chron]
+          item[:chron_compare] = item[:chron].delete(' ')
+          item[:chron_month] = find_month item[:chron]
         end
         
         if item[:year].blank?
@@ -268,28 +304,44 @@ module BlacklightCornellRequests
         end
       end
       
+      # items.each do |h|
+        # Rails.logger.info "sk274_log: #{h[:numeric_enumeration]}, #{h[:enumeration_compare]}, #{h[:numeric_chron]}, #{h[:chron_month]}, #{h[:chron_compare]}, #{h[:numeric_year]}, #{h[:year_compare]}"
+      # end
+      
+      # Rails.logger.info "sk274_log: -------- problematic items --------"
+      
+      # items.each do |h|
+        # if h[:numeric_enumeration].blank? or h[:enumeration_compare].blank? or h[:numeric_chron].blank? or h[:chron_month].blank? or h[:chron_compare].blank? or h[:numeric_year].blank? or h[:year_compare].blank?
+          # Rails.logger.info "sk274_log: #{h[:enumeration]}, #{h[:chron]}, #{h[:year]}"
+        # end
+      # end
+      
       ## sort based on number of occurances of each of three fields
       ## when tied, year has highest weight followed by enum
       sorted_items = {}
       if num_year >= num_enum and num_year >= num_chron
         if num_enum >= num_chron
-          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:numeric_chron],h[:chron_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare] ]}
         else
-          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_compare],h[:numeric_enumeration] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_enumeration],h[:enumeration_compare] ]}
         end
       elsif num_enum >= num_chron and num_enum >= num_year
         if num_year >= num_chron
-          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare] ]}
         else
-          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:numeric_chron],h[:chron_compare],h[:numeric_year],h[:year_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_year],h[:year_compare] ]}
         end
       else
         if num_year >= num_enum
-          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_compare],h[:numeric_year],h[:year_compare],h[:numeric_enumeration] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:enumeration_compare] ]}
         else
-          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_compare],h[:numeric_enumeration],h[:numeric_year],h[:year_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_year],h[:year_compare] ]}
         end
       end
+      
+      # sorted_items.each do |item|
+        # Rails.logger.info "sk274_log: #{item[:enumeration]}: #{item[:numeric_enumeration]}"
+      # end
       
       ## as of ruby 1.9, hash preserves insertion order
       sorted_items.each do |item|
@@ -298,23 +350,6 @@ module BlacklightCornellRequests
         y = item[:year]
         
         next if e.blank? and c.blank? and y.blank?
-
-        # if e.present? and c.blank? and y.blank?
-          # volumes[e] = "|#{e}|||"
-        # elsif c.present? and e.blank? and y.blank?
-          # volumes[c] = "||#{c}||"
-        # elsif y.present? and e.blank? and c.blank?
-          # volumes[y] = "|||#{y}|"
-        # else
-          # label = ''
-          # [e, c, y].each do |element|
-            # if element.present?
-              # label += ' - ' unless label == ''
-              # label += element
-            # end
-          # end
-          # volumes[label] = "|#{e}|#{c}|#{y}|"
-        # end
         
         label = ''
         [e, c, y].each do |element|
@@ -354,6 +389,36 @@ module BlacklightCornellRequests
     #   volumes
 
     # end
+    
+    def find_month str
+      if str =~ /Jan/
+        1
+      elsif str =~ /Feb/
+        2
+      elsif str =~ /Mar/
+        3
+      elsif str =~ /Apr/
+        4
+      elsif str =~ /May/
+        5
+      elsif str =~ /Jun/
+        6
+      elsif str =~ /Jul/
+        7
+      elsif str =~ /Aug/
+        8
+      elsif str =~ /Sep/
+        9
+      elsif str =~ /Oct/
+        10
+      elsif str =~ /Nov/
+        11
+      elsif str =~ /Dec/
+        12
+      else
+        0
+      end
+    end
 
     ##################### Manipulate holdings data #####################
 
@@ -751,7 +816,7 @@ module BlacklightCornellRequests
       end
 
       # Use the VoyagerRequest class to submit the request while bypassing the holdings service
-      v = VoyagerRequest.new(self.bibid)
+      v = VoyagerRequest.new(self.bibid, {:holdings_url => Rails.configuration.voyager_get_holds, :request_url => Rails.configuration.voyager_req_holds})
       v.itemid = params[:holding_id]
       v.patron(netid)
       v.libraryid = params[:library_id]
