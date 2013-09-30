@@ -771,7 +771,11 @@ module BlacklightCornellRequests
       if v.mtype.strip == 'success'
         return { :success => I18n.t('requests.success') }
       else
-        return { :failure => I18n.t('requests.failure') }
+        if v.mtype.strip == 'blocked'
+          return { :failure => I18n.t('requests.failure'+v.bcode)}
+        else
+          return { :failure => I18n.t('requests.failure') }
+        end
       end
 
       # Set up Voyager request URL string
