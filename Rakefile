@@ -20,10 +20,20 @@ RDoc::Task.new(:rdoc) do |rdoc|
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
 
+
+require 'rake/testtask'
+Rake::TestTask.new(:test) do |test|
+  test.libs << 'lib' << 'test' << 'lib/blacklight_cornell_requests'
+  test.pattern = 'test/**/test_*.rb'
+  test.verbose = true
+end
+
+require 'ci/reporter/rake/minitest'
+
 APP_RAKEFILE = File.expand_path("../spec/dummy/Rakefile", __FILE__)
 load 'rails/tasks/engine.rake'
 
-
+task :test => ["ci:setup:minitest"] 
 
 Bundler::GemHelper.install_tasks
 
