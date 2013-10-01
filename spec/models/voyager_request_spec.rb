@@ -28,9 +28,19 @@ describe BlacklightCornellRequests::VoyagerRequest do
     end
     expect( req.lastname).to eq('***REMOVED***') 
   end
+  def munch
+  context "When the global global mode is not rest"  do
+  it "switches to rest mode properly" do 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
+    expect( was).to eq false 
+    expect( BlacklightCornellRequests::VoyagerRequest.use_rest(true)).to eq true 
+  end 
+  end
+  end
 
   context "When making a hold request" do
   let(:req) {
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
     @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  =  requestholder
     areq =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
     areq.netid = @netid
@@ -51,7 +61,12 @@ describe BlacklightCornellRequests::VoyagerRequest do
   }
   it "reports success properly" do 
     expect( req.lastname).to eq('***REMOVED***') 
-    VCR.use_cassette("hold_response_data_#{@itemid}") do
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+    cassette = "hold_response_data_#{@itemid}"
+    if (BlacklightCornellRequests::VoyagerRequest.rest()) 
+       cassette = 'rest_' + cassette
+    end
+    VCR.use_cassette(cassette) do
       req.itemid = @itemid;
       req.mfhdid = @mfhdid;
       req.libraryid = @libraryid;
@@ -59,6 +74,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
       req.place_hold_item!
     end
     expect( req.mtype).to eq 'success' 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
   end
   it "reports error properly" do
     expect( req.lastname).to eq('***REMOVED***')
@@ -95,6 +111,89 @@ describe BlacklightCornellRequests::VoyagerRequest do
     end
     expect( adpreq.mtype).to eq 'system' 
     expect( adpreq.bcode).to eq '' 
+  end
+  end
+
+  context "When making a hold request,with rest api" do
+  let(:req) {
+    #was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
+    @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  =  requestholder_rest
+    areq =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
+    areq.netid = @netid
+    VCR.use_cassette("patron_data_#{@netid}") do
+      areq.patron(@netid)
+    end
+    areq
+  }
+  let(:adpreq) {
+    #was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+    @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @xnetid  =  requestholder_rest
+    @xnetid = "xxxxadp78";
+    areq =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
+    areq.netid = @xnetid
+    VCR.use_cassette("patron_data_#{@xnetid}") do
+      areq.patron(@xnetid)
+    end
+    areq
+  }
+  it "reports success properly" do 
+    expect( req.lastname).to eq('***REMOVED***') 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
+    VCR.use_cassette("rest_hold_response_data_#{@itemid}") do
+      req.itemid = @itemid;
+      req.mfhdid = @mfhdid;
+      req.libraryid = @libraryid;
+      req.reqnna = @reqnna
+      #req.place_hold_item_rest!
+      req.place_hold_item!
+    end
+    expect( req.mtype).to eq 'success' 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(was)
+  end
+  it "reports error properly" do
+    expect( req.lastname).to eq('***REMOVED***')
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
+    VCR.use_cassette("rest_hold_response_data_fail_#{@itemid}") do
+      req.itemid = @itemid
+      req.mfhdid = @mfhdid
+      req.libraryid = @libraryid
+      req.reqnna = @reqnna
+      #req.place_hold_item_rest!
+      req.place_hold_item!
+    end
+    expect( req.mtype).to_not eq 'success'
+    expect( req.bcode).to eq '25' 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(was)
+  end
+
+  it "reports error properly for an invalid item id" do 
+    expect( req.lastname).to eq('***REMOVED***') 
+    req.itemid = @itemid + "xxx"
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
+    VCR.use_cassette("rest_hold_response_data_fail_#{req.itemid}") do
+      req.mfhdid = @mfhdid
+      req.libraryid = @libraryid
+      req.reqnna = @reqnna
+      #req.place_hold_item_rest!
+      req.place_hold_item!
+    end
+    expect( req.mtype).to_not eq 'success' 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+  end
+
+  it "reports error properly for an invalid user"   do
+    @netid = "xxxxadp78";
+    adpreq.itemid = @itemid
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
+    VCR.use_cassette("rest_hold_response_data_fail_#{@netid}_#{adpreq.itemid}") do
+      adpreq.mfhdid = @mfhdid
+      adpreq.libraryid = @libraryid
+      adpreq.reqnna = @reqnna
+      adpreq.place_hold_item_rest!
+    end
+    expect( adpreq.mtype).to_not eq 'success' 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+    expect( adpreq.bcode).to_not eq '' 
   end
   end
 
@@ -168,7 +267,86 @@ describe BlacklightCornellRequests::VoyagerRequest do
   end
   end
 
+  context "When making a recall request, with rest api" do
+  let(:req) {
+    @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  =  requestholder
+    areq =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
+    areq.netid = @netid
+    VCR.use_cassette("patron_data_#{@netid}") do
+      areq.patron(@netid)
+    end
+    areq
+  }
+  let(:adpreq) {
+    @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @xnetid  =  requestholder
+    @xnetid = "xxxxadp78";
+    areq =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
+    areq.netid = @xnetid
+    VCR.use_cassette("patron_data_#{@xnetid}") do
+      areq.patron(@xnetid)
+    end
+    areq
+  }
+
+  it "reports success properly" do 
+    expect( req.lastname).to eq('***REMOVED***') 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+    cassette = "recall_response_data_#{@itemid}"
+    if (BlacklightCornellRequests::VoyagerRequest.rest()) 
+       cassette = 'rest_' + cassette
+    end
+    VCR.use_cassette(cassette) do
+      req.itemid = @itemid
+      req.mfhdid = @mfhdid
+      req.libraryid = @libraryid
+      req.reqnna = @reqnna
+      req.place_recall_item!
+    end
+    expect( req.mtype).to eq 'success' 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+  end
+
+  it "reports error properly" do 
+    expect( req.lastname).to eq('***REMOVED***') 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
+    VCR.use_cassette("rest_recall_response_data_fail_#{@itemid}") do
+      req.itemid = @itemid
+      req.mfhdid = @mfhdid
+      req.libraryid = @libraryid
+      req.reqnna = @reqnna
+      req.place_recall_item!
+    end
+    expect( req.mtype).to_not eq 'success' 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+  end
+  it "reports error properly for a invalid item id" do 
+    expect( req.lastname).to eq('***REMOVED***') 
+    req.itemid = '9999999' + @itemid
+    VCR.use_cassette("rest_recall_response_data_fail_#{req.itemid}") do
+      req.mfhdid = @mfhdid
+      req.libraryid = @libraryid
+      req.reqnna = @reqnna
+      req.place_recall_item_rest!
+    end
+    expect( req.mtype).to_not eq 'success' 
+  end
+  it "reports error properly for an invalid user"   do
+    @netid = "xxxxadp78";
+    adpreq.netid = @netid
+    VCR.use_cassette("rest_recall_response_data_fail_#{@netid}_#{@itemid}") do
+      adpreq.itemid = @itemid
+      adpreq.mfhdid = @mfhdid
+      adpreq.libraryid = @libraryid
+      adpreq.reqnna = @reqnna
+      adpreq.place_recall_item_rest!
+    end
+    expect( adpreq.mtype).to_not eq 'success' 
+    expect( adpreq.bcode).to eq '51' 
+  end
+  end
+
   context "When making a call slip request" do
+  was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
   let(:req) {
     @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  =  callslipper
     areq =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
@@ -179,6 +357,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     areq
   }
   let(:adpreq) {
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
     @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @xnetid  =  callslipper
     @xnetid = "xxxxadp78";
     areq =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
@@ -209,7 +388,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
       req.reqnna = @reqnna
       req.place_callslip_item!
     end
-    expect( req.mtype).to eq 'blocked' 
+    expect( req.mtype).to_not eq 'success' 
   end
   it "reports error properly for an invalid item id" do 
     expect( req.lastname).to eq('***REMOVED***') 
@@ -233,10 +412,88 @@ describe BlacklightCornellRequests::VoyagerRequest do
       adpreq.reqnna = @reqnna
       adpreq.place_callslip_item!
     end
-    expect( adpreq.mtype).to eq 'system' 
-    expect( adpreq.bcode).to eq '' 
+    expect( adpreq.mtype).to_not eq 'success' 
+    #expect( adpreq.bcode).to_not eq '' 
   end
   end
+
+  context "When making a call slip request, with rest api" do
+  let(:req) {
+    @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  =  callslipper_rest
+    areq =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
+    areq.netid = @netid
+    VCR.use_cassette("patron_data_#{@netid}") do
+      areq.patron(@netid)
+    end
+    areq
+  }
+  let(:adpreq) {
+    @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @xnetid  =  callslipper_rest
+    @xnetid = "xxxxadp78";
+    areq =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
+    areq.netid = @xnetid
+    VCR.use_cassette("patron_data_#{@xnetid}") do
+      areq.patron(@xnetid)
+    end
+    areq
+  }
+  it "reports success properly"   do
+    expect( req.lastname).to eq('***REMOVED***') 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
+    cassette =  "callslip_response_data_#{@itemid}"
+    if (BlacklightCornellRequests::VoyagerRequest.rest()) 
+       cassette = 'rest_' + cassette
+    end
+    VCR.use_cassette(cassette) do
+      req.itemid = @itemid
+      req.mfhdid = @mfhdid
+      req.libraryid = @libraryid
+      req.reqnna = @reqnna
+      #req.place_callslip_item_rest!
+      req.place_callslip_item!
+    end
+    expect( req.mtype).to eq 'success' 
+    was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+  end
+
+  it "reports error properly"   do
+    expect( req.lastname).to eq('***REMOVED***') 
+    VCR.use_cassette("rest_callslip_response_data_fail_#{@itemid}") do
+      req.itemid = @itemid
+      req.mfhdid = @mfhdid
+      req.libraryid = @libraryid
+      req.reqnna = @reqnna
+      req.place_callslip_item_rest!
+    end
+    expect( req.mtype).to_not eq 'success' 
+  end
+  it "reports error properly for an invalid item id" do 
+    expect( req.lastname).to eq('***REMOVED***') 
+    req.itemid = "1"  
+    VCR.use_cassette("rest_callslip_response_data_fail_#{req.itemid}") do
+      req.mfhdid = @mfhdid
+      req.libraryid = @libraryid
+      req.reqnna = @reqnna
+      req.place_callslip_item_rest!
+    end
+    expect( req.mtype).to_not eq 'success' 
+  end
+
+  it "reports error properly for an invalid user"   do
+    @netid = "xxxxadp78";
+    adpreq.netid = @netid
+    VCR.use_cassette("rest_callslip_response_data_fail_#{@netid}_#{@itemid}") do
+      adpreq.itemid = @itemid
+      adpreq.mfhdid = @mfhdid
+      adpreq.libraryid = @libraryid
+      adpreq.reqnna = @reqnna
+      adpreq.place_callslip_item_rest!
+    end
+    expect( adpreq.mtype).to_not eq 'success' 
+    expect( adpreq.bcode).to eq '51' 
+  end
+  end
+
   context "When a call slip request has been placed" do 
   it "appears in the user account data and can be cancelled" do
     @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  = callslipper
@@ -416,6 +673,15 @@ private
      "2014-09-27",
      "***REMOVED***"]
   end
+  def callslipper_rest
+  [
+     "3623453",
+     "4192460",
+     "5641078",
+     "181",
+     "20140927",
+     "***REMOVED***"]
+  end
 
   # bibid,mfhdid,itemid, libraryid,date,netid
   # you can put a hold, or recall on this one
@@ -423,7 +689,12 @@ private
   #
   def requestholder
    [ "6873904", "7315768", "8751586",
-     "189", "2013-09-27", "***REMOVED***" ]
+     "189", "2013-12-27", "***REMOVED***" ]
+  end
+
+  def requestholder_rest
+   [ "6873904", "7315768", "8751586",
+     "189", "20131227", "***REMOVED***" ]
   end
 
   @odd = 0
@@ -431,9 +702,9 @@ private
   def many_requestholder
    @odd = @odd==1 ? 0 : 1
    @odd==0 ?  [ "6873904", "7315768", "8751586",
-            "189", "2013-09-27", "***REMOVED***" ]
+            "189", "2013-12-27", "***REMOVED***" ]
    :       [ "3792882", "4367276", "5811637",
-           "189", "2013-09-27", "***REMOVED***" ]
+           "189", "2013-12-27", "***REMOVED***" ]
   end
 
 

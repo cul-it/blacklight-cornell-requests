@@ -28,6 +28,12 @@ Rake::TestTask.new(:test) do |test|
   test.verbose = true
 end
 
+require 'rspec/core/rake_task'
+
+RSpec::Core::RakeTask.new(:spec)
+
+task :default => :spec
+
 require 'ci/reporter/rake/minitest'
 
 APP_RAKEFILE = File.expand_path("../spec/dummy/Rakefile", __FILE__)

@@ -27,7 +27,7 @@ http_interactions:
       Content-Type:
       - application/x-www-form-urlencoded
       Cookie:
-      - JSESSIONID=644B85447DAEC33179B1AAE1816929E3
+      - JSESSIONID=7A8C9861C1A350A7877C1161EF3E50D2
   response:
     status:
       code: 200
@@ -36,7 +36,7 @@ http_interactions:
     headers:
       !binary "RGF0ZQ==":
       - !binary |-
-        RnJpLCAyNyBTZXAgMjAxMyAxNzoyMzoxNSBHTVQ=
+        VHVlLCAwMSBPY3QgMjAxMyAxOTozOTozOSBHTVQ=
       !binary "U2VydmVy":
       - !binary |-
         QXBhY2hl
@@ -56,5 +56,5 @@ http_interactions:
         <ser:voyagerServiceData xmlns:ser="http://www.endinfosys.com/Voyager/serviceParameters"><ser:messages><ser:message
         type="success"/></ser:messages></ser:voyagerServiceData>'
     http_version: 
-  recorded_at: Fri, 27 Sep 2013 17:23:15 GMT
+  recorded_at: Tue, 01 Oct 2013 19:39:39 GMT
 recorded_with: VCR 2.6.0
