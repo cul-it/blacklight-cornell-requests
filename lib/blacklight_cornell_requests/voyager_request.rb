@@ -342,6 +342,8 @@ module BlacklightCornellRequests
       self.mtype = 'initialized'
       # http://10.100.2.37:30114/vxws/record/155/items/303/hold?patron=185&patron_homedb=1@QA20012DB20020613131313&patron_group=1
       rest_url = @rest_url  + "/record/#{bibid}/items/#{itemid}/#{type}?patron=#{patronid}&patron_homedb=#{DB_ID}" 
+      Rails.logger.info "rest url: #{rest_url}"
+      Rails.logger.info "body: #{@req}"
       http_client do |hc|
         begin
          # res = hc.request('POST', Rails.configuration.voyager_request_url,body:@req)
