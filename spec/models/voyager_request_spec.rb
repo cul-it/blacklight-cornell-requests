@@ -38,7 +38,37 @@ describe BlacklightCornellRequests::VoyagerRequest do
   end
   end
 
-  context "When making a hold request" do
+  context "When making a hold request for a title" do
+    let(:req) {
+      was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+      @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  =  requestholder_title
+      areq =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
+      areq.netid = @netid
+      VCR.use_cassette("patron_data_#{@netid}") do
+        areq.patron(@netid)
+      end
+      areq
+    }
+    it "reports success properly" do
+      expect( req.lastname).to eq('***REMOVED***')
+      was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+      cassette = "hold_title_response_data_#{@bibid}"
+      if (BlacklightCornellRequests::VoyagerRequest.rest())
+       cassette = 'rest_' + cassette
+      end
+      VCR.use_cassette(cassette) do
+        req.itemid = '';
+        req.mfhdid = '';
+        req.libraryid = @libraryid;
+        req.reqnna = @reqnna
+        req.place_hold_title!
+      end
+      expect( req.mtype).to eq 'success'
+      was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+    end
+  end
+
+  context "When making a hold request for an item," do
   let(:req) {
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
     @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  =  requestholder
@@ -162,7 +192,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
       req.place_hold_item!
     end
     expect( req.mtype).to_not eq 'success'
-    expect( req.bcode).to eq '25' 
+    expect( req.bcode).to eq '8' 
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(was)
   end
 
@@ -195,6 +225,36 @@ describe BlacklightCornellRequests::VoyagerRequest do
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
     expect( adpreq.bcode).to_not eq '' 
   end
+  end
+
+  context "When making a recall request for a title" do
+    let(:req) {
+      was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
+      @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  =  requestholder_title
+      areq =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
+      areq.netid = @netid
+      VCR.use_cassette("patron_data_#{@netid}") do
+        areq.patron(@netid)
+      end
+      areq
+    }
+    it "reports success properly" do
+      expect( req.lastname).to eq('***REMOVED***')
+      was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
+      cassette = "recall_title_response_data_#{@bibid}"
+      if (BlacklightCornellRequests::VoyagerRequest.rest())
+       cassette = 'rest_' + cassette
+      end
+      VCR.use_cassette(cassette) do
+        req.itemid = '';
+        req.mfhdid = '';
+        req.libraryid = @libraryid;
+        req.reqnna = @reqnna
+        req.place_recall_title_rest!
+      end
+      expect( req.mtype).to eq 'success'
+      was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+    end
   end
 
   context "When making a recall request" do
@@ -342,6 +402,32 @@ describe BlacklightCornellRequests::VoyagerRequest do
     end
     expect( adpreq.mtype).to_not eq 'success' 
     expect( adpreq.bcode).to eq '51' 
+  end
+  end
+ # Evidently callslips for titles are disabled in the configuration for our voyager.
+ def disabled_callslip_title
+  context "When making a call slip request for a title" do
+  was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
+  let(:req) {
+    @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  =  callslipper
+    areq =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
+    areq.netid = @netid
+    VCR.use_cassette("patron_data_#{@netid}") do
+      areq.patron(@netid)
+    end
+    areq
+  }
+  it "reports success properly"   do
+    expect( req.lastname).to eq('***REMOVED***') 
+    VCR.use_cassette("callslip_title_response_data_#{@bibid}") do
+      req.itemid = '';
+      req.mfhdid = '';
+      req.libraryid = @libraryid
+      req.reqnna = @reqnna
+      req.place_callslip_title!
+    end
+    expect( req.mtype).to eq 'success' 
+  end
   end
   end
 
@@ -494,7 +580,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
   end
   end
 
-  context "When a call slip request has been placed" do 
+  context "Having made a call slip request" do 
   it "appears in the user account data and can be cancelled" do
     @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  = callslipper
     req =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
@@ -547,7 +633,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
   end
   end
 
- context "When a hold has been placed" do
+ context "Having made a hold request" do
  it "appears in the user account data and can be cancelled successfully" do
     @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  = requestholder
     req =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
@@ -602,7 +688,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
   end
   end
 
- context "When a recall has been placed" do
+ context "Having made a recall request" do
  it "appears in the user account data and can be cancelled successfully" do
     @bibid, @mfhdid , @itemid, @libraryid , @reqnna , @netid  = requestholder
     req =  BlacklightCornellRequests::VoyagerRequest.new(@bibid,{:request_url => VOYAGER_REQ_HOLDS})
@@ -690,6 +776,13 @@ private
   def requestholder
    [ "6873904", "7315768", "8751586",
      "189", "2013-12-27", "***REMOVED***" ]
+  end
+
+  def requestholder_title
+# 8073079 when the emperor was divine
+#   [ "5476547", "", "", # Freakonomics
+   [ "8073079", "", "", # when the emperor was divine
+     "189", "2013-12-29", "***REMOVED***" ]
   end
 
   def requestholder_rest
