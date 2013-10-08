@@ -10,6 +10,10 @@ module BlacklightCornellRequests
 
       @id = params[:bibid]
       resp, @document = get_solr_response_for_doc_id(@id)
+      
+      if params[:counter].present?
+        session[:search][:counter] = params[:counter]
+      end
 
       req = BlacklightCornellRequests::Request.new(@id)
       req.netid = request.env['REMOTE_USER']
