@@ -1,3 +1,4 @@
+- counter = params[:counter] || session[:search][:counter]
 - if counter.blank?
   = link_to catalog_path(@id), { :title => @ti } do
     %i.icon-circle-arrow-left

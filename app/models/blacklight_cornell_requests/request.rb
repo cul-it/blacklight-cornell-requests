@@ -503,7 +503,8 @@ module BlacklightCornellRequests
     # Determine delivery options for a single item if the patron is a Cornell affiliate
     def get_cornell_delivery_options item, params
 
-      item_loan_type = loan_type item[:typeCode]
+      typeCode = (item[:tempType].blank? or item[:tempType] == '0') ? item[:typeCode] : item[:tempType]
+      item_loan_type = loan_type typeCode
 
       request_options = []
       if item_loan_type == 'nocirc'
@@ -577,7 +578,8 @@ module BlacklightCornellRequests
 
     # Determine delivery options for a single item if the patron is a guest (non-Cornell)
     def get_guest_delivery_options item
-      item_loan_type = loan_type item[:typeCode]
+      typeCode = (item[:tempType].blank? or item[:tempType] == '0') ? item[:typeCode] : item[:tempType]
+      item_loan_type = loan_type typeCode
       request_options = []
 
       if item_loan_type == 'nocirc'
