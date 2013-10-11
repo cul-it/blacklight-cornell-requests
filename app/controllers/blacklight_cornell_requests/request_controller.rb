@@ -96,6 +96,10 @@ module BlacklightCornellRequests
     def pda
       return magic_request Request::PDA
     end
+    
+    def circ
+      return magic_request Request::ASK_CIRCULATION
+    end
 
     def ask
       return magic_request Request::ASK_LIBRARIAN

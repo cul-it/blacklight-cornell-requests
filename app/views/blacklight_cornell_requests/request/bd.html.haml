@@ -2,6 +2,7 @@
 -subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
 -responsibility = render_document_show_field_value :document => @document, :field => 'title_responsibility_display'
 - @selected_volume = params[:volume]
+- counter = params[:counter] || session[:search][:counter]
 - if counter.blank?
   = link_to catalog_path(@id), { :title => @ti } do
     %i.icon-circle-arrow-left
