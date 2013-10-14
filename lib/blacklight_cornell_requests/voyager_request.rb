@@ -10,16 +10,20 @@ module BlacklightCornellRequests
     HOLDINGS_URL = "***REMOVED***"
     REQUEST_URL = "***REMOVED***"
     NETID_URL = "***REMOVED***"
-    DB_ID     = '1@***REMOVED***'
     COOKIE_STORE = "***REMOVED***"
+    DB     = '***REMOVED***'
+    DB_ID     = "1@#{DB}"
+    REST_URL  = '***REMOVED***'
+
 
     attr_reader   :bibid
-    attr_accessor :results, :lastname, :barcode, :patronid, :mtype, :itemid,:mfhdid,
-                  :netid,:libraryid,:reqnna,:reqcomments,:req
+    attr_accessor :results, :lastname, :barcode, :patronid, :mtype, :bcode, :itemid,:mfhdid,
+                  :netid,:libraryid,:reqnna,:reqcomments,:req,:requests
 
     def initialize(bibid, args = {})
       @bibid = bibid
       @results = {}
+      @requests = []
 
       @http_client = args[:http_client]
       
@@ -177,13 +181,93 @@ module BlacklightCornellRequests
       end
     end
 
-    def self.fetch(*bibids)
+  def self.fetch(*bibids)
       results = {}
       bibids.each do |id|
         results[id] = VoyagerRequest.new(id).fetch_from_opac!.results
       end
       results
-    end
+  end
+
+  def user_account
+          self.mtype = 'initialized'
+          http_client do |hc|
+            begin
+               #http://server:port/vxws/MyAccountService?patronId=XXXX&patronHomeUbId=YYYY 
+               myurl = @request_url+"?patronId=#{@patronid}&patronHomeUbId=#{DB_ID}"
+               @req = myurl 
+               res = hc.request('GET', @req)
+               xml = Nokogiri::XML(res.content())
+               self.mtype = 'parsed'
+             rescue
+                @results= Hash.arbitrary_depth
+                self.mtype =  xml.inspect#'failed'
+                return self
+             end
+             @results = res.content();
+             get_content = lambda { |node| node ? node.content : nil }
+             xml.root.add_namespace_definition("vsd", "http://www.endinfosys.com/Voyager/serviceParameters")
+             xml.root.add_namespace_definition("myac", "http://www.endinfosys.com/Voyager/myAccount")
+            # <myac:requests>
+            #<myac:title>Pending Requests</myac:title>
+            #<myac:requestItem>
+            #  <myac:itemID>42289</myac:itemID>
+            #  <myac:holdRecallID>1491</myac:holdRecallID>
+            #  <myac:replyNote/>
+            #  <myac:status>1</myac:status>
+            #  <myac:holdType>H</myac:holdType>
+             xml.xpath("//myac:requests").collect do |m|
+               m.xpath("myac:requestItem").collect do |r|
+                 cass = get_content.call(r.at_xpath("myac:callslipStatus"))
+                 ht   = get_content.call(r.at_xpath("myac:holdType"))
+                 @requests <<  {:itemid => get_content.call(r.at_xpath("myac:itemID")),
+                               :holdrecallid => get_content.call(r.at_xpath("myac:holdRecallID")),
+                               :callslipstatus => cass,
+                               :holdstatus => get_content.call(r.at_xpath("myac:status")),
+                               :holdtype => ht
+                              } unless (cass == '7' and ht == 'C')
+
+             end
+            end
+          end
+  end
+  def cancel_hold_item!(holdid)
+            cancel_any_item!('holds',holdid)
+  end
+
+  def cancel_callslip_item!(holdid)
+            cancel_any_item!('callslips',holdid)
+  end
+
+  def cancel_any_item!(type,holdid)
+          self.mtype = 'initialized'
+          http_client do |hc|
+            begin
+               # res = hc.request('POST', Rails.configuration.voyager_request_url,body:@req)
+               # ***REMOVED***/circulationActions/requests?institution=LOCAL&patron_homedb=1@***REMOVED***
+               # 30114/vxws/patron/1000007/circulationActions/requests/callslips/QA20012DB20020613131313%7C931?patron_homedb=1@QA20012DB20020613131313
+               #cancsurl=  REST_URL+"/patron/#{patronid}/circulationActions/requests/#{type}/#{DB}%7C#{holdid}?patron_homedb=#{DB_ID}"
+               #cancsurl=  "http://catalog-test.library.cornell.edu:7074" + "/patron/#{patronid}/circulationActions/requests/#{type}/#{DB}%7C#{holdid}?patron_homedb=#{DB_ID}"
+               cancsurl = REST_URL + "/patron/#{patronid}/circulationActions/requests/#{type}/#{DB}%7C#{holdid}?patron_homedb=#{DB_ID}"
+               res = hc.request('DELETE', cancsurl)
+               xml = Nokogiri::XML(res.content())
+               self.mtype = 'parsed'
+             rescue
+                @results= Hash.arbitrary_depth
+                self.mtype =  xml.inspect#'failed'
+                return self
+             end
+             @results = res.content();
+             xml.xpath("//reply-text").collect do |m|
+                @mtype = m.content == 'ok' ? 'success' : 'failure';
+             end
+             xml.xpath("//reply-code").collect do |m|
+                @bcode = m.content
+             end
+            end
+  end
+
+
 
   private
 
@@ -215,6 +299,7 @@ module BlacklightCornellRequests
         xml.root.add_namespace_definition("ser", "http://www.endinfosys.com/Voyager/serviceParameters")
         xml.xpath("//ser:message").collect do |m|
           self.mtype = m.attributes["type"].value
+          self.bcode = m.attributes.key?("blockCode") ? m.attributes["blockCode"].value : ''
         end
        end
     end
@@ -233,10 +318,15 @@ module BlacklightCornellRequests
       if @http_client 
         yield @http_client
       else
-        VoyagerRequest.http_client_with_cookies do |hc|
+        VoyagerRequest.http_client_without_cookies do |hc|
           yield hc
         end
       end
+    end
+
+    def self.http_client_without_cookies
+      hc = HTTPClient.new
+      yield hc
     end
 
     def self.http_client_with_cookies
