@@ -20,6 +20,8 @@ module BlacklightCornellRequests
     attr_accessor :results, :lastname, :barcode, :patronid, :mtype, :bcode, :itemid,:mfhdid,
                   :netid,:libraryid,:reqnna,:reqcomments,:req,:requests
 
+    @@rest =  false 
+     
     def initialize(bibid, args = {})
       @bibid = bibid
       @results = {}
@@ -36,6 +38,10 @@ module BlacklightCornellRequests
       if @request_url.blank?
         @request_url = REQUEST_URL
       end
+      @rest_url = args[:rest_url]
+      if @rest_url.blank?
+        @rest_url = REST_URL
+      end
     end
 
     def to_s
@@ -44,10 +50,21 @@ module BlacklightCornellRequests
       "response:#{@mtype} req:#{@req} result:#{@results}" ;
     end
 
+    def self.use_rest(rest) 
+      ret = @@rest
+      @@rest = rest
+      ret 
+    end
+
+    def self.rest() 
+      @@rest
+    end
+    
     def patron(netid)
       http_client do |hc|
         begin
           res = hc.get_content(NETID_URL,:netid=> netid)
+          logger_info "Patron: #{res}\n "
           pat = JSON.parse(res)
           @barcode  = pat['bc'] 
           @lastname = pat['last'] 
@@ -55,18 +72,43 @@ module BlacklightCornellRequests
           @pdata = pat 
           @netid = netid
         rescue
+          logger_info "Patron failed: #{netid}"
           @results= Hash.arbitrary_depth
           return self
         end
       end
     end
 
+    def place_hold_item_rest!
+      req = hold_text_item_rest
+      place_any_rest!(req,'hold')
+    end
+
+
+# the docs do not actually describe how to do this.
     def place_hold_title!
       req = hold_text_item
       place_any!(req)
     end
 
+    def place_hold_title!
+      place_hold_title_rest!
+    end
+
+    def place_hold_title_rest!
+      req = hold_text_title_rest
+      place_any_rest!(req,'hold')
+    end
+
     def place_hold_item!
+      if (@@rest)
+        place_hold_item_rest!
+      else
+        place_hold_item_xml!
+      end
+    end
+
+    def place_hold_item_xml!
       req = hold_text_item
       place_any!(req)
     end
@@ -76,19 +118,50 @@ module BlacklightCornellRequests
       place_any!(req)
     end
 
+    def place_recall_title_rest!
+      req = recall_text_title_rest
+      place_any_rest!(req,'recall')
+    end
+
     def place_recall_item!
+      if (@@rest)
+        place_recall_item_rest!
+      else
+        place_recall_item_xml!
+      end
+    end
+
+    def place_recall_item_rest!
+      req = recall_text_item_rest
+      place_any_rest!(req,'recall')
+    end
+
+    def place_recall_item_xml!
       req = recall_text_item
       place_any!(req)
     end
 
     def place_callslip_title!
+      req = callslip_text_title_rest
+      place_any_rest!(req,'callslip')
+    end
+
+    def place_callslip_item!
+      if (@@rest)
+        place_callslip_item_rest!
+      else
+        place_callslip_item_xml!
+      end
+    end
+
+    def place_callslip_item_xml!
       req = callslip_text_item
       place_any!(req)
     end
 
-    def place_callslip_item!
-      req = callslip_text_item
-      place_any!(req)
+    def place_callslip_item_rest!
+      req = callslip_text_item_rest
+      place_any_rest!(req,'callslip')
     end
 
     def fetch_from_opac!
@@ -97,6 +170,7 @@ module BlacklightCornellRequests
       http_client do |hc|
         begin
           xml = Nokogiri::XML(hc.get_content(@holdings_url, :bibId => bibid))
+          @xml = xml
         rescue
           @results= Hash.arbitrary_depth
           return self
@@ -198,6 +272,7 @@ module BlacklightCornellRequests
                @req = myurl 
                res = hc.request('GET', @req)
                xml = Nokogiri::XML(res.content())
+               @xml = xml 
                self.mtype = 'parsed'
              rescue
                 @results= Hash.arbitrary_depth
@@ -231,6 +306,10 @@ module BlacklightCornellRequests
             end
           end
   end
+  def cancel_recall_item!(holdid)
+            cancel_any_item!('holds',holdid)
+  end
+
   def cancel_hold_item!(holdid)
             cancel_any_item!('holds',holdid)
   end
@@ -267,9 +346,65 @@ module BlacklightCornellRequests
             end
   end
 
-
-
   private
+
+    def logger_info (text)
+      if defined?(Rails) 
+        Rails.logger.info  text
+      else
+        print text
+     end
+    end
+       
+    def place_any_rest!(text,type)
+
+      raw_data = Hash.arbitrary_depth
+      @req = text
+
+      begin
+        bad_doc = Nokogiri::XML(text) { |config| config.strict }
+      rescue Nokogiri::XML::SyntaxError => e
+        logger_info "Request (Failed): #{@req}"
+        self.mtype =  "syntax error in request: #{e} #{@req}"
+        return [self.mtype]
+      end
+
+      self.mtype = 'initialized'
+      if itemid == ''
+         rest_url = @rest_url  + "/record/#{bibid}/#{type}?patron=#{patronid}&patron_homedb=#{DB_ID}" 
+      else
+         rest_url = @rest_url  + "/record/#{bibid}/items/#{itemid}/#{type}?patron=#{patronid}&patron_homedb=#{DB_ID}" 
+      end 
+      # http://10.100.2.37:30114/vxws/record/155/items/303/hold?patron=185&patron_homedb=1@QA20012DB20020613131313&patron_group=1
+      #rest_url = @rest_url  + "/record/#{bibid}/items/#{itemid}/#{type}?patron=#{patronid}&patron_homedb=#{DB_ID}" 
+        logger_info "Request rest url: #{rest_url}"
+        logger_info "Request Body: #{@req}"
+      http_client do |hc|
+        begin
+         # res = hc.request('POST', Rails.configuration.voyager_request_url,body:@req)
+          res = hc.request('PUT', rest_url, body:@req)
+          xml = Nokogiri::XML(res.content())
+          self.mtype = 'parsed'
+        rescue
+          logger_info "Result (Failed): #{@req}"
+          @results= Hash.arbitrary_depth
+          self.mtype =  xml.inspect#'failed'
+          return self
+        end
+        @results = res.content();
+        logger_info "Result: #{res.content()}"
+        xml.xpath("//reply-text").collect do |m|
+          @mtype = m.content == 'ok' ? 'success' : 'failure';
+        end
+        xml.xpath("//reply-code").collect do |m|
+          @bcode = m.content
+          if @bcode == '25'
+             @bcode = '8'
+             @mtype = 'blocked'
+          end
+        end
+      end
+    end
 
     def place_any!(text)
       raw_data = Hash.arbitrary_depth
@@ -318,7 +453,8 @@ module BlacklightCornellRequests
       if @http_client 
         yield @http_client
       else
-        VoyagerRequest.http_client_without_cookies do |hc|
+        VoyagerRequest.http_client_with_cookies do |hc|
+        #VoyagerRequest.http_client_without_cookies do |hc|
           yield hc
         end
       end
@@ -328,7 +464,7 @@ module BlacklightCornellRequests
       hc = HTTPClient.new
       yield hc
     end
-
+    
     def self.http_client_with_cookies
       hc = HTTPClient.new
 
@@ -340,6 +476,101 @@ module BlacklightCornellRequests
       hc.cookie_manager.save_all_cookies(true)
     end
 
+# this does not quite match the docs, but the docs do not make sense.
+    def old_callslip_text_item_rest
+    reqcom = reqcomments.blank? ? '' :
+             reqcomments.encode(:xml=>:text)
+    req = <<EOS 
+<?xml version="1.0" encoding="UTF-8"?>
+<call-slip-parameters>
+<pickup-location>#{libraryid}</pickup-location>
+<comment>#{reqcom}</comment>
+<dbkey>#{DB_ID}</dbkey>
+<reqinput field="1"></reqinput>
+<reqinput field="2"></reqinput>
+<reqinput field="3"></reqinput>
+</call-slip-parameters>
+EOS
+    end 
+    def callslip_text_title_rest
+            "<?xml version='1.0' encoding='UTF-8'?>\n" +
+           '<call-slip-title-parameters>' +
+            text_callslip_parameters_rest +
+           '</call-slip-title-parameters>' 
+    end
+
+    def callslip_text_item_rest
+            "<?xml version='1.0' encoding='UTF-8'?>\n" +
+           '<call-slip-parameters>' +
+            text_callslip_parameters_rest +
+           '</call-slip-parameters>' 
+    end
+
+    def text_callslip_parameters_rest
+    reqcom = reqcomments.blank? ? '' :
+             reqcomments.encode(:xml=>:text)
+     req = <<EOS
+<pickup-location>#{libraryid}</pickup-location>
+<comment>#{reqcom}</comment>
+<dbkey>#{DB_ID}</dbkey>
+<reqinput field="1"></reqinput>
+<reqinput field="2"></reqinput>
+<reqinput field="3"></reqinput>
+EOS
+    end 
+
+    def text_parameters_rest
+    rest_reqnna = reqnna.gsub("-",'') 
+    reqcom = reqcomments.blank? ? '' :
+             reqcomments.encode(:xml=>:text)
+      req = <<EOS 
+        <pickup-location>#{libraryid}</pickup-location>
+        <last-interest-date>#{rest_reqnna}</last-interest-date>
+        <comment>#{reqcom}</comment>
+        <dbkey>#{DB_ID}</dbkey>
+EOS
+    end
+
+    def hold_text_title_rest
+    "<?xml version='1.0' encoding='UTF-8'?>\n" +
+           '<hold-title-parameters>' +
+           text_parameters_rest +
+           '</hold-title-parameters>'
+    end 
+ 
+    def hold_text_item_rest
+    "<?xml version='1.0' encoding='UTF-8'?>\n" +
+           '<hold-request-parameters>' +
+           text_parameters_rest +
+           '</hold-request-parameters>'
+    end 
+
+    def recall_text_item_rest
+    "<?xml version='1.0' encoding='UTF-8'?>\n" +
+           '<recall-parameters>' +
+           text_parameters_rest +
+           '</recall-parameters>'
+    end 
+    def recall_text_title_rest
+    "<?xml version='1.0' encoding='UTF-8'?>\n" +
+           '<recall-title-parameters>' +
+           text_parameters_rest +
+           '</recall-title-parameters>'
+    end 
+    def old_recall_text_item_rest
+    rest_reqnna = reqnna.gsub("-",'') 
+    reqcom = reqcomments.blank? ? '' :
+             reqcomments.encode(:xml=>:text)
+    req = <<EOS 
+<?xml version="1.0" encoding="UTF-8"?>
+<recall-parameters>
+<pickup-location>#{libraryid}</pickup-location>
+<last-interest-date>#{rest_reqnna}</last-interest-date>
+<comment>#{reqcom}</comment>
+<dbkey>#{DB_ID}</dbkey>
+</recall-parameters>
+EOS
+    end 
     def hold_text_item
      req  = <<EOS
 <?xml version="1.0" encoding="UTF-8"?>
