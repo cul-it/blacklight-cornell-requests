@@ -978,6 +978,147 @@ describe BlacklightCornellRequests::Request do
 
     end
 
+    context "Testing volume sort logic", :volume_sort => true do
+      let(:sorted_volumes) {
+        req = FactoryGirl.build(:request, bibid: nil)
+        items =
+        [
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641019",
+            "itemid"=>"641019", "enumeration"=>"v.46:no.1-4", "chron"=>"1990", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641020",
+            "itemid"=>"641020", "enumeration"=>"v.46:no.5-6", "chron"=>"1990", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641021",
+            "itemid"=>"641021", "enumeration"=>"v.46:no.7-8", "chron"=>"1990", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641022",
+            "itemid"=>"641022", "enumeration"=>"v.46:no.13/14-16", "chron"=>"1990", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.46:no.9-12", "chron"=>"1990", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.46:no.17-20", "chron"=>"1990", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.46:no.21-24", "chron"=>"1990", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.24", "chron"=>"1968:Jan.", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.24", "chron"=>"1968:Feb.", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.24", "chron"=>"1968:Mar.", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.24", "chron"=>"1968:Apr.", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.24", "chron"=>"1968:May", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.24", "chron"=>"1968:June", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.24", "chron"=>"1968:July", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.24", "chron"=>"1968:Aug.", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.24", "chron"=>"1968:Sept.", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.24", "chron"=>"1968:Oct.", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.24", "chron"=>"1968:Nov.", "year"=>""
+          }.with_indifferent_access,
+          {
+            "href"=>"http://catalog-test.library.cornell.edu/vxws/record/307808/items/641023",
+            "itemid"=>"641023", "enumeration"=>"v.24", "chron"=>"1968:Dec.", "year"=>""
+          }.with_indifferent_access
+        ]
+        req.set_volumes(items)
+        req.volumes.keys
+        Hash[req.volumes.keys.map.with_index.to_a]
+      }
+      
+      it "should sort 'v.24 - 1968:Jan.' before 'v.24 - 1968:Feb.'" do
+        expect(sorted_volumes['v.24 - 1968:Jan.']).to be < sorted_volumes['v.24 - 1968:Feb.']
+      end
+      
+      it "should sort 'v.24 - 1968:Feb.' before 'v.24 - 1968:Mar.'" do
+        expect(sorted_volumes['v.24 - 1968:Feb.']).to be < sorted_volumes['v.24 - 1968:Mar.']
+      end
+      
+      it "should sort 'v.24 - 1968:Mar.' before 'v.24 - 1968:Apr.'" do
+        expect(sorted_volumes['v.24 - 1968:Mar.']).to be < sorted_volumes['v.24 - 1968:Apr.']
+      end
+      
+      it "should sort 'v.24 - 1968:Apr.' before 'v.24 - 1968:May'" do
+        expect(sorted_volumes['v.24 - 1968:Apr.']).to be < sorted_volumes['v.24 - 1968:May']
+      end
+      
+      it "should sort 'v.24 - 1968:May' before 'v.24 - 1968:June'" do
+        expect(sorted_volumes['v.24 - 1968:May']).to be < sorted_volumes['v.24 - 1968:June']
+      end
+      
+      it "should sort 'v.24 - 1968:June' before 'v.24 - 1968:July'" do
+        expect(sorted_volumes['v.24 - 1968:June']).to be < sorted_volumes['v.24 - 1968:July']
+      end
+      
+      it "should sort 'v.24 - 1968:July' before 'v.24 - 1968:Aug.'" do
+        expect(sorted_volumes['v.24 - 1968:July']).to be < sorted_volumes['v.24 - 1968:Aug.']
+      end
+      
+      it "should sort 'v.24 - 1968:Aug.' before 'v.24 - 1968:Sept.'" do
+        expect(sorted_volumes['v.24 - 1968:Aug.']).to be < sorted_volumes['v.24 - 1968:Sept.']
+      end
+      
+      it "should sort 'v.24 - 1968:Sept.' before 'v.24 - 1968:Oct.'" do
+        expect(sorted_volumes['v.24 - 1968:Sept.']).to be < sorted_volumes['v.24 - 1968:Oct.']
+      end
+      
+      it "should sort 'v.24 - 1968:Oct.' before 'v.24 - 1968:Nov.'" do
+        expect(sorted_volumes['v.24 - 1968:Oct.']).to be < sorted_volumes['v.24 - 1968:Nov.']
+      end
+      
+      it "should sort 'v.24 - 1968:Nov.' before 'v.24 - 1968:Dec.'" do
+        expect(sorted_volumes['v.24 - 1968:Nov.']).to be < sorted_volumes['v.24 - 1968:Dec.']
+      end
+      
+      it "should sort 'v.46:no.9-12 - 1990' before 'v.46:no.13/14-16 - 1990'" do
+        expect(sorted_volumes['v.46:no.9-12 - 1990']).to be < sorted_volumes['v.46:no.13/14-16 - 1990']
+      end
+      
+      it "should sort 'v.24 - 1968:Jan.' before 'v.46:no.1-4 - 1990'" do
+        expect(sorted_volumes['v.24 - 1968:Jan.']).to be < sorted_volumes['v.46:no.1-4 - 1990']
+      end
+      
+    end
+
   end
 
   context "Working with holdings data", :holdings_data => true do
