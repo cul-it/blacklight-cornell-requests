@@ -28,7 +28,7 @@ module BlacklightCornellRequests
       @estimate = req.estimate
       @ti = req.ti
       @au = req.au
-      @isbn = req.isbn
+      @isbn = req.isbn || {}
       @ill_link = req.ill_link
       @pub_info = req.pub_info
       @volume = params[:volume]
