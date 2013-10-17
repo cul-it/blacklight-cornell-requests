@@ -2,9 +2,15 @@
 -subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
 -responsibility = render_document_show_field_value :document => @document, :field => 'title_responsibility_display'
 - @selected_volume = params[:volume]
-= link_to catalog_path(@id), {:title => @ti} do
-  %i.icon-circle-arrow-left
-  Back to item
+- counter = params[:counter] || session[:search][:counter]
+- if counter.blank?
+  = link_to catalog_path(@id), { :title => @ti } do
+    %i.icon-circle-arrow-left
+    Back to item
+- else
+  = link_to catalog_path(@id), { :title => @ti, 'data-counter'.to_sym => counter } do
+    %i.icon-circle-arrow-left
+    Back to item
 %h1.request-type Borrow Direct Request
 %div.row
   %div.span8.well

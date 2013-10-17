@@ -10,6 +10,10 @@ module BlacklightCornellRequests
 
       @id = params[:bibid]
       resp, @document = get_solr_response_for_doc_id(@id)
+      
+      if params[:counter].present?
+        session[:search][:counter] = params[:counter]
+      end
 
       req = BlacklightCornellRequests::Request.new(@id)
       req.netid = request.env['REMOTE_USER']
@@ -24,7 +28,7 @@ module BlacklightCornellRequests
       @estimate = req.estimate
       @ti = req.ti
       @au = req.au
-      @isbn = req.isbn
+      @isbn = req.isbn || {}
       @ill_link = req.ill_link
       @pub_info = req.pub_info
       @volume = params[:volume]
@@ -92,6 +96,10 @@ module BlacklightCornellRequests
     def pda
       return magic_request Request::PDA
     end
+    
+    def circ
+      return magic_request Request::ASK_CIRCULATION
+    end
 
     def ask
       return magic_request Request::ASK_LIBRARIAN
@@ -128,7 +136,8 @@ module BlacklightCornellRequests
           render js: "window.location = '#{Rails.application.routes.url_helpers.catalog_path(params[:bibid], :flash=>'success')}'"
           return
         else
-          flash[:error] = I18n.t('requests.failure')
+          #flash[:error] = I18n.t('requests.failure')
+          flash[:error] = response[:failure]
         end
       end
 
