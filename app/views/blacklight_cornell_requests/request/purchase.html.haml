@@ -49,7 +49,7 @@
         .control-group
           %label.control-label{:for => 'reqseries'} Series:
           .controls
-            %input#reqseries.input-xxlarge{:type => 'text', :name => 'reqseries', :value => @document[:title_series_display]}
+            %input#reqseries.input-xxlarge{:type => 'text', :name => 'reqseries', :value => @document[:title_series_display][0]}
         .control-group
           %label.control-label{:for => 'reqpublication'} Place, publisher, and year of publication:
           .controls
@@ -57,7 +57,7 @@
         .control-group
           %label.control-label{:for => 'reqidentifier'} ISBN, ISSN, or URL:
           .controls
-            %input#reqidentifier{:type => 'text', :name => 'reqidentifier', :value => @isbn[0]}
+            %input#reqidentifier{:type => 'text', :name => 'reqidentifier', :value => (!@isbn.nil? ? @isbn[0] : '')}
         .control-group
           %label.control-label{:for => 'reqcomments'} Source of information or comments concerning this request:
           .controls
