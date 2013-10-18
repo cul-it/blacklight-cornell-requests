@@ -47,14 +47,36 @@ module BlacklightCornellRequests
             :attrs =>  ['tokenGroups'] }
           ldap.search(search_params) do |entry|
 
-          # This is a brute-force approach because I can't make sense of LDAP
-          # Just match all the attributes of the form 'CN=rg.whatever'
+            # This is a brute-force approach because I can't make sense of LDAP
+            # Just match all the attributes of the form 'CN=rg.whatever'
             reference_groups = entry.to_ldif.scan(/CN=(rg.*?),/).flatten
             if reference_groups.include? "rg.cuniv.employee" or reference_groups.include? "rg.cuniv.student"
               return "cornell"
             else
               return "guest"
             end
+          end
+
+        end
+      end
+
+      # Given a netid, return a patron name
+      # Reference Groups reference page is http://www.it.cornell.edu/services/group/about/reference.cfm
+      def get_patron_name netid
+
+        unless netid.blank?
+          patron_dn = get_ldap_dn netid
+          return nil if patron_dn.nil?
+
+          ldap = bind_ldap
+          return unless ldap
+
+          # Do our search
+          search_params = { :base =>   patron_dn,
+            :scope =>  Net::LDAP::SearchScope_BaseObject,
+            :attrs =>  ['tokenGroups'] }
+          ldap.search(search_params) do |entry|
+            return entry.to_ldif.scan(/displayname: ([a-zA-Z ]+)/)[0][0] 
           end
 
         end

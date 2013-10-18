@@ -1,15 +1,9 @@
 -title = the_vernaculator('title_display', 'title_vern_display')
 -subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
 -responsibility = render_document_show_field_value :document => @document, :field => 'title_responsibility_display'
-- counter = params[:counter] || session[:search][:counter]
-- if counter.blank?
-  = link_to catalog_path(@id), { :title => @ti } do
-    %i.icon-circle-arrow-left
-    Back to item
-- else
-  = link_to catalog_path(@id), { :title => @ti, 'data-counter'.to_sym => counter } do
-    %i.icon-circle-arrow-left
-    Back to item
+= link_to catalog_path(@id), {:title => @ti} do
+  %i.icon-circle-arrow-left
+  Back to item
 - unless flash[:success]
   %h1.request-type Purchase Request
   %div.row
@@ -22,12 +16,12 @@
         .control-group
           %label.control-label{:for => 'reqname'} Name:
           .controls
-            %input#reqname{:type => 'text', :name => 'name'}
+            %input#reqname{:type => 'text', :name => 'name', :value => @name}
             .help-inline.required (required)
         .control-group
           %label.control-label{:for => 'reqemail'} Email address:
           .controls
-            %input#reqemail{:type => 'text', :name => 'email'}
+            %input#reqemail{:type => 'text', :name => 'email', :value => "#{@netid}@cornell.edu"}
             .help-inline.required (required)
         .control-group
           %label.control-label{:for => 'reqstatus'} Status:
@@ -55,7 +49,7 @@
         .control-group
           %label.control-label{:for => 'reqseries'} Series:
           .controls
-            %input#reqseries.input-xxlarge{:type => 'text', :name => 'reqseries', :value => @document[:title_series_display]}
+            %input#reqseries.input-xxlarge{:type => 'text', :name => 'reqseries', :value => (!@document[:title_series_display].nil? ? @document[:title_series_display][0] : '')}
         .control-group
           %label.control-label{:for => 'reqpublication'} Place, publisher, and year of publication:
           .controls
@@ -63,7 +57,7 @@
         .control-group
           %label.control-label{:for => 'reqidentifier'} ISBN, ISSN, or URL:
           .controls
-            %input#reqidentifier{:type => 'text', :name => 'reqidentifier', :value => @isbn[0]}
+            %input#reqidentifier{:type => 'text', :name => 'reqidentifier', :value => (!@isbn.nil? ? @isbn[0] : '')}
         .control-group
           %label.control-label{:for => 'reqcomments'} Source of information or comments concerning this request:
           .controls
