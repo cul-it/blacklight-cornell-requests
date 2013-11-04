@@ -60,9 +60,13 @@ module BlacklightCornellRequests
         end
 
       end
+      
+      @counter = params[:counter]
+      if @counter.blank? and session[:search].present?
+        @counter = session[:search][:counter]
+      end
 
       render @service
-
 
     end
 
