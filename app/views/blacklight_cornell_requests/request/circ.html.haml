@@ -1,10 +1,9 @@
-- counter = params[:counter] || session[:search][:counter]
-- if counter.blank?
+- if @counter.blank?
   = link_to catalog_path(@id), { :title => @ti } do
     %i.icon-circle-arrow-left
     Back to item
 - else
-  = link_to catalog_path(@id), { :title => @ti, 'data-counter'.to_sym => counter } do
+  = link_to catalog_path(@id), { :title => @ti, 'data-counter'.to_sym => @counter } do
     %i.icon-circle-arrow-left
     Back to item
 %h1.request-type Check at Circulation
