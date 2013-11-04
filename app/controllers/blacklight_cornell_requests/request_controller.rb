@@ -5,6 +5,7 @@ module BlacklightCornellRequests
   class RequestController < ApplicationController
 
     include Blacklight::SolrHelper
+    include Cornell::LDAP
 
     def magic_request target=''
 
@@ -28,6 +29,8 @@ module BlacklightCornellRequests
       @ill_link = req.ill_link
       @pub_info = req.pub_info
       @volume = params[:volume]
+      @netid = req.netid
+      @name = get_patron_name req.netid
 
       @iis = ActiveSupport::HashWithIndifferentAccess.new
 
@@ -128,7 +131,7 @@ module BlacklightCornellRequests
           render js: "window.location = '#{Rails.application.routes.url_helpers.catalog_path(params[:bibid], :flash=>'success')}'"
           return
         else
-          flash[:error] = I18n.t('requests.failure')
+          flash[:error] = response[:failure]
         end
       end
 

@@ -232,14 +232,20 @@ module BlacklightCornellRequests
       ## if the field is blank, use 'z' to rank low
       ## record number of occurances for each of the 
       items.each do |item|
-        item[:numeric_enumeration] = item[:enumeration][/\d+/]
-        item[:enumeration] = item[:enumeration]
-        if !item[:numeric_enumeration].blank?
-          item[:numeric_enumeration] = item[:numeric_enumeration].to_i
+        
+        # item[:numeric_enumeration] = item[:enumeration][/\d+/]  
+        enums = item[:enumeration].scan(/\d+/)  
+        if enums.count > 0  
+          numeric_enumeration = ''  
+          enums.each do |enum|  
+            numeric_enumeration = numeric_enumeration + enum.rjust(9,'0')  
+          end  
+          item[:numeric_enumeration] = numeric_enumeration
           num_enum = num_enum + 1
         else
-          item[:numeric_enumeration] = 999999999
+          item[:numeric_enumeration] = '999999999'
         end
+        
         item[:numeric_chron] = item[:chron][/\d+/]
         if !item[:numeric_chron].blank?
           item[:numeric_chron] = item[:numeric_chron].to_i
@@ -247,6 +253,7 @@ module BlacklightCornellRequests
         else
           item[:numeric_chron] = 999999999
         end
+        
         item[:numeric_year] = item[:year][/\d+/]
         if !item[:numeric_year].blank?
           item[:numeric_year] = item[:numeric_year].to_i
@@ -255,10 +262,18 @@ module BlacklightCornellRequests
           item[:numeric_year] = 999999999
         end
         
-        if item[:chron].blank?
-          item[:chron_compare] = 'z'
-        else
-          item[:chron_compare] = item[:chron]
+        if item[:enumeration].blank?  
+          item[:enumeration_compare] = 'z'  
+        else  
+          item[:enumeration_compare] = item[:enumeration]  
+        end
+        
+        if item[:chron].blank?  
+          item[:chron_compare] = 'z'  
+          item[:chron_month] = 13  
+        else  
+          item[:chron_compare] = item[:chron].delete(' ')  
+          item[:chron_month] = find_month item[:chron]  
         end
         
         if item[:year].blank?
@@ -273,21 +288,21 @@ module BlacklightCornellRequests
       sorted_items = {}
       if num_year >= num_enum and num_year >= num_chron
         if num_enum >= num_chron
-          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:numeric_chron],h[:chron_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare] ]}
         else
-          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_compare],h[:numeric_enumeration] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_enumeration],h[:enumeration_compare] ]}
         end
       elsif num_enum >= num_chron and num_enum >= num_year
         if num_year >= num_chron
-          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare] ]}
         else
-          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:numeric_chron],h[:chron_compare],h[:numeric_year],h[:year_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_year],h[:year_compare] ]}
         end
       else
         if num_year >= num_enum
-          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_compare],h[:numeric_year],h[:year_compare],h[:numeric_enumeration] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:enumeration_compare] ]}
         else
-          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_compare],h[:numeric_enumeration],h[:numeric_year],h[:year_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_year],h[:year_compare] ]}
         end
       end
       
@@ -488,7 +503,8 @@ module BlacklightCornellRequests
     # Determine delivery options for a single item if the patron is a Cornell affiliate
     def get_cornell_delivery_options item, params
 
-      item_loan_type = loan_type item[:typeCode]
+      typeCode = (item[:tempType].blank? or item[:tempType] == '0') ? item[:typeCode] : item[:tempType]
+      item_loan_type = loan_type typeCode
 
       request_options = []
       if item_loan_type == 'nocirc'
@@ -562,7 +578,8 @@ module BlacklightCornellRequests
 
     # Determine delivery options for a single item if the patron is a guest (non-Cornell)
     def get_guest_delivery_options item
-      item_loan_type = loan_type item[:typeCode]
+      typeCode = (item[:tempType].blank? or item[:tempType] == '0') ? item[:typeCode] : item[:tempType]
+      item_loan_type = loan_type typeCode
       request_options = []
 
       if item_loan_type == 'nocirc'
@@ -734,6 +751,36 @@ module BlacklightCornellRequests
       Marshal.load(Marshal.dump(o)).with_indifferent_access
     end
     
+    def find_month str  
+      if str =~ /Jan/  
+        1  
+      elsif str =~ /Feb/  
+        2  
+      elsif str =~ /Mar/  
+        3  
+      elsif str =~ /Apr/  
+        4  
+      elsif str =~ /May/  
+        5  
+      elsif str =~ /Jun/  
+        6  
+      elsif str =~ /Jul/  
+        7  
+      elsif str =~ /Aug/  
+        8  
+      elsif str =~ /Sep/  
+        9  
+      elsif str =~ /Oct/  
+        10  
+      elsif str =~ /Nov/  
+        11  
+      elsif str =~ /Dec/  
+        12  
+      else  
+        0  
+      end  
+    end 
+    
     ###################### Make Voyager requests ################################
 
     # Handle a request for a Voyager action
@@ -753,7 +800,7 @@ module BlacklightCornellRequests
       end
 
       # Use the VoyagerRequest class to submit the request while bypassing the holdings service
-      v = VoyagerRequest.new(self.bibid, {:holdings_url => Rails.configuration.voyager_get_holds, :request_url => Rails.configuration.voyager_req_holds})
+      v = VoyagerRequest.new(self.bibid, {:holdings_url => Rails.configuration.voyager_get_holds, :request_url => Rails.configuration.voyager_req_holds,:rest_url => Rails.configuration.voyager_req_holds_rest})
       v.itemid = params[:holding_id]
       v.patron(netid)
       v.libraryid = params[:library_id]
@@ -771,7 +818,11 @@ module BlacklightCornellRequests
       if v.mtype.strip == 'success'
         return { :success => I18n.t('requests.success') }
       else
-        return { :failure => I18n.t('requests.failure') }
+        if v.mtype.strip == 'blocked'
+          return { :failure => I18n.t('requests.failure'+v.bcode)}
+        else
+          return { :failure => I18n.t('requests.failure') }
+        end
       end
 
       # Set up Voyager request URL string

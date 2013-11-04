@@ -60,13 +60,15 @@ module BlacklightCornellRequests
       # Rails.logger.info "session id: #{session_id}"
 
       ## make pazpar2 search
-      isbn = /([a-zA-Z0-9]+)/.match(params[:isbn][0])
-      isbn = isbn[1]
+      if isbn.present?
+        isbn = /([a-zA-Z0-9]+)/.match(params[:isbn][0])
+        isbn = isbn[1]
+      end
       # isbn = params[:isbn][0].scan(/"([a-zA-Z0-9]+)[ "]/)
       # logger.info "isbn:"
       # logger.info isbn.inspect
       if isbn.blank? && !params[:title].blank?
-        request_url = base_url + "/search.pz2?session=#{session_id}&command=search&query=ti%3D#{params[:title]}"
+        request_url = base_url + "/search.pz2?session=#{session_id}&command=search&query=ti%3D" + ERB::Util.url_encode("\"#{params[:title]}\"")
       elsif !isbn.blank?
         request_url = base_url + "/search.pz2?session=#{session_id}&command=search&query=isbn%3D#{isbn}"
       else
@@ -98,7 +100,7 @@ module BlacklightCornellRequests
       end
       # logger.info "finished search request in #{i} seconds"
       ## make show request to get record id
-      request_url = base_url + "/search.pz2?session=#{session_id}&command=show&start=0&num=2&sort=title:1"
+      request_url = base_url + "/search.pz2?session=#{session_id}&command=show&start=0&sort=title:1"
       response = HTTPClient.get_content(request_url)
       response_parsed = Hash.from_xml(response)
       hits = response_parsed['show']['hit']

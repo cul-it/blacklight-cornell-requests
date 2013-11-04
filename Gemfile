@@ -9,7 +9,9 @@ gemspec
 gem "jquery-rails"
 
 group :test do
+  gem "mocha"
   gem "webmock"
+  gem "ci_reporter"
 end
 
 # Declare any dependencies that are still in development here instead of in
