@@ -55,7 +55,7 @@
             - if @volume.blank?
               = link_to request_recall_path(@id), {:title => @ti} do 
                 %h2.blacklight-title_display 
-                  %i.fa.fa-arrow-circl-right 
+                  %i.fa.fa-arrow-circle-right 
                   Recall
             - else
               = link_to request_recall_vol_path(:bibid => @id, :volume => @volume), {:title => @ti} do 
