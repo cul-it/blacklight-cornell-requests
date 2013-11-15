@@ -60,9 +60,13 @@ module BlacklightCornellRequests
         end
 
       end
+      
+      @counter = params[:counter]
+      if @counter.blank? and session[:search].present?
+        @counter = session[:search][:counter]
+      end
 
       render @service
-
 
     end
 
@@ -131,7 +135,7 @@ module BlacklightCornellRequests
           render js: "window.location = '#{Rails.application.routes.url_helpers.catalog_path(params[:bibid], :flash=>'success')}'"
           return
         else
-          flash[:error] = I18n.t('requests.failure')
+          flash[:error] = response[:failure]
         end
       end
 

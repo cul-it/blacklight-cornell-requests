@@ -13,12 +13,12 @@
             - if @volume.blank?
               = link_to request_l2l_path(@id), {:title => @ti} do 
                 %h2.blacklight-title_display 
-                  %i.icon-circle-arrow-right 
+                  %i.fa.fa-arrow-circle-right 
                   Library to library
             - else
               = link_to request_l2l_vol_path(:bibid => @id, :volume => @volume), {:title => @ti} do 
                 %h2.blacklight-title_display 
-                  %i.icon-circle-arrow-right 
+                  %i.fa.fa-arrow-circle-right 
                   Library to library
           %td  
             = option[:estimate]
@@ -28,7 +28,7 @@
           %td
             = link_to request_bd_path(@id), {:title => @ti} do 
               %h2.blacklight-title_display 
-                %i.icon-circle-arrow-right 
+                %i.fa.fa-arrow-circle-right 
                 Borrow Direct
           %td 
             = option[:estimate]
@@ -39,12 +39,12 @@
             - if @volume.blank?
               = link_to request_hold_path(@id), {:title => @ti} do 
                 %h2.blacklight-title_display 
-                  %i.icon-circle-arrow-right 
+                  %i.fa.fa-arrow-circle-right 
                   Hold
             - else
               = link_to request_hold_vol_path(:bibid => @id, :volume => @volume), {:title => @ti} do 
                 %h2.blacklight-title_display 
-                  %i.icon-circle-arrow-right 
+                  %i.fa.fa-arrow-circle-right 
                   Hold
           %td
             = option[:estimate]
@@ -55,12 +55,12 @@
             - if @volume.blank?
               = link_to request_recall_path(@id), {:title => @ti} do 
                 %h2.blacklight-title_display 
-                  %i.icon-circle-arrow-right 
+                  %i.fa.fa-arrow-circle-right 
                   Recall
             - else
               = link_to request_recall_vol_path(:bibid => @id, :volume => @volume), {:title => @ti} do 
                 %h2.blacklight-title_display 
-                  %i.icon-circle-arrow-right 
+                  %i.fa.fa-arrow-circle-right 
                   Recall
           %td
             = option[:estimate]
@@ -70,7 +70,7 @@
           %td
             = link_to request_purchase_path(@id), {:title => @ti} do 
               %h2.blacklight-title_display 
-                %i.icon-circle-arrow-right 
+                %i.fa.fa-arrow-circle-right 
                 Purchase request
           %td
             = option[:estimate]
@@ -80,7 +80,7 @@
           %td
             = link_to request_ill_path(@id), {:title => @ti} do 
               %h2.blacklight-title_display 
-                %i.icon-circle-arrow-right 
+                %i.fa.fa-arrow-circle-right 
                 Interlibrary Loan
           %td
             = option[:estimate]
@@ -90,7 +90,7 @@
           %td
             = link_to request_circ_path(@id), {:title => @ti} do
               %h2.blacklight-title_display
-                %i.icon-circle-arrow-right
+                %i.fa.fa-arrow-circle-right
                 Check circulation
           %td
             This item is a short-term loan. Please check at the circulation desk.
@@ -99,7 +99,7 @@
           %td
             = link_to request_document_delivery_path(@id), {:title => @ti} do
               %h2.blacklight-title_display
-                %i.icon-circle-arrow-right &nbsp;
+                %i.fa.fa-arrow-circle-right &nbsp;
                 Document delivery
           %td
             = option[:estimate]
@@ -109,7 +109,7 @@
           %td
             = link_to request_pda_path(@id), {:title => @ti} do
               %h2.blacklight-title_display
-                %i.icon-circle-arrow-right &nbsp;
+                %i.fa.fa-arrow-circle-right &nbsp;
                 Purchase request
           %td
             = option[:estimate]

@@ -453,8 +453,8 @@ module BlacklightCornellRequests
       if @http_client 
         yield @http_client
       else
-        VoyagerRequest.http_client_with_cookies do |hc|
-        #VoyagerRequest.http_client_without_cookies do |hc|
+        #VoyagerRequest.http_client_with_cookies do |hc|
+        VoyagerRequest.http_client_without_cookies do |hc|
           yield hc
         end
       end
