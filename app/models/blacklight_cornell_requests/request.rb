@@ -14,7 +14,9 @@ module BlacklightCornellRequests
     ASK_CIRCULATION = 'circ'
     ASK_LIBRARIAN = 'ask'
     LIBRARY_ANNEX = 'Library Annex'
+    DOCUMENT_DELIVERY = 'document_delivery'
     HOLD_PADDING_TIME = 3
+    OCLC_TYPE_ID = 'OCoLC'
 
     # attr_accessible :title, :body
     include ActiveModel::Validations
@@ -23,7 +25,7 @@ module BlacklightCornellRequests
 
     attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :alternate_options
     attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items, :volumes, :all_items
-    attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN
+    attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN, :DOCUMENT_DELIVERY
     validates_presence_of :bibid
     def save(validate = true)
       validate ? valid? : true
@@ -77,8 +79,19 @@ module BlacklightCornellRequests
           iid[:status] = item_status iid[:itemStatus]
 
           self.all_items.push(iid) # Everything goes into all_items
+
           # If volume is specified, only populate items with matching enum/chron/year values
-          next if (!volume.blank? and ( volume != i[:enumeration] and volume != i[:chron] and volume != i[:year]))
+
+          # Unpack volume if necessary
+          if volume.present?
+            parts = volume.split '|'
+            e = parts[1] || ''
+            c = parts[2] || ''
+            y = parts[3] || ''
+
+            # Require a match on all three iterator values to determine a match
+            next if ( y != i[:year] or c != i[:chron] or e != i[:enumeration])
+          end
           
           # Only a subset of all_items gets put into working_items
           working_items.push(iid)
@@ -164,12 +177,31 @@ module BlacklightCornellRequests
         self.service = ASK_LIBRARIAN
       end
 
-      request_options.push ({:service => ASK_LIBRARIAN, :estimate => get_delivery_time(ASK_LIBRARIAN, nil)})
+      request_options.push ( { :service => ASK_LIBRARIAN, :estimate => get_delivery_time( ASK_LIBRARIAN, nil ) } )
       populate_options self.service, request_options unless self.service == ASK_LIBRARIAN
-      
+
+      if document[:format].present? and document[:format].include? 'Journal'
+        if self.alternate_options.nil?
+          self.alternate_options = []
+        end
+        # this article form cannot be prepopulated...
+        dd_link = '***REMOVED***?Action=10&Form=22'
+        dd_estimate = get_delivery_time DOCUMENT_DELIVERY, nil
+        if self.service != DOCUMENT_DELIVERY
+          dd_iids = { :itemid => 'document_delivery', :url => dd_link }
+          self.alternate_options.unshift ( { :service => DOCUMENT_DELIVERY, :iid => dd_iids, :estimate => dd_estimate } )
+        else
+          dd_iids = { :itemid => 'document_delivery', :url => dd_link }
+          if !self.request_options.nil?
+            self.alternate_options.unshift *self.request_options
+          end
+          self.request_options = [ { :service => DOCUMENT_DELIVERY, :iid => dd_iids, :estimate => dd_estimate } ]
+        end
+      end
+
       self.document = document
-      
-    end   
+
+    end
     
     def populate_options target, request_options
       self.alternate_options = []
@@ -191,37 +223,152 @@ module BlacklightCornellRequests
     # set the class volumes from a list of item records
     def set_volumes(items) 
       volumes = {}
+      num_enum = 0
+      num_chron = 0
+      num_year = 0
+      
+      ## take first integer from each of enum, chron and year
+      ## if not populated, use big number to rank low
+      ## if the field is blank, use 'z' to rank low
+      ## record number of occurances for each of the 
       items.each do |item|
-        volumes[item[:enumeration]] = 1 unless item[:enumeration].blank? 
-        volumes[item[:chron]] = 1 unless item[:chron].blank?
-        volumes[item[:year]] = 1 unless item[:year].blank?
+        
+        # item[:numeric_enumeration] = item[:enumeration][/\d+/]  
+        enums = item[:enumeration].scan(/\d+/)  
+        if enums.count > 0  
+          numeric_enumeration = ''  
+          enums.each do |enum|  
+            numeric_enumeration = numeric_enumeration + enum.rjust(9,'0')  
+          end  
+          item[:numeric_enumeration] = numeric_enumeration
+          num_enum = num_enum + 1
+        else
+          item[:numeric_enumeration] = '999999999'
+        end
+        
+        item[:numeric_chron] = item[:chron][/\d+/]
+        if !item[:numeric_chron].blank?
+          item[:numeric_chron] = item[:numeric_chron].to_i
+          num_chron = num_chron + 1
+        else
+          item[:numeric_chron] = 999999999
+        end
+        
+        item[:numeric_year] = item[:year][/\d+/]
+        if !item[:numeric_year].blank?
+          item[:numeric_year] = item[:numeric_year].to_i
+          num_year = num_year + 1
+        else
+          item[:numeric_year] = 999999999
+        end
+        
+        if item[:enumeration].blank?  
+          item[:enumeration_compare] = 'z'  
+        else  
+          item[:enumeration_compare] = item[:enumeration]  
+        end
+        
+        if item[:chron].blank?  
+          item[:chron_compare] = 'z'  
+          item[:chron_month] = 13  
+        else  
+          item[:chron_compare] = item[:chron].delete(' ')  
+          item[:chron_month] = find_month item[:chron]  
+        end
+        
+        if item[:year].blank?
+          item[:year_compare] = 'z'
+        else
+          item[:year_compare] = item[:year]
+        end
       end
+      
+      ## sort based on number of occurances of each of three fields
+      ## when tied, year has highest weight followed by enum
+      sorted_items = {}
+      if num_year >= num_enum and num_year >= num_chron
+        if num_enum >= num_chron
+          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare] ]}
+        else
+          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_enumeration],h[:enumeration_compare] ]}
+        end
+      elsif num_enum >= num_chron and num_enum >= num_year
+        if num_year >= num_chron
+          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare] ]}
+        else
+          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_year],h[:year_compare] ]}
+        end
+      else
+        if num_year >= num_enum
+          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:enumeration_compare] ]}
+        else
+          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_year],h[:year_compare] ]}
+        end
+      end
+      
+      ## as of ruby 1.9, hash preserves insertion order
+      sorted_items.each do |item|
+        e = item[:enumeration]
+        c = item[:chron]
+        y = item[:year]
+        
+        next if e.blank? and c.blank? and y.blank?
 
-      self.volumes = sort_volumes(volumes.keys)
+        # if e.present? and c.blank? and y.blank?
+          # volumes[e] = "|#{e}|||"
+        # elsif c.present? and e.blank? and y.blank?
+          # volumes[c] = "||#{c}||"
+        # elsif y.present? and e.blank? and c.blank?
+          # volumes[y] = "|||#{y}|"
+        # else
+          # label = ''
+          # [e, c, y].each do |element|
+            # if element.present?
+              # label += ' - ' unless label == ''
+              # label += element
+            # end
+          # end
+          # volumes[label] = "|#{e}|#{c}|#{y}|"
+        # end
+        
+        label = ''
+        [e, c, y].each do |element|
+          if element.present?
+            label += ' - ' unless label == ''
+            label += element
+          end
+        end
+        volumes[label] = "|#{e}|#{c}|#{y}|"
+
+      end
+      
+      self.volumes = volumes
     end
 
     # Sort volumes in their logical order for display.
     # Volume strings typically look like 'v.1', 'v21-22', 'index v.1-10', etc.
-    def sort_volumes(volumes)
+    # def sort_volumes(volumes)
 
-      volumes = volumes.sort_by do |v|
+    #   Rails.logger.debug "mjc12test: v1: #{volumes}"
+    #   volumes = volumes.sort_by do |v|
 
-        if v.is_a? Integer
-          [Integer(v)]
-        else
-          a, b, c = v.split(/[\.\-,]/) 
-          b = b.gsub(/[^0-9]/,'') unless b.nil?
-          if b.blank? or b !~ /\d+/
-            [a]
-          else
-            [a, Integer(b)] # Note: This forces whatever is left into an integer!
-          end
-        end
-      end
+    #     if v.is_a? Integer
+    #       [Integer(v)]
+    #     else
+    #       a, b, c = v.split(/[\.\-,]/) 
+    #       b = b.gsub(/[^0-9]/,'') unless b.nil?
+    #       if b.blank? or b !~ /\d+/
+    #         [a]
+    #       else
+    #         [a, Integer(b)] # Note: This forces whatever is left into an integer!
+    #       end
+    #     end
+    #   end
+    #   Rails.logger.debug "mjc12test: v2: #{volumes}"
 
-      volumes
+    #   volumes
 
-    end
+    # end
 
     ##################### Manipulate holdings data #####################
 
@@ -356,7 +503,8 @@ module BlacklightCornellRequests
     # Determine delivery options for a single item if the patron is a Cornell affiliate
     def get_cornell_delivery_options item, params
 
-      item_loan_type = loan_type item[:typeCode]
+      typeCode = (item[:tempType].blank? or item[:tempType] == '0') ? item[:typeCode] : item[:tempType]
+      item_loan_type = loan_type typeCode
 
       request_options = []
       if item_loan_type == 'nocirc'
@@ -386,7 +534,9 @@ module BlacklightCornellRequests
                              {:service => HOLD, :location => item[:location], :status => item[:itemStatus]})
 
       elsif ((item_loan_type == 'regular' and item[:status] == 'Missing') or
-             (item_loan_type == 'regular' and item[:status] == 'Lost'))
+             (item_loan_type == 'regular' and item[:status] == 'Lost') or
+             (item_loan_type == 'day' and item[:status] == 'Missing') or
+             (item_loan_type == 'day' and item[:status] == 'Lost'))
 
          # TODO: Test and fix BD check with real params
         if borrowDirect_available? params
@@ -428,7 +578,8 @@ module BlacklightCornellRequests
 
     # Determine delivery options for a single item if the patron is a guest (non-Cornell)
     def get_guest_delivery_options item
-      item_loan_type = loan_type item[:typeCode]
+      typeCode = (item[:tempType].blank? or item[:tempType] == '0') ? item[:typeCode] : item[:tempType]
+      item_loan_type = loan_type typeCode
       request_options = []
 
       if item_loan_type == 'nocirc'
@@ -474,7 +625,6 @@ module BlacklightCornellRequests
     end
 
     def get_delivery_time service, item_data
-
       case service 
 
         when L2L
@@ -491,8 +641,9 @@ module BlacklightCornellRequests
 
         when HOLD
           ## if it got to this point, it means it is not available and should have Due on xxxx-xx-xx
-          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])[1]
+          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])
           if ! dueDate.nil?
+            dueDate = dueDate[1]
             estimate = (Date.parse(dueDate) - Date.today).to_i
             if (estimate < 0)
               ## this item is overdue
@@ -513,6 +664,21 @@ module BlacklightCornellRequests
           5
         when PURCHASE
           10
+        when DOCUMENT_DELIVERY
+          # for others, item_data is a single item
+          # for DD, it is the entire holdings data since it matters whether the item is available as a whole or not
+          available = false
+          self.all_items.each do |item|
+            if item[:status] == 'Not Charged'
+              available = true
+              break
+            end
+          end
+          if available == true
+            2
+          else
+            2 + ( get_delivery_time ILL, nil )
+          end
         when ASK_LIBRARIAN
           9999
         when ASK_CIRCULATION
@@ -565,12 +731,55 @@ module BlacklightCornellRequests
       if document[:lc_callnum_display].present?
         ill_link = ill_link + "&rft.identifier=#{document[:lc_callnum_display][0]}"
       end
+      if document[:other_id_display]
+        oclc = []
+        document[:other_id_display].each do |other_id|
+          if match = other_id.match(/\(#{OCLC_TYPE_ID}\)([0-9]+)/)
+            id_value = match.captures[0]
+            oclc.push id_value
+          end
+        end
+        if oclc.count > 0
+          ill_link = ill_link + "&rfe_dat=#{oclc.join(',')}"
+        end
+      end
+      
       self.ill_link = ill_link
     end
     
     def deep_copy(o)
       Marshal.load(Marshal.dump(o)).with_indifferent_access
     end
+    
+    def find_month str  
+      if str =~ /Jan/  
+        1  
+      elsif str =~ /Feb/  
+        2  
+      elsif str =~ /Mar/  
+        3  
+      elsif str =~ /Apr/  
+        4  
+      elsif str =~ /May/  
+        5  
+      elsif str =~ /Jun/  
+        6  
+      elsif str =~ /Jul/  
+        7  
+      elsif str =~ /Aug/  
+        8  
+      elsif str =~ /Sep/  
+        9  
+      elsif str =~ /Oct/  
+        10  
+      elsif str =~ /Nov/  
+        11  
+      elsif str =~ /Dec/  
+        12  
+      else  
+        0  
+      end  
+    end 
     
     ###################### Make Voyager requests ################################
 
@@ -591,7 +800,7 @@ module BlacklightCornellRequests
       end
 
       # Use the VoyagerRequest class to submit the request while bypassing the holdings service
-      v = VoyagerRequest.new(self.bibid)
+      v = VoyagerRequest.new(self.bibid, {:holdings_url => Rails.configuration.voyager_get_holds, :request_url => Rails.configuration.voyager_req_holds,:rest_url => Rails.configuration.voyager_req_holds_rest})
       v.itemid = params[:holding_id]
       v.patron(netid)
       v.libraryid = params[:library_id]
@@ -609,7 +818,11 @@ module BlacklightCornellRequests
       if v.mtype.strip == 'success'
         return { :success => I18n.t('requests.success') }
       else
-        return { :failure => I18n.t('requests.failure') }
+        if v.mtype.strip == 'blocked'
+          return { :failure => I18n.t('requests.failure'+v.bcode)}
+        else
+          return { :failure => I18n.t('requests.failure') }
+        end
       end
 
       # Set up Voyager request URL string

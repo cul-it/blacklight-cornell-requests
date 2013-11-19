@@ -5,6 +5,7 @@ module BlacklightCornellRequests
   class RequestController < ApplicationController
 
     include Blacklight::SolrHelper
+    include Cornell::LDAP
 
     def magic_request target=''
 
@@ -27,13 +28,24 @@ module BlacklightCornellRequests
       @isbn = req.isbn
       @ill_link = req.ill_link
       @pub_info = req.pub_info
+      @volume = params[:volume]
+      @netid = req.netid
+      @name = get_patron_name req.netid
 
       @iis = ActiveSupport::HashWithIndifferentAccess.new
 
-      @volumes = req.set_volumes(req.all_items)
+      # @volumes = req.set_volumes(req.all_items)
+      @volumes = req.volumes
       if req.volumes.present? and params[:volume].blank?
-        render 'shared/_volume_select'
-        return
+        if req.volumes.count != 1
+          render 'shared/_volume_select'
+          return
+        else
+          # a bit hacky solution here to get to request path
+          # will need more rails compliant solution down the road...
+          redirect_to '/request' + request.env['PATH_INFO'] + "/#{req.volumes[req.volumes.keys[0]]}"
+          return
+        end
       elsif req.request_options.present?
         req.request_options.each do |item|
           iid = item[:iid]
@@ -48,9 +60,13 @@ module BlacklightCornellRequests
         end
 
       end
+      
+      @counter = params[:counter]
+      if @counter.blank? and session[:search].present?
+        @counter = session[:search][:counter]
+      end
 
       render @service
-
 
     end
 
@@ -88,6 +104,10 @@ module BlacklightCornellRequests
       return magic_request Request::ASK_LIBRARIAN
     end
 
+    def document_delivery
+      return magic_request Request::DOCUMENT_DELIVERY
+    end
+
     def blacklight_solr
       @solr ||=  RSolr.connect(blacklight_solr_config)
     end
@@ -115,7 +135,7 @@ module BlacklightCornellRequests
           render js: "window.location = '#{Rails.application.routes.url_helpers.catalog_path(params[:bibid], :flash=>'success')}'"
           return
         else
-          flash[:error] = I18n.t('requests.failure')
+          flash[:error] = response[:failure]
         end
       end
 
