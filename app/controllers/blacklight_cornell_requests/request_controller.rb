@@ -52,7 +52,8 @@ module BlacklightCornellRequests
           iid[:call_number] = iid[:callNumber]
           @iis[iid[:itemid]] = iid
         end
-        @volumes = req.volumes
+        @volumes = req.set_volumes(req.all_items)
+        #@volumes = req.volumes
 
         @alternate_request_options = []
         req.alternate_options.each do |option|
