@@ -158,14 +158,14 @@ module BlacklightCornellRequests
       if params[:name].blank?
         errors << I18n.t('requests.errors.name.blank')
       end
+      if params[:email].blank?
+        errors << I18n.t('requests.errors.email.blank')
+      end
       if params[:reqstatus].blank?
         errors << I18n.t('requests.errors.status.blank')
       end
       if params[:reqtitle].blank?
         errors << I18n.t('requests.errors.title.blank')
-      end
-      if params[:email].blank?
-        errors << I18n.t('requests.errors.email.blank')
       end
       if params[:email].present?
         if params[:email].match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/)
