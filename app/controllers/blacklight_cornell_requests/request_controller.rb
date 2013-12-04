@@ -167,7 +167,7 @@ module BlacklightCornellRequests
       if params[:reqtitle].blank?
         errors << I18n.t('requests.errors.title.blank')
       end
-      if params[:email].present?
+      if params[:email].present? and errors.empty?
         if params[:email].match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/)
           # Email the form contents to the purchase request staff
           RequestMailer.email_request(request.env['REMOTE_USER'], params)
