@@ -11,6 +11,7 @@ module BlacklightCornellRequests
 
       @id = params[:bibid]
       resp, @document = get_solr_response_for_doc_id(@id)
+      @document = @document
 
       req = BlacklightCornellRequests::Request.new(@id)
       req.netid = request.env['REMOTE_USER']
@@ -49,8 +50,7 @@ module BlacklightCornellRequests
       elsif req.request_options.present?
         req.request_options.each do |item|
           iid = item[:iid]
-          iid[:call_number] = iid[:callNumber]
-          @iis[iid[:itemid]] = iid
+          @iis[iid[:item_id]] = iid
         end
         @volumes = req.set_volumes(req.all_items)
         #@volumes = req.volumes
