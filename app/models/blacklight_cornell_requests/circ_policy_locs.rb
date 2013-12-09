@@ -1,9 +1,9 @@
 module BlacklightCornellRequests
   class Circ_policy_locs < ActiveRecord::Base
-    attr_accessible :circ_group_id,:pickup_location
+    attr_accessible :CIRC_GROUP_ID,:PICKUP_LOCATION,:LOCATION_ID
     
     def readonly?
-      true
+      false
     end
   end
 end

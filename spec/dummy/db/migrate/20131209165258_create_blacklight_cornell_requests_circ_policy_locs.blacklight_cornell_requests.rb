@@ -1,3 +1,4 @@
+# This migration comes from blacklight_cornell_requests (originally 20131205183448)
 class CreateBlacklightCornellRequestsCircPolicyLocs < ActiveRecord::Migration
   def change
     create_table :blacklight_cornell_requests_circ_policy_locs do |t|
