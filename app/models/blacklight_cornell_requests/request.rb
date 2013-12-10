@@ -401,7 +401,7 @@ module BlacklightCornellRequests
       holdings = document[:item_record_display].present? ? document[:item_record_display].map { |item| parseJSON item } : Array.new
       # Rails.logger.info "sk274_log: #{holdings.inspect}"
 
-      return holdings unless self.bibid
+      return nil unless self.bibid
 
       response = parseJSON(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/status_short/#{self.bibid}"))
       # Rails.logger.info "sk274_log: #{response.inspect}"
@@ -653,8 +653,7 @@ module BlacklightCornellRequests
         request_options.push( {:service => HOLD, :location => item[:location], :status => item[:status] } )
 
       elsif item_loan_type == 'day' and item[:status] == NOT_CHARGED
-
-        unless Request.no_l2l_day_loan_types.include? item[:typeCode]
+        unless Request.no_l2l_day_loan_types.include? typeCode
           request_options.push( {:service => L2L, :location => item[:location] } )
         end
 
