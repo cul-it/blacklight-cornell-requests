@@ -1150,7 +1150,7 @@ describe BlacklightCornellRequests::Request do
       it "returns nil if no bibid is passed in" do
         request = FactoryGirl.build(:request, bibid: nil)
         result = request.get_holdings document
-        result.empty?.should == true
+        result.nil?.should == true
       end
 
       it "returns nil for an invalid bibid" do
@@ -1158,7 +1158,7 @@ describe BlacklightCornellRequests::Request do
         VCR.use_cassette 'holdings/invalid_bibid' do
           result = request.get_holdings document
           puts "---\n" + result.inspect + "---\n"
-          result[request.bibid.to_s].empty?should == true
+          result[request.bibid.to_s].empty?.should == true
         end
       end
 
@@ -1474,7 +1474,54 @@ def run_cornell_tests(loan_type, status, bd, short_day_loan = false)
     else
   end
 
-  return r.get_delivery_options({ :item_type_id => type_code, :status => status })
+  item = {
+    "sensitize"=>"Y",
+           "spine_label"=>"",
+           "magnetic_media"=>"N",
+           "recalls_placed"=>"0",
+           "temp_location"=>"0",
+           "historical_browses"=>"1",
+           "item_enum"=>"v.10",
+           "item_sequence_number"=>"10",
+           "historical_charges"=>"0",
+           "create_date"=>"2000-05-31 00:00:00.0",
+           "copy_number"=>"1",
+           "create_location_id"=>"0",
+           "mfhd_id"=>"6058442",
+           "short_loan_charges"=>"0",
+           "chron"=>"1939",
+           "reserve_charges"=>"0",
+           "year"=>"",
+           "modify_location_id"=>"100",
+           "media_type_id"=>"0",
+           "create_operator_id"=>"",
+           "historical_bookings"=>"0",
+           "holds_placed"=>"0",
+           "perm_location"=>"99",
+           "modify_date"=>"2006-12-21 20:25:35.0",
+           "temp_item_type_id"=>"0",
+           "caption"=>"",
+           "on_reserve"=>"N",
+           "pieces"=>"1",
+           "item_type_id"=>"3",
+           "price"=>"0",
+           "item_type_name"=>"book",
+           "item_id"=>"5511982",
+           "freetext"=>"",
+           "modify_operator_id"=>"es254",
+           "status"=>2,
+           "call_number"=>"PR6068.O924 H36 1998",
+           "location"=>"Olin Library",
+           "exclude_location_id"=>['181', '188'],
+           "callNumber" => "PR6068.O924 H36 1998",
+           :copy_number => "1",
+           :item_type_id => type_code,
+           :status => req.item_status(status),
+           :exclude_location_id => [181, 188]
+        }.with_indifferent_access
+                puts "mjc12test: options: #{type_code}, #{status}"
+
+  return r.get_delivery_options(item, { :item_type_id => type_code, :status => status })
 
 end
 
