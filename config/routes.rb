@@ -1,7 +1,7 @@
 BlacklightCornellRequests::Engine.routes.draw do
   
-  match 'hold/:bibid' => 'request#hold', :as =>'request_hold' , :constraints => { :bibid => /.+/ }
-  match 'hold/:bibid/:volume' => 'request#hold', :as =>'request_hold_vol' , :constraints => { :bibid => /.+/, :volume => /.*/ }
+  match 'hold/:bibid' => 'request#hold', :as =>'request_hold' 
+  match 'hold/:bibid/:volume' => 'request#hold', :as =>'request_hold_vol' , :constraints => { :volume => /.*/ }
   match 'recall/:bibid' => 'request#recall', :as =>'request_recall'
   match 'recall/:bibid/:volume' => 'request#recall', :as =>'request_recall_vol', :constraints => { :volume => /.*/ }
   #match 'callslip/:netid/:bibid' =>'request#callslip', :as =>'request_callslip'

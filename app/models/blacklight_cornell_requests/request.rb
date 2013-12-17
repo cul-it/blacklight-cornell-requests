@@ -17,6 +17,34 @@ module BlacklightCornellRequests
     DOCUMENT_DELIVERY = 'document_delivery'
     HOLD_PADDING_TIME = 3
     OCLC_TYPE_ID = 'OCoLC'
+    
+    NOT_CHARGED = 1
+    CHARGED = 2
+    RENEWED = 3
+    OVERDUE = 4
+    RECALL_REQUEST = 5
+    HOLD_REQUEST = 6
+    ON_HOLD = 7
+    IN_TRANSIT = 8
+    IN_TRANSIT_DISCHARGED = 9
+    IN_TRANSIT_ON_HOLD = 10
+    DISCHARGED = 11
+    MISSING = 12
+    LOST_LIBRARY_APPLIED = 13
+    LOST_SYSTEM_APPLIED = 14
+    LOST = 26 # means LOST_LIBRARY_APPLIED or LOST_SYSTEM_APPLIED
+    CLAIMS_RETURNED = 15
+    DAMAGED = 16
+    WITHDRAWN = 17
+    AT_BINDERY = 18
+    CATALOG_REVIEW =19
+    CIRCULATION_REVIEW = 20
+    SCHEDULED = 21
+    IN_PROCESS = 22
+    CALL_SLIP_REQUEST = 23
+    SHORT_LOAN_REQUEST = 24
+    REMOTE_STORAGE_REQUEST = 25
+    REQUESTED = 27
 
     # attr_accessible :title, :body
     include ActiveModel::Validations
@@ -26,6 +54,11 @@ module BlacklightCornellRequests
     attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :alternate_options
     attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items, :volumes, :all_items
     attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN, :DOCUMENT_DELIVERY
+    attr_accessor :NOT_CHARGED, :CHARGED, :RENEWED, :OVERDUE, :RECALL_REQUEST, :HOLD_REQUEST, :ON_HOLD
+    attr_accessor :IN_TRANSIT, :IN_TRANSIT_DISCHARGED, :IN_TRANSIT_ON_HOLD, :DISCHARGED, :MISSING
+    attr_accessor :LOST_LIBRARY_APPLIED, :LOST_SYSTEM_APPLIED, :LOST, :CLAIMS_RETURNED, :DAMAGED
+    attr_accessor :WITHDRAWN, :AT_BINDERY, :CATALOG_REVIEW, :CIRCULATION_REVIEW, :SCHEDULED, :IN_PROCESS
+    attr_accessor :CALL_SLIP_REQUEST, :SHORT_LOAN_REQUEST, :REMOTE_STORAGE_REQUEST, :REQUESTED
     validates_presence_of :bibid
     def save(validate = true)
       validate ? valid? : true
@@ -60,7 +93,7 @@ module BlacklightCornellRequests
       end
 
       # Get holdings
-      get_holdings 'retrieve_detail_raw' unless self.holdings_data
+      self.holdings_data = get_holdings document unless self.holdings_data
 
       # Get item status and location for each item in each holdings record; store in working_items
       # We now have two item arrays! working_items (which eventually gets set in self.items) is a 
@@ -69,34 +102,23 @@ module BlacklightCornellRequests
       # use that list to, for example, obtain a list of all the volumes in the bibid.
       working_items = []
       self.all_items = []
-      item_status = 'Charged'
-      holdings = self.holdings_data[self.bibid.to_s][:records]
-      holdings.each do |h|
-        items = h[:item_status][:itemdata]
-        items.each do |i|
-          iid = deep_copy(i)
-          iid[:id] = iid[:itemid]
-          iid[:status] = item_status iid[:itemStatus]
+      item_status = CHARGED
+      self.holdings_data.each do |h|
+        self.all_items.push h # Everything goes into all_items
+        # If volume is specified, only populate items with matching enum/chron/year values
+        # Unpack volume if necessary
+        if volume.present?
+          parts = volume.split '|'
+          e = parts[1] || ''
+          c = parts[2] || ''
+          y = parts[3] || ''
 
-          self.all_items.push(iid) # Everything goes into all_items
-
-          # If volume is specified, only populate items with matching enum/chron/year values
-
-          # Unpack volume if necessary
-          if volume.present?
-            parts = volume.split '|'
-            e = parts[1] || ''
-            c = parts[2] || ''
-            y = parts[3] || ''
-
-            # Require a match on all three iterator values to determine a match
-            next if ( y != i[:year] or c != i[:chron] or e != i[:enumeration])
-          end
-          
-          # Only a subset of all_items gets put into working_items
-          working_items.push(iid)
-
+          # Require a match on all three iterator values to determine a match
+          next if ( y != h[:year] or c != h[:chron] or e != h[:item_enum])
         end
+          
+        # Only a subset of all_items gets put into working_items
+        working_items.push h
       end
 
       self.items = working_items
@@ -118,7 +140,7 @@ module BlacklightCornellRequests
         if patron_type == 'cornell' && !document['url_pda_display'].blank?
           self.document = document
           
-          pda_url = document['url_pda_display'][0]
+          pda_url = document[:url_pda_display][0]
           pda_url, note = pda_url.split('|')
           iids = { :itemid => 'pda', :url => pda_url, :note => note }
           pda_entry = { :service => PDA, :iid => iids, :estimate => get_delivery_time(PDA, nil) }
@@ -233,8 +255,8 @@ module BlacklightCornellRequests
       ## record number of occurances for each of the 
       items.each do |item|
         
-        # item[:numeric_enumeration] = item[:enumeration][/\d+/]  
-        enums = item[:enumeration].scan(/\d+/)  
+        # item[:numeric_enumeration] = item[:item_enum][/\d+/]  
+        enums = item[:item_enum].scan(/\d+/)  
         if enums.count > 0  
           numeric_enumeration = ''  
           enums.each do |enum|  
@@ -262,10 +284,10 @@ module BlacklightCornellRequests
           item[:numeric_year] = 999999999
         end
         
-        if item[:enumeration].blank?  
-          item[:enumeration_compare] = 'z'  
+        if item[:item_enum].blank?  
+          item[:item_enum_compare] = 'z'  
         else  
-          item[:enumeration_compare] = item[:enumeration]  
+          item[:item_enum_compare] = item[:item_enum]  
         end
         
         if item[:chron].blank?  
@@ -288,27 +310,27 @@ module BlacklightCornellRequests
       sorted_items = {}
       if num_year >= num_enum and num_year >= num_chron
         if num_enum >= num_chron
-          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:item_enum_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare] ]}
         else
-          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_enumeration],h[:enumeration_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_enumeration],h[:item_enum_compare] ]}
         end
       elsif num_enum >= num_chron and num_enum >= num_year
         if num_year >= num_chron
-          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:item_enum_compare],h[:numeric_year],h[:year_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare] ]}
         else
-          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_year],h[:year_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_enumeration],h[:item_enum_compare],h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_year],h[:year_compare] ]}
         end
       else
         if num_year >= num_enum
-          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:enumeration_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_year],h[:year_compare],h[:numeric_enumeration],h[:item_enum_compare] ]}
         else
-          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_enumeration],h[:enumeration_compare],h[:numeric_year],h[:year_compare] ]}
+          sorted_items = items.sort_by {|h| [ h[:numeric_chron],h[:chron_month],h[:chron_compare],h[:numeric_enumeration],h[:item_enum_compare],h[:numeric_year],h[:year_compare] ]}
         end
       end
       
       ## as of ruby 1.9, hash preserves insertion order
       sorted_items.each do |item|
-        e = item[:enumeration]
+        e = item[:item_enum]
         c = item[:chron]
         y = item[:year]
         
@@ -375,16 +397,93 @@ module BlacklightCornellRequests
     # Set holdings data from the Voyager service configured in the
     # environments file.
     # holdings_param = { :bibid => <bibid>, :type => retrieve|retrieve_detail_raw}
-    def get_holdings(type = 'retrieve')
+    def get_holdings document
+      holdings = document[:item_record_display].present? ? document[:item_record_display].map { |item| parseJSON item } : Array.new
+      # Rails.logger.info "sk274_log: #{holdings.inspect}"
 
       return nil unless self.bibid
 
-      response = JSON.parse(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/#{type}/#{self.bibid}"))
-
-      # return nil if there is no meaningful response (e.g., invalid bibid)
-      return nil if response[self.bibid.to_s].nil?
+      response = parseJSON(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/status_short/#{self.bibid}"))
+      # Rails.logger.info "sk274_log: #{response.inspect}"
       
-      self.holdings_data = response.with_indifferent_access
+      if response[self.bibid.to_s] and response[self.bibid.to_s][self.bibid.to_s] and response[self.bibid.to_s][self.bibid.to_s][:records]
+        statuses = {}
+        call_numbers = {}
+        response[self.bibid.to_s][self.bibid.to_s]['records'].each do |record|
+          if record[:bibid].to_s == self.bibid.to_s
+            record[:holdings].each do |holding|
+              statuses[holding[:ITEM_ID].to_s] = holding[:ITEM_STATUS]
+              call_numbers[holding[:ITEM_ID].to_s] = holding[:DISPLAY_CALL_NO]
+            end
+          end
+        end
+        
+        location_seen = Hash.new
+        location_ids = Array.new
+        ## assume there is one holdings location per bibid
+        locations = Hash.new
+        call_number = ''
+        document[:holdings_record_display].each do |hrd|
+          hrdJSON = parseJSON hrd
+          hrdJSON[:locations].each do |loc|
+            locations[loc[:number].to_s] = loc[:name]
+          end
+        end if document[:holdings_record_display]
+        
+        holdings.each do |holding|
+          holding[:status] = item_status statuses[holding['item_id'].to_s]
+          holding[:call_number] = item_status call_numbers[holding['item_id'].to_s]
+          location = holding[:perm_location]
+          if holding[:temp_location].to_s == '0'
+            # use holdings location
+            holding[:location] = locations[holding[:perm_location].to_s]
+          else
+            # use temp location
+            tempLocJSON = parseJSON holding[:temp_location]
+            holding[:location] = tempLocJSON[:name]
+          end
+          
+          # Rails.logger.info "sk274_log: holding: #{holding.inspect}"
+          location_seen[location] = 1 unless location_seen[location]
+          exclude_location_list = Array.new
+          
+          if location_seen[location] == 1
+            circ_group_id = Circ_policy_locs.select('circ_group_id').where( :location_id => location )
+            
+            ## handle exceptions
+            ## group id 3  - Olin
+            ## group id 19 - Uris
+            ## group id 5  - Annex
+            ## Olin or Uris can't deliver to itselves and each other
+            ## Annex group can deliver to itself
+            ## Others can't deliver to itself
+            # logger.debug "sk274_log: " + circ_group_id.inspect
+            if circ_group_id[0]['circ_group_id'] == 3 || circ_group_id[0]['circ_group_id'] == 19
+              ## include both group id if Olin or Uris
+              circ_group_id = [3, 19]
+              # logger.debug "sk274_log: Olin or Uris detected"
+            elsif circ_group_id[0]['circ_group_id'] == 5
+              ## skip annex next time
+              # logger.debug "sk274_log: Annex detected, skipping"
+              location_seen[location] = exclude_location_list
+              holding[:exclude_location_id] = exclude_location_list
+              next
+            end
+            # logger.debug "sk274_log: circ group id: " + circ_group_id.inspect
+            locs = Circ_policy_locs.select('location_id').where( :circ_group_id =>  circ_group_id, :pickup_location => 'Y' )
+            locs.each do |loc|
+              exclude_location_list.push loc['location_id']
+            end
+            location_seen[location] = exclude_location_list
+          else
+            exclude_location_list = location_seen[location]
+          end
+          holding[:exclude_location_id] = exclude_location_list
+          # Rails.logger.info "sk274_log: #{holding[:item_id].inspect}, #{holding[:exclude_location_id].inspect}"
+        end
+      end
+      
+      holdings
 
     end
 
@@ -423,44 +522,40 @@ module BlacklightCornellRequests
 
     # Locate and translate the actual item status from the text string in the holdings data
     def item_status item_status
-      if item_status.include? 'Not Charged'
-        'Not Charged'
-      elsif item_status.include? 'Discharged'
-        'Not Charged'
-      elsif item_status.include? 'Cataloging Review'
-        return 'Not Charged'
-      elsif item_status.include? 'Circulation Review'
-        return 'Not Charged'
-      elsif item_status.include? 'Charged'
-        'Charged'
-      elsif item_status.include? 'Renewed'
-        'Charged'
-      elsif item_status.include? 'Requested'
-        'Requested'
-      elsif item_status.include? 'Missing'
-        'Missing'
-      elsif item_status.include? 'Lost'
-        'Lost'
-      elsif item_status =~ /In transit to(.*)\./
-        return 'Charged'
-      elsif item_status.include? 'In transit'
-        return 'Not Charged'
-      elsif item_status.include? 'Hold'
-        return 'Charged'
-      elsif item_status.include? 'Overdue'
-        return 'Charged'
-      elsif item_status.include? 'Recall'
-        return 'Charged'
-      elsif item_status.include? 'Claims'
-        return 'Charged'
-      elsif item_status.include? 'Damaged'
-        return 'Charged'
-      elsif item_status.include? 'Withdrawn'
-        return 'Charged'
-      elsif item_status.include? 'Call Slip Request'
-        return 'Charged'
-      elsif item_status.include? 'At Bindery'
-        return 'At Bindery'
+      if item_status == NOT_CHARGED
+        NOT_CHARGED
+      elsif item_status == DISCHARGED
+        NOT_CHARGED
+      elsif item_status == CATALOG_REVIEW
+        NOT_CHARGED
+      elsif item_status == CIRCULATION_REVIEW
+        NOT_CHARGED
+      elsif item_status == CHARGED
+        CHARGED
+      elsif item_status == RENEWED
+        CHARGED
+      elsif item_status == CALL_SLIP_REQUEST or item_status == RECALL_REQUEST or item_status == HOLD_REQUEST
+        CHARGED
+      elsif item_status == MISSING
+        MISSING
+      elsif item_status == LOST_LIBRARY_APPLIED or item_status == LOST_SYSTEM_APPLIED
+        LOST
+      elsif item_status == IN_TRANSIT_ON_HOLD
+        CHARGED
+      elsif item_status == IN_TRANSIT or item_status == IN_TRANSIT_DISCHARGED
+        NOT_CHARGED
+      elsif item_status == ON_HOLD
+        CHARGED
+      elsif item_status == OVERDUE
+        CHARGED
+      elsif item_status == CLAIMS_RETURNED
+        CHARGED
+      elsif item_status == DAMAGED
+        CHARGED
+      elsif item_status == WITHDRAWN
+        CHARGED
+      elsif item_status == AT_BINDERY
+        AT_BINDERY
       else
         item_status
       end
@@ -494,6 +589,8 @@ module BlacklightCornellRequests
         option[:estimate] = get_delivery_time(option[:service], option)
         option[:iid] = item
       end
+      
+      # Rails.logger.info "sk274_log: #{options.inspect}"
 
       #return sort_request_options options
       return options
@@ -503,8 +600,10 @@ module BlacklightCornellRequests
     # Determine delivery options for a single item if the patron is a Cornell affiliate
     def get_cornell_delivery_options item, params
 
-      typeCode = (item[:tempType].blank? or item[:tempType] == '0') ? item[:typeCode] : item[:tempType]
+      typeCode = (item[:temp_item_type_id].blank? or item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
+      
+      # Rails.logger.info "sk274_log: type id: #{typeCode.inspect}, item loan type: #{item_loan_type.inspect}, status: #{item[:status].inspect}"
 
       request_options = []
       if item_loan_type == 'nocirc'
@@ -519,24 +618,23 @@ module BlacklightCornellRequests
           request_options.push( {:service => BD, :location => item[:location] } )
         end
         request_options.push({:service => ILL, :location => item[:location]})
-      elsif item_loan_type == 'regular' and item[:status] == 'Not Charged'
+      elsif item_loan_type == 'regular' and item[:status] == NOT_CHARGED
 
         request_options.push({:service => L2L, :location => item[:location] } )
 
-      elsif ((item_loan_type == 'regular' and item[:status] == 'Charged') or
-             (item_loan_type == 'regular' and item[:status] == 'Requested'))
+      elsif item_loan_type == 'regular' and item[:status] ==  CHARGED
         # TODO: Test and fix BD check with real params
         if borrowDirect_available? params
           request_options.push( {:service => BD, :location => item[:location] } )
         end
         request_options.push({:service => ILL, :location => item[:location]},
                              {:service => RECALL,:location => item[:location]},
-                             {:service => HOLD, :location => item[:location], :status => item[:itemStatus]})
+                             {:service => HOLD, :location => item[:location], :status => item[:status]})
 
-      elsif ((item_loan_type == 'regular' and item[:status] == 'Missing') or
-             (item_loan_type == 'regular' and item[:status] == 'Lost') or
-             (item_loan_type == 'day' and item[:status] == 'Missing') or
-             (item_loan_type == 'day' and item[:status] == 'Lost'))
+      elsif ((item_loan_type == 'regular' and item[:status] == MISSING) or
+             (item_loan_type == 'regular' and item[:status] == LOST) or
+             (item_loan_type == 'day' and item[:status] == MISSING) or
+             (item_loan_type == 'day' and item[:status] == LOST))
 
          # TODO: Test and fix BD check with real params
         if borrowDirect_available? params
@@ -545,19 +643,17 @@ module BlacklightCornellRequests
         request_options.push({:service => PURCHASE, :location => item[:location]},
                              {:service => ILL,:location => item[:location]})
 
-      elsif ((item_loan_type == 'day' and item[:status] == 'Charged') or
-             (item_loan_type == 'day' and item[:status] == 'Requested'))
+      elsif item_loan_type == 'day' and item[:status] == CHARGED
 
          # TODO: Test and fix BD check with real params
         if borrowDirect_available? params
           request_options.push( {:service => BD, :location => item[:location] } )
         end
         request_options.push( {:service => ILL, :location => item[:location] } )
-        request_options.push( {:service => HOLD, :location => item[:location], :status => item[:itemStatus] } )
+        request_options.push( {:service => HOLD, :location => item[:location], :status => item[:status] } )
 
-      elsif (item_loan_type == 'day' and item[:status] == 'Not Charged')
-
-        unless Request.no_l2l_day_loan_types.include? item[:typeCode]
+      elsif item_loan_type == 'day' and item[:status] == NOT_CHARGED
+        unless Request.no_l2l_day_loan_types.include? typeCode
           request_options.push( {:service => L2L, :location => item[:location] } )
         end
 
@@ -569,7 +665,7 @@ module BlacklightCornellRequests
         end
         request_options.push( {:service => ASK_CIRCULATION, :location => item[:location] } )
         
-      elsif item[:status] == 'At Bindery'
+      elsif item[:status] == AT_BINDERY
         request_options.push( {:service => ILL, :location => item[:location] } )
       end
 
@@ -578,41 +674,35 @@ module BlacklightCornellRequests
 
     # Determine delivery options for a single item if the patron is a guest (non-Cornell)
     def get_guest_delivery_options item
-      typeCode = (item[:tempType].blank? or item[:tempType] == '0') ? item[:typeCode] : item[:tempType]
+      typeCode = (item[:temp_item_type_id].blank? or item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
       request_options = []
 
       if item_loan_type == 'nocirc'
         # do nothing
-      elsif item_loan_type == 'regular' and item[:status] == 'Not Charged'
+      elsif item_loan_type == 'regular' and item[:status] == NOT_CHARGED
         request_options = [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
-      elsif item_loan_type == 'regular' and item[:status] == 'Charged'
+      elsif item_loan_type == 'regular' and item[:status] == CHARGED
         request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
-      elsif item_loan_type == 'regular' and item[:status] == 'Requested'
-        request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
-      elsif item_loan_type == 'regular' and item[:status] == 'Missing'
+      elsif item_loan_type == 'regular' and item[:status] == MISSING
         ## do nothing
-      elsif item_loan_type == 'regular' and item[:status] == 'Lost'
+      elsif item_loan_type == 'regular' and item[:status] == LOST
         ## do nothing
-      elsif item_loan_type == 'day' and item[:status] == 'Not Charged'
+      elsif item_loan_type == 'day' and item[:status] == NOT_CHARGED
         request_options = [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
-      elsif item_loan_type == 'day' and item[:status] == 'Charged'
+      elsif item_loan_type == 'day' and item[:status] == CHARGED
         request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
-      elsif item_loan_type == 'day' and item[:status] == 'Requested'
-        request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
-      elsif item_loan_type == 'day' and item[:status] == 'Missing'
+      elsif item_loan_type == 'day' and item[:status] == MISSING
         ## do nothing
-      elsif item_loan_type == 'day' and item[:status] == 'Lost'
+      elsif item_loan_type == 'day' and item[:status] == LOST
         ## do nothing
-      elsif item_loan_type == 'minute' and item[:status] == 'Not Charged'
+      elsif item_loan_type == 'minute' and item[:status] == NOT_CHARGED
         request_options = [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
-      elsif item_loan_type == 'minute' and item[:status] == 'Charged'
+      elsif item_loan_type == 'minute' and item[:status] == CHARGED
         request_options = [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
-      elsif item_loan_type == 'minute' and item[:status] == 'Requested'
-        request_options = [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
-      elsif item_loan_type == 'minute' and item[:status] == 'Missing'
+      elsif item_loan_type == 'minute' and item[:status] == MISSING
         ## do nothing
-      elsif item_loan_type == 'minute' and item[:status] == 'Lost'
+      elsif item_loan_type == 'minute' and item[:status] == LOST
         ## do nothing
       end
 
@@ -641,22 +731,23 @@ module BlacklightCornellRequests
 
         when HOLD
           ## if it got to this point, it means it is not available and should have Due on xxxx-xx-xx
-          dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])
-          if ! dueDate.nil?
-            dueDate = dueDate[1]
-            estimate = (Date.parse(dueDate) - Date.today).to_i
-            if (estimate < 0)
-              ## this item is overdue
-              ## use default value instead
-              return 180
-            end
-            ## pad for extra days for processing time?
-            ## also padding would allow l2l to be always first option
-            return estimate.to_i + get_hold_padding
-          else
-            ## due date not found... use default
-            return 180
-          end
+          # dueDate = /.*Due on (\d\d\d\d-\d\d-\d\d)/.match(item_data[:status])
+          # if ! dueDate.nil?
+            # dueDate = dueDate[1]
+            # estimate = (Date.parse(dueDate) - Date.today).to_i
+            # if (estimate < 0)
+              # ## this item is overdue
+              # ## use default value instead
+              # return 180
+            # end
+            # ## pad for extra days for processing time?
+            # ## also padding would allow l2l to be always first option
+            # return estimate.to_i + get_hold_padding
+          # else
+            # ## due date not found... use default
+            # return 180
+          # end
+          180
 
         when RECALL
           15
@@ -690,7 +781,7 @@ module BlacklightCornellRequests
     end
     
     def populate_document_values
-      unless self.document.nil?
+      unless self.document.blank?
         self.isbn = self.document[:isbn_display]
         self.ti = self.document[:title_display]
         if !self.document[:author_display].blank?
@@ -780,6 +871,10 @@ module BlacklightCornellRequests
         0  
       end  
     end 
+    
+    def parseJSON data
+      JSON.parse(data).with_indifferent_access
+    end
     
     ###################### Make Voyager requests ################################
 

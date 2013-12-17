@@ -8,7 +8,7 @@
         Select a copy:
       -elsif (@iis.length == 1)
         This copy:
-    -if (@iis.length > 1 and @document[:multivol_b].nil?)
+    -if @iis.length > 1 
       .controls
         %input(id="copy-any" class="copy-select" type="radio" name="holding_id" value="" data-exclude-location="[]")
         %label.radio-label{ :for => "copy-any"} Any Copy
@@ -19,7 +19,9 @@
             %input(id="copy-#{copyn}" class="copy-select" type="radio" name="holding_id" value="#{copyn}" data-exclude-location="#{copyd[:exclude_location_id]}" checked)
           -else
             %input(id="copy-#{copyn}" class="copy-select" type="radio" name="holding_id" value="#{copyn}" data-exclude-location="#{copyd[:exclude_location_id]}")
-          = "#{copyd[:location]} #{copyd[:enumeration]} #{copyd[:copy]}"
+          = "#{copyd[:location]} #{copyd[:item_enum]} "
+          - if copyd[:copy_number]
+            = "c. #{copyd[:copy_number]} "
           %span.copy-callnumber
             = copyd[:call_number]
           -if copyd[:chron].present?

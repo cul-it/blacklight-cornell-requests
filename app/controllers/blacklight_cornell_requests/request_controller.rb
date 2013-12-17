@@ -11,6 +11,7 @@ module BlacklightCornellRequests
 
       @id = params[:bibid]
       resp, @document = get_solr_response_for_doc_id(@id)
+      @document = @document
 
       req = BlacklightCornellRequests::Request.new(@id)
       req.netid = request.env['REMOTE_USER']
@@ -49,8 +50,7 @@ module BlacklightCornellRequests
       elsif req.request_options.present?
         req.request_options.each do |item|
           iid = item[:iid]
-          iid[:call_number] = iid[:callNumber]
-          @iis[iid[:itemid]] = iid
+          @iis[iid[:item_id]] = iid
         end
         @volumes = req.set_volumes(req.all_items)
         #@volumes = req.volumes
@@ -120,11 +120,20 @@ module BlacklightCornellRequests
     def make_voyager_request
 
       # Validate the form data
+      errors = []
       if params[:holding_id].blank?
-        flash[:error] = I18n.t('requests.errors.holding_id.blank')
-      elsif params[:library_id].blank?
-        flash[:error] = I18n.t('requests.errors.library_id.blank')
-      else
+        errors << I18n.t('requests.errors.holding_id.blank')
+      end
+      if params[:library_id].blank?
+        errors << I18n.t('requests.errors.library_id.blank')
+      end
+
+      if errors
+        flash[:error] = errors.join('<br/>').html_safe
+      end
+
+      if  errors.size < 1
+      #unless errors
         # Hand off the data to the request model for sending
         req = BlacklightCornellRequests::Request.new(params[:bibid])
         req.netid = request.env['REMOTE_USER']
@@ -146,23 +155,32 @@ module BlacklightCornellRequests
 
     def make_purchase_request
 
+      errors = []
       if params[:name].blank?
-        flash[:error] = I18n.t('requests.errors.name.blank')
-      elsif params[:reqstatus].blank?
-        flash[:error] = I18n.t('requests.errors.status.blank')
-      elsif params[:reqtitle].blank?
-        flash[:error] = I18n.t('requests.errors.title.blank')
-      elsif params[:email].blank?
-        flash[:error] = I18n.t('requests.errors.email.blank')
-      elsif params[:email].present?
+        errors << I18n.t('requests.errors.name.blank')
+      end
+      if params[:email].blank?
+        errors << I18n.t('requests.errors.email.blank')
+      end
+      if params[:reqstatus].blank?
+        errors << I18n.t('requests.errors.status.blank')
+      end
+      if params[:reqtitle].blank?
+        errors << I18n.t('requests.errors.title.blank')
+      end
+      if params[:email].present? and errors.empty?
         if params[:email].match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/)
           # Email the form contents to the purchase request staff
           RequestMailer.email_request(request.env['REMOTE_USER'], params)
           # TODO: check for mail errors, don't assume that things are working!
-          flash[:success] = I18n.t('blacklight.requests.success')
+          flash[:success] = I18n.t('requests.success')
         else
-          flash[:error] = I18n.t('requests.errors.email.invalid')
+          errors << I18n.t('requests.errors.email.invalid')
         end
+      end
+
+      if errors
+        flash[:error] = errors.join('<br/>').html_safe
       end
 
       render :partial => '/flash_msg', :layout => false
