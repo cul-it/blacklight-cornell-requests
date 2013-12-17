@@ -132,7 +132,8 @@ module BlacklightCornellRequests
         flash[:error] = errors.join('<br/>').html_safe
       end
 
-      unless errors
+      if  errors.size < 1
+      #unless errors
         # Hand off the data to the request model for sending
         req = BlacklightCornellRequests::Request.new(params[:bibid])
         req.netid = request.env['REMOTE_USER']
