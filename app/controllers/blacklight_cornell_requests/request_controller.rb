@@ -132,11 +132,17 @@ module BlacklightCornellRequests
         flash[:error] = errors.join('<br/>').html_safe
       end
 
-      if  errors.size < 1
-      #unless errors
+      unless errors
         # Hand off the data to the request model for sending
         req = BlacklightCornellRequests::Request.new(params[:bibid])
         req.netid = request.env['REMOTE_USER']
+        
+        # If the holding_id = 'any', then set to blank. Voyager expects an empty value for 'any copy',
+        # but validation above expects a non-blank value!
+        if params[:holding_id] == 'any'
+          params[:holding_id] = ''
+        end
+
         response = req.make_voyager_request params
 
         if response[:failure].blank?
