@@ -711,10 +711,10 @@ module BlacklightCornellRequests
 
     # Custom sort method: sort by delivery time estimate from a hash
     def sort_request_options request_options
-      return request_options.sort_by { |option| option[:estimate] }
+      return request_options.sort_by { |option| option[:estimate][0] }
     end
 
-    def get_delivery_time service, item_data, return_range = false
+    def get_delivery_time service, item_data, return_range = true
 
       # Delivery time estimates are kept as ranges (as per requested) instead of single numbers
       range = [9999, 9999]     # default value
@@ -772,7 +772,8 @@ module BlacklightCornellRequests
           if available == true
             range = [2, 2]
           else
-            base_estimate = 2 + ( get_delivery_time ILL, nil, false )
+            base_time = get_delivery_time ILL, nil
+            base_estimate = 2 + base_time[0]
             range = [base_estimate, base_estimate]
           end
         when ASK_LIBRARIAN
