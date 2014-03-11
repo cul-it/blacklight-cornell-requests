@@ -711,23 +711,27 @@ module BlacklightCornellRequests
 
     # Custom sort method: sort by delivery time estimate from a hash
     def sort_request_options request_options
-      return request_options.sort_by { |option| option[:estimate] }
+      return request_options.sort_by { |option| option[:estimate][0] }
     end
 
-    def get_delivery_time service, item_data
+    def get_delivery_time service, item_data, return_range = true
+
+      # Delivery time estimates are kept as ranges (as per requested) instead of single numbers
+      range = [9999, 9999]     # default value
+
       case service 
 
         when L2L
           if item_data[:location] == LIBRARY_ANNEX
-            1
+            range = [1, 2]
           else
-            2
+            range = [2, 2]
           end
 
         when BD
-          6
+          range = [3, 5]
         when ILL
-          14
+          range = [7, 14]
 
         when HOLD
           ## if it got to this point, it means it is not available and should have Due on xxxx-xx-xx
@@ -747,14 +751,14 @@ module BlacklightCornellRequests
             # ## due date not found... use default
             # return 180
           # end
-          180
+          range = [180, 180]
 
         when RECALL
-          15
+          range = [15, 15]
         when PDA
-          5
+          range = [5, 5]
         when PURCHASE
-          10
+          range = [10, 10]
         when DOCUMENT_DELIVERY
           # for others, item_data is a single item
           # for DD, it is the entire holdings data since it matters whether the item is available as a whole or not
@@ -766,16 +770,24 @@ module BlacklightCornellRequests
             end
           end
           if available == true
-            2
+            range = [2, 2]
           else
-            2 + ( get_delivery_time ILL, nil )
+            base_time = get_delivery_time ILL, nil
+            base_estimate = 2 + base_time[0]
+            range = [base_estimate, base_estimate]
           end
         when ASK_LIBRARIAN
-          9999
+          range = [9999, 9999]
         when ASK_CIRCULATION
-          9998
+          range = [9998, 9998]
         else
-          9999
+          range = [9999, 9999]
+      end
+
+      if return_range
+        return range
+      else
+        return range[0] # This means that we're using the lower end of the range for calculations. Is that right?
       end
 
     end

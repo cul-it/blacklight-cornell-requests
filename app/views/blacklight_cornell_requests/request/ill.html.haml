@@ -1,26 +1,17 @@
--title = the_vernaculator('title_display', 'title_vern_display')
--subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
--responsibility = render_document_show_field_value :document => @document, :field => 'title_responsibility_display'
-- @selected_volume = params[:volume]
-- if @counter.blank?
-  = link_to catalog_path(@id), { :title => @ti } do
-    %i.fa.fa-arrow-circle-left
-    Back to item
-- else
-  = link_to catalog_path(@id), { :title => @ti, 'data-counter'.to_sym => @counter } do
-    %i.fa.fa-arrow-circle-left
-    Back to item
+= link_to catalog_path(@id), {:title => @ti} do
+  %i.icon-circle-arrow-left
+  Back to item
 %h1.request-type Interlibrary Loan
 %div.row
   %div.span8.well
-    %h2.item-title-request.blacklight-title_display=title
-    %div.request-author=responsibility
+    %h2.item-title-request.blacklight-title_display=@ti
+    %div.request-author=@au
     %p
       To request this item through interlibrary loan, please use the button below and complete the interlibrary loan form.
     %p
       Delivery time: Approximately
-      =@estimate
-      days.
+      = delivery_estimate_display @estimate
+      \.
     .control-group
       .controls.clearfix
         %a{:href => @ill_link, :class => 'btn btn-danger pull-left'}
@@ -33,8 +24,8 @@
           %div#collapseOne.accordion-body.collapse
             %div.accordion-inner
               %div.span4
-                Interlibrary loan will take approximately
-                =@estimate
-                days. Your other request options are listed below.
+                Interlibrary loan is your fastest option and will take approximately
+                = delivery_estimate_display @estimate
+                \. Your other request options are listed below.
                 = render :partial => 'shared/request_options'      
     
