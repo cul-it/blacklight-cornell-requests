@@ -448,7 +448,7 @@ module BlacklightCornellRequests
           exclude_location_list = Array.new
           
           if location_seen[location] == 1
-            circ_group_id = Circ_policy_locs.select('circ_group_id').where( :location_id => location )
+            circ_group_id = Circ_policy_locs.select('circ_group_id').where( 'location_id' =>  location['number'] )
             
             ## handle exceptions
             ## group id 3  - Olin
