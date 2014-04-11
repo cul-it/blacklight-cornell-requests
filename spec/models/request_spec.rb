@@ -58,15 +58,207 @@ describe BlacklightCornellRequests::Request do
 
     end
 
-    # describe "find_month" do
-    #   it "Returns the correct month number for month abbreviation" do
-    #     names = %w[ Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec ]
-    #     names.each do |n|
-    #       r = FactoryGirl.build(:request)
-    #       names.index(n).should == r.find_month(n) - 1
-    #     end
-    #   end
-    # end
+    describe 'get_delivery_time' do
+
+      let (:request)  { FactoryGirl.create(:request) }
+
+      context 'requesting L2L' do
+      
+        context 'item is in annex' do
+
+          it 'returns a range of [1,2]' do
+            result = request.get_delivery_time 'l2l', { :location => 'Library Annex' }, true
+            expect(result).to eq([1,2])
+          end
+
+          it 'returns a single value of 1' do
+            result = request.get_delivery_time 'l2l', { :location => 'Library Annex' }, false
+            expect(result).to equal(1)        
+          end
+        end
+
+        context 'item not in annex' do
+
+          it 'returns a range of [1,2]' do
+            result = request.get_delivery_time 'l2l', {  }, true
+            expect(result).to eq([2,2])
+          end
+
+          it 'returns a single value of 1' do
+            result = request.get_delivery_time 'l2l', {  }, false
+            expect(result).to equal(2)        
+          end
+
+        end
+
+      end
+
+      context 'requesting BD' do
+
+          it 'returns a range of [3,5]' do
+            result = request.get_delivery_time 'bd', {  }, true
+            expect(result).to eq([3,5])
+          end
+
+          it 'returns a single value of 3' do
+            result = request.get_delivery_time 'bd', {  }, false
+            expect(result).to equal(3)        
+          end
+
+      end
+
+      context 'requesting ILL' do
+
+          it 'returns a range of [7,14]' do
+            result = request.get_delivery_time 'ill', {  }, true
+            expect(result).to eq([7,14])
+          end
+
+          it 'returns a single value of 7' do
+            result = request.get_delivery_time 'ill', {  }, false
+            expect(result).to equal(7)        
+          end
+
+      end
+
+      context 'requesting hold' do
+
+          it 'returns a range of [180,180]' do
+            result = request.get_delivery_time 'hold', {  }, true
+            expect(result).to eq([180,180])
+          end
+
+          it 'returns a single value of 180' do
+            result = request.get_delivery_time 'hold', {  }, false
+            expect(result).to equal(180)        
+          end
+
+      end
+
+      context 'requesting recall' do
+
+          it 'returns a range of [15,15]' do
+            result = request.get_delivery_time 'recall', {  }, true
+            expect(result).to eq([15,15])
+          end
+
+          it 'returns a single value of 15' do
+            result = request.get_delivery_time 'recall', {  }, false
+            expect(result).to equal(15)        
+          end
+
+      end
+
+      context 'requesting PDA' do
+
+          it 'returns a range of [5,5]' do
+            result = request.get_delivery_time 'pda', {  }, true
+            expect(result).to eq([5,5])
+          end
+
+          it 'returns a single value of 5' do
+            result = request.get_delivery_time 'pda', {  }, false
+            expect(result).to equal(5)        
+          end
+
+      end
+
+      context 'requesting purchase' do
+
+          it 'returns a range of [10,10]' do
+            result = request.get_delivery_time 'purchase', {  }, true
+            expect(result).to eq([10,10])
+          end
+
+          it 'returns a single value of 10' do
+            result = request.get_delivery_time 'purchase', {  }, false
+            expect(result).to equal(10)        
+          end
+
+      end
+
+      context 'requesting document delivery' do
+
+        let(:items) { [{:status => 'Charged'}, {:status => 'Charged'} ] }
+
+        context 'at least one item is available' do
+
+          before { 
+            items << { :status => 'Not Charged' }
+            request.all_items = items 
+          }
+          it 'returns a range of [2,2]' do
+            result = request.get_delivery_time 'document_delivery', {  }, true
+            expect(result).to eq([2,2])
+          end
+
+          it 'returns a single value of 2' do
+            result = request.get_delivery_time 'document_delivery', {  }, false
+            expect(result).to equal(2)        
+          end
+
+        end
+
+        context 'no items are available' do
+
+          before { request.all_items = items }
+          it 'returns a range of [9,9]' do
+            result = request.get_delivery_time 'document_delivery', {  }, true
+            expect(result).to eq([9,9])
+          end
+
+          it 'returns a single value of 9' do
+            result = request.get_delivery_time 'document_delivery', {  }, false
+            expect(result).to equal(9)        
+          end
+
+        end
+
+      end
+
+      context 'ask a librarian' do
+
+          it 'returns a range of [9999,9999]' do
+            result = request.get_delivery_time 'ask', {  }, true
+            expect(result).to eq([9999,9999])
+          end
+
+          it 'returns a single value of 9999' do
+            result = request.get_delivery_time 'ask', {  }, false
+            expect(result).to equal(9999)        
+          end
+
+      end
+
+      context 'ask at circulation' do
+
+          it 'returns a range of [9998,9998]' do
+            result = request.get_delivery_time 'circ', {  }, true
+            expect(result).to eq([9998,9998])
+          end
+
+          it 'returns a single value of 9998' do
+            result = request.get_delivery_time 'circ', {  }, false
+            expect(result).to equal(9998)        
+          end
+
+      end
+
+      context 'the request type is unknown' do
+
+          it 'returns a range of [9999,9999]' do
+            result = request.get_delivery_time '?', {  }, true
+            expect(result).to eq([9999,9999])
+          end
+
+          it 'returns a single value of 9999' do
+            result = request.get_delivery_time '?', {  }, false
+            expect(result).to equal(9999)        
+          end
+
+      end
+
+    end
 
 
 
