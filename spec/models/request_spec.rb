@@ -260,6 +260,18 @@ describe BlacklightCornellRequests::Request do
 
     end
 
+    describe 'sort_request_options' do 
+
+      let(:options) { [ {:estimate => [3,5]}, {:estimate => [1,1]}, {:estimate => [4,6] }]}
+
+      it 'puts requests in order by delivery times' do
+        request = FactoryGirl.create(:request)
+        sorted_options = request.sort_request_options options
+        puts "sorted: #{sorted_options}"
+        expect(sorted_options).to eq([{:estimate=>[1, 1]}, {:estimate=>[3, 5]}, {:estimate=>[4, 6]}])
+      end
+
+    end
 
 
 
