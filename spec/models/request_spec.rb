@@ -44,7 +44,7 @@ describe BlacklightCornellRequests::Request do
           request.document[:author_display] = nil
           request.document[:author_addl_display] = ['Mr. Testcase']
           request.populate_document_values
-          expect(request.au).to eq(document[:author_addl_display])
+          expect(request.au).to eq(document[:author_addl_display][0])
         end
       end
 
