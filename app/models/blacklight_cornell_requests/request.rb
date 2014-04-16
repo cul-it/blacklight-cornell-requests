@@ -769,11 +769,10 @@ module BlacklightCornellRequests
               break
             end
           end
-          if available == true
+          if available
             range = [2, 2]
           else
-            base_time = get_delivery_time ILL, nil
-            base_estimate = 2 + base_time[0]
+            base_estimate = 2 + (get_delivery_time ILL, nil, false)
             range = [base_estimate, base_estimate]
           end
         when ASK_LIBRARIAN
@@ -850,9 +849,9 @@ module BlacklightCornellRequests
       self.ill_link = ill_link
     end
     
-    def deep_copy(o)
-      Marshal.load(Marshal.dump(o)).with_indifferent_access
-    end
+    # def deep_copy(o)
+    #   Marshal.load(Marshal.dump(o)).with_indifferent_access
+    # end
     
     def parseJSON data
       JSON.parse(data).with_indifferent_access

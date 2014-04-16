@@ -273,8 +273,17 @@ describe BlacklightCornellRequests::Request do
 
     end
 
+    describe 'get_guest_delivery_options' do
 
+      pending 
 
+    end
+
+    describe 'get_cornell_delivery_options' do
+
+      pending 
+      
+    end
 
   end
 

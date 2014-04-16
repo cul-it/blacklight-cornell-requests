@@ -4,7 +4,14 @@ FactoryGirl.define do
 
 	factory :request, :class => "BlacklightCornellRequests::Request" do
 
-		initialize_with { BlacklightCornellRequests::Request.new(5000000 + Random.rand(100000))}
+		initialize_with { BlacklightCornellRequests::Request.new(bibid) }
+		
+
+
+		ignore do
+			sequence(:bibid) { |n| n + 50000000 } 
+		end
+
 		
 	end
 	
