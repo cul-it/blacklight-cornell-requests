@@ -295,7 +295,7 @@ module BlacklightCornellRequests
           item[:chron_month] = 13  
         else  
           item[:chron_compare] = item[:chron].delete(' ')  
-          item[:chron_month] = find_month item[:chron]  
+          item[:chron_month] = Date::ABBR_MONTHNAMES.index item[:chron]  
         end
         
         if item[:year].blank?
@@ -868,36 +868,6 @@ module BlacklightCornellRequests
     def deep_copy(o)
       Marshal.load(Marshal.dump(o)).with_indifferent_access
     end
-    
-    def find_month str  
-      if str =~ /Jan/  
-        1  
-      elsif str =~ /Feb/  
-        2  
-      elsif str =~ /Mar/  
-        3  
-      elsif str =~ /Apr/  
-        4  
-      elsif str =~ /May/  
-        5  
-      elsif str =~ /Jun/  
-        6  
-      elsif str =~ /Jul/  
-        7  
-      elsif str =~ /Aug/  
-        8  
-      elsif str =~ /Sep/  
-        9  
-      elsif str =~ /Oct/  
-        10  
-      elsif str =~ /Nov/  
-        11  
-      elsif str =~ /Dec/  
-        12  
-      else  
-        0  
-      end  
-    end 
     
     def parseJSON data
       JSON.parse(data).with_indifferent_access
