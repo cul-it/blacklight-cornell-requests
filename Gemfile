@@ -7,10 +7,10 @@ gemspec
 
 # jquery-rails is used by the dummy application
 gem "jquery-rails"
+#gem "thor"
 
 group :test do
   gem "mocha"
-  gem "webmock"
   gem "ci_reporter"
 end
 
