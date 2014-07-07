@@ -473,23 +473,26 @@ module BlacklightCornellRequests
             ## Annex group can deliver to itself
             ## Others can't deliver to itself
             # logger.debug "sk274_log: " + circ_group_id.inspect
-            if circ_group_id[0]['circ_group_id'] == 3 || circ_group_id[0]['circ_group_id'] == 19
-              ## include both group id if Olin or Uris
-              circ_group_id = [3, 19]
-              # logger.debug "sk274_log: Olin or Uris detected"
-            elsif circ_group_id[0]['circ_group_id'] == 5
-              ## skip annex next time
-              # logger.debug "sk274_log: Annex detected, skipping"
+            # there might not be an entry in this table  
+            if !circ_group_id.blank? 
+              if circ_group_id[0]['circ_group_id'] == 3 || circ_group_id[0]['circ_group_id'] == 19
+                ## include both group id if Olin or Uris
+                circ_group_id = [3, 19]
+                # logger.debug "sk274_log: Olin or Uris detected"
+              elsif circ_group_id[0]['circ_group_id'] == 5
+                ## skip annex next time
+                # logger.debug "sk274_log: Annex detected, skipping"
+                location_seen[location] = exclude_location_list
+                holding[:exclude_location_id] = exclude_location_list
+                next
+              end
+              # logger.debug "sk274_log: circ group id: " + circ_group_id.inspect
+              locs = Circ_policy_locs.select('location_id').where( :circ_group_id =>  circ_group_id, :pickup_location => 'Y' )
+              locs.each do |loc|
+                exclude_location_list.push loc['location_id']
+              end
               location_seen[location] = exclude_location_list
-              holding[:exclude_location_id] = exclude_location_list
-              next
             end
-            # logger.debug "sk274_log: circ group id: " + circ_group_id.inspect
-            locs = Circ_policy_locs.select('location_id').where( :circ_group_id =>  circ_group_id, :pickup_location => 'Y' )
-            locs.each do |loc|
-              exclude_location_list.push loc['location_id']
-            end
-            location_seen[location] = exclude_location_list
           else
             exclude_location_list = location_seen[location]
           end
