@@ -94,6 +94,7 @@ module BlacklightCornellRequests
 
       # Get holdings
       self.holdings_data = get_holdings document unless self.holdings_data
+      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} holdings data returned."+ Time.new.inspect
 
       # Get item status and location for each item in each holdings record; store in working_items
       # We now have two item arrays! working_items (which eventually gets set in self.items) is a 
@@ -123,17 +124,22 @@ module BlacklightCornellRequests
 
       self.items = working_items
       self.document = document
+      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} working items processed. number of items: #{self.items.size} at"+ Time.new.inspect
 
       unless document.nil?
 
         # Iterate through all items and get list of delivery methods
         bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
+        n = 0
         working_items.each do |item|
+          n = n + 1
+          #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} deliv options for each item. (#{n})"+ Time.new.inspect
           services = get_delivery_options item, bd_params
           item[:services] = services
         end
         populate_document_values
         
+      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} services established for each item."+ Time.new.inspect
         
         # handle pda
         patron_type = get_patron_type self.netid
@@ -173,7 +179,9 @@ module BlacklightCornellRequests
           
           return
         end
+      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} bd/pda processed."+ Time.new.inspect
 
+      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
         # Determine whether this is a multi-volume thing or not (i.e, multi-copy)
         # They will be handled differently depending
         if self.document[:multivol_b] and volume.blank?
@@ -191,6 +199,7 @@ module BlacklightCornellRequests
 
       end
   
+      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
       if !target.blank?
         self.service = target
       elsif request_options.present?
@@ -398,13 +407,14 @@ module BlacklightCornellRequests
     # environments file.
     # holdings_param = { :bibid => <bibid>, :type => retrieve|retrieve_detail_raw}
     def get_holdings document
+      #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} entered get_holdings"
       holdings = document[:item_record_display].present? ? document[:item_record_display].map { |item| parseJSON item } : Array.new
-      # Rails.logger.info "sk274_log: #{holdings.inspect}"
+      #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
 
       return nil unless self.bibid
 
       response = parseJSON(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/status_short/#{self.bibid}"))
-      # Rails.logger.info "sk274_log: #{response.inspect}"
+      #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} #{response.inspect}"
       
       if response[self.bibid.to_s] and response[self.bibid.to_s][self.bibid.to_s] and response[self.bibid.to_s][self.bibid.to_s][:records]
         statuses = {}
@@ -418,6 +428,7 @@ module BlacklightCornellRequests
           end
         end
         
+        #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} #{call_numbers.inspect}"
         location_seen = Hash.new
         location_ids = Array.new
         ## assume there is one holdings location per bibid
@@ -501,6 +512,7 @@ module BlacklightCornellRequests
         end
       end
       
+      #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
       holdings
 
     end
@@ -909,7 +921,7 @@ module BlacklightCornellRequests
       when 'callslip'
         v.place_callslip_item!
       end
-
+      #Rails.logger.debug "Response" + v.inspect 
       if v.mtype.strip == 'success'
         return { :success => I18n.t('requests.success') }
       else
