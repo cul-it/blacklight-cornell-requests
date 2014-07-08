@@ -838,6 +838,7 @@ module BlacklightCornellRequests
     end
     
     def create_ill_link
+
       document = self.document
       ill_link = '***REMOVED***?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
       if self.isbn.present?
@@ -851,13 +852,20 @@ module BlacklightCornellRequests
       if !document[:author_display].blank?
         ill_link = ill_link + "&rft.aulast=#{document[:author_display]}"
       end
-      if document[:pub_info_display].present?
-        pub_info_display = document[:pub_info_display][0]
-        self.pub_info = pub_info_display
-        ill_link = ill_link + "&rft.place=#{pub_info_display}"
-        ill_link = ill_link + "&rft.pub=#{pub_info_display}"
-        ill_link = ill_link + "&rft.date=#{pub_info_display}"
-      end
+      
+      # Populate the publisher data fields. This can be done
+      # using pub_info_display, which gloms everything together,
+      # or by using the separate pubplace_display, publisher_display
+      # and pub_date_display
+      pub_info_combo = document[:pub_info_display][0]
+      pub_date = (document[:pub_date_display] ? document[:pub_date_display][0] : pub_info_combo)
+      pub_info = (document[:publisher_display] ? document[:publisher_display][0] : pub_info_combo)
+      pub_place = (document[:pubplace_display] ? document[:pubplace_display][0] : pub_info_combo)
+      self.pub_info = pub_info_combo
+      ill_link = ill_link + "&rft.place=#{pub_place}"
+      ill_link = ill_link + "&rft.pub=#{pub_info}"
+      ill_link = ill_link + "&rft.date=#{pub_date}"
+
       if !document[:format].blank?
         ill_link = ill_link + "&rft.genre=#{document[:format][0]}"
       end
