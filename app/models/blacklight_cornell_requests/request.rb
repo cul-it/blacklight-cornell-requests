@@ -929,11 +929,11 @@ module BlacklightCornellRequests
       v.reqcomments = params[:reqcomments]
       case params[:request_action]
       when 'hold'
-        v.place_hold_item!
+         v.itemid.blank? ?  v.place_hold_title!   : v.place_hold_item!
       when 'recall'
-        v.place_recall_item!
+         v.itemid.blank? ?  v.place_recall_title_rest! : v.place_recall_item_rest!
       when 'callslip'
-        v.place_callslip_item!
+         v.itemid.blank? ?  v.place_callslip_title! : v.place_callslip_item!
       end
       #Rails.logger.debug "Response" + v.inspect 
       if v.mtype.strip == 'success'

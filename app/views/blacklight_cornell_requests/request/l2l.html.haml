@@ -10,7 +10,8 @@
   = link_to catalog_path(@id), { :title => @ti, 'data-counter'.to_sym => @counter } do
     %i.fa.fa-arrow-circle-left
     Back to item
-%h1.request-type Request library to library delivery
+%h1.request-type 
+  = "Request library to library delivery for user: " + request.env['REMOTE_USER'].inspect
 %div.row
   %div.span8.well
     %h2.blacklight-title_display.item-title-request
@@ -25,7 +26,7 @@
             = render :partial =>'shared/volume_select'
       %input(type="hidden" name="bid" value="#{@id}" id="bid")
       %input(type="hidden" name="request_action" value="callslip" id="request_action")
-      = render :partial => 'shared/reqac'
+      = render :partial => 'shared/l2lac'
       = render :partial => 'shared/reqpu'
       .control-group
         %label.control-label{:for => 'reqcomments'} Notes to library staff:
