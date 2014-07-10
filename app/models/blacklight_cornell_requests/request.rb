@@ -852,7 +852,7 @@ module BlacklightCornellRequests
       if !document[:author_display].blank?
         ill_link = ill_link + "&rft.aulast=#{document[:author_display]}"
       end
-      
+
       # Populate the publisher data fields. This can be done
       # using pub_info_display, which gloms everything together,
       # or by using the separate pubplace_display, publisher_display
