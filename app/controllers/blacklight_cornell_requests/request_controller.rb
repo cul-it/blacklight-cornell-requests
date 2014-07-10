@@ -34,7 +34,12 @@ module BlacklightCornellRequests
       @name = get_patron_name req.netid
 
       @iis = ActiveSupport::HashWithIndifferentAccess.new
-
+      if !@document[:url_pda_display].blank? && !@document[:url_pda_display][0].blank?
+        pda_url = @document[:url_pda_display][0]
+        Rails.logger.info "***REMOVED***_log #{__FILE__} #{__LINE__}:" + pda_url.inspect
+        pda_url, note = pda_url.split('|')
+        @iis = {:pda => { :itemid => 'pda', :url => pda_url, :note => note }}
+      end
       # @volumes = req.set_volumes(req.all_items)
       @volumes = req.volumes
       if req.volumes.present? and params[:volume].blank?
