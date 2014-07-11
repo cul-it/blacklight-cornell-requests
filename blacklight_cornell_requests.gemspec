@@ -23,6 +23,8 @@ Gem::Specification.new do |s|
   s.add_dependency 'net-ldap'
   s.add_dependency 'blacklight'
   s.add_dependency 'i18n'
+  s.add_dependency 'zoom', :git => 'https://github.com/bricestacey/ruby-zoom.git'
+  s.add_dependency 'nokogiri'
 
   s.add_development_dependency "sqlite3"
 
