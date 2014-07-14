@@ -119,7 +119,7 @@ module BlacklightCornellRequests
               holdings =results_xml.xpath('//holdings/holding/circulations/circulation/availableNow')
               holdings.each do |h|
                 available = (h.attribute('value').to_s == '1')
-                            if available
+                if available
                   Rails.logger.debug "mjc12test: available from #{s[0]}"
                 end
                 return true if available
