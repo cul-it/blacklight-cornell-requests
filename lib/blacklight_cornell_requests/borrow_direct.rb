@@ -136,6 +136,8 @@ module BlacklightCornellRequests
 
       end # servers.each
 
+      return available
+
     end # def borrowdirect_available?
 
   end # module
