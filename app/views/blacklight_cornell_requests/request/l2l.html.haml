@@ -10,7 +10,7 @@
   = link_to catalog_path(@id), { :title => @ti, 'data-counter'.to_sym => @counter } do
     %i.fa.fa-arrow-circle-left
     Back to item
-%h1.request-type 
+%h1.request-type
   = "Request library to library delivery for user: " + request.env['REMOTE_USER'].inspect
 %div.row
   %div.span8.well
@@ -18,7 +18,7 @@
       =title
     %div.request-author=responsibility
     %form#req.l2l-request.form-horizontal{:method => 'post', :action => make_voyager_request_path({:bibid =>@id})}
-      -if @volumes.present?
+      -if @volumes.present? && @volumes.count > 1
         .control-group
           %label.control-label{:for => "volume-selection"}
             Current Volume:

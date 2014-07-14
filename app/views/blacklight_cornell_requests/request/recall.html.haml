@@ -10,14 +10,14 @@
   = link_to catalog_path(@id), { :title => @ti, 'data-counter'.to_sym => @counter } do
     %i.fa.fa-arrow-circle-left
     Back to item
-%h1.request-type 
+%h1.request-type
   = "Request a recall for user:" + request.env['REMOTE_USER'].inspect
 %div.row
   %div.span8.well
     %h2.item-title-request.blacklight-title_display=title
     %div.request-author=responsibility
     %form#req.form-horizontal{:method => 'post', :action => make_voyager_request_path}
-      -if @volumes.present?
+      -if @volumes.present? && @volumes.count > 1
         .control-group
           %label.control-label{:for => "volume-selection"}
             Current Volume:
