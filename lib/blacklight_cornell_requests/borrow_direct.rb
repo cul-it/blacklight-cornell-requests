@@ -93,7 +93,6 @@ module BlacklightCornellRequests
       # seeing because pazpar2 simply isn't returning results for 
       # many of these servers!
       servers.each do |s|
-  Rails.logger.warn "mjc12test: Activating groovy search for #{s[0]}"
 
         begin
 
@@ -112,7 +111,7 @@ module BlacklightCornellRequests
               holdings.each do |h|
                 available = (h.content == 'AVAILABLE')
                 if available
-                  Rails.logger.warn "mjc12test: available from #{s[0]}"
+                  Rails.logger.debug "mjc12test: available from #{s[0]}"
                 end
                 return true if available
               end
@@ -121,7 +120,7 @@ module BlacklightCornellRequests
               holdings.each do |h|
                 available = (h.attribute('value').to_s == '1')
                             if available
-                  Rails.logger.warn "mjc12test: available from #{s[0]}"
+                  Rails.logger.debug "mjc12test: available from #{s[0]}"
                 end
                 return true if available
               end
