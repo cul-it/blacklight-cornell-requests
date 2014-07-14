@@ -114,7 +114,7 @@ module BlacklightCornellRequests
                 if available
                   Rails.logger.warn "mjc12test: available from #{s[0]}"
                 end
-             #   return true if available
+                return true if available
               end
             else
               holdings =results_xml.xpath('//holdings/holding/circulations/circulation/availableNow')
@@ -123,7 +123,7 @@ module BlacklightCornellRequests
                             if available
                   Rails.logger.warn "mjc12test: available from #{s[0]}"
                 end
-             #   return true if available
+                return true if available
               end
             end
 
@@ -133,7 +133,7 @@ module BlacklightCornellRequests
           Rails.logger.info "Error checking borrow direct availability: exception #{e.class.name} : #{e.message}"
         end
 
-        # return true if available
+         return true if available
 
       end # servers.each
 
