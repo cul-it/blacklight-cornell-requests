@@ -18,7 +18,7 @@
     %h2.item-title-request.blacklight-title_display=title
     %div.request-author=responsibility
     %form#req.form-horizontal{:method => 'post', :action => make_voyager_request_path}
-      -if @volumes.present?
+      -if @volumes.present? && @volumes.count > 1
         .control-group
           %label.control-label{:for => "volume-selection"}
             Current Volume:
