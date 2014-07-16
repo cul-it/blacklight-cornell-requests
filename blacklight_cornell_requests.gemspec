@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'haml-rails'
   s.add_dependency 'httpclient'
   s.add_dependency 'net-ldap'
-  s.add_dependency 'blacklight'
+  s.add_dependency 'blacklight',['~> 4.3']
   s.add_dependency 'i18n'
   s.add_dependency 'nokogiri'
   s.add_dependency 'zoom'
@@ -29,7 +29,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "sqlite3"
 
   s.add_development_dependency "rspec-rails", "~> 2.5"
-  s.add_development_dependency "capybara", "~> 0.4"
+  s.add_development_dependency "capybara", "2.4.1"
   s.add_development_dependency "guard-spork"
   s.add_development_dependency "guard-rspec"
   s.add_development_dependency "spork"
