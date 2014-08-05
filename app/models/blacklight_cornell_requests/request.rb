@@ -15,6 +15,8 @@ module BlacklightCornellRequests
     ASK_LIBRARIAN = 'ask'
     LIBRARY_ANNEX = 'Library Annex'
     DOCUMENT_DELIVERY = 'document_delivery'
+    # The doc del form can't be pre-populated as we do with the ILL form, so the URL is constant
+    DOCUMENT_DELIVERY_URL = '***REMOVED***?Action=10&Form=22'
     HOLD_PADDING_TIME = 3
     OCLC_TYPE_ID = 'OCoLC'
     
@@ -196,7 +198,6 @@ module BlacklightCornellRequests
             request_options.push *item[:services]
           end
           request_options = sort_request_options request_options
-        
         end
 
       end
@@ -205,6 +206,12 @@ module BlacklightCornellRequests
       if !target.blank?
         self.service = target
       elsif request_options.present?
+        # Don't present document delivery as the default option unless
+        # there's no other choice
+        if (request_options[0][:service] == DOCUMENT_DELIVERY) and 
+           (request_options.length > 1)
+           request_options[0], request_options[1] = request_options[1], request_options[0]
+        end
         self.service = request_options[0][:service]
       else
         self.service = ASK_LIBRARIAN
@@ -213,27 +220,7 @@ module BlacklightCornellRequests
       request_options.push ( { :service => ASK_LIBRARIAN, :estimate => get_delivery_time( ASK_LIBRARIAN, nil ) } )
       populate_options self.service, request_options unless self.service == ASK_LIBRARIAN
 
-      if document[:format].present? and document[:format].include? 'Journal'
-        if self.alternate_options.nil?
-          self.alternate_options = []
-        end
-        # this article form cannot be prepopulated...
-        dd_link = '***REMOVED***?Action=10&Form=22'
-        dd_estimate = get_delivery_time DOCUMENT_DELIVERY, nil
-        if self.service != DOCUMENT_DELIVERY
-          dd_iids = { :itemid => 'document_delivery', :url => dd_link }
-          self.alternate_options.unshift ( { :service => DOCUMENT_DELIVERY, :iid => dd_iids, :estimate => dd_estimate } )
-        else
-          dd_iids = { :itemid => 'document_delivery', :url => dd_link }
-          if !self.request_options.nil?
-            self.alternate_options.unshift *self.request_options
-          end
-          self.request_options = [ { :service => DOCUMENT_DELIVERY, :iid => dd_iids, :estimate => dd_estimate } ]
-        end
-      end
-
       self.document = document
-
     end
     
     def populate_options target, request_options
@@ -595,7 +582,7 @@ module BlacklightCornellRequests
 
     ############  Return eligible delivery services for request #################
     def delivery_services
-      [L2L, BD, HOLD, RECALL, PURCHASE, PDA, ILL, ASK_LIBRARIAN, ASK_CIRCULATION]
+      [L2L, BD, HOLD, RECALL, PURCHASE, PDA, ILL, ASK_LIBRARIAN, ASK_CIRCULATION, DOCUMENT_DELIVERY]
     end
 
     # Main entry point for determining which delivery services are available for a given item
@@ -704,6 +691,9 @@ module BlacklightCornellRequests
         request_options.push( {:service => ILL, :location => item[:location] } )
       end
 
+      # Document delivery should be available for all items - see DISCOVERYACCESS-1149
+      request_options.push( {:service => DOCUMENT_DELIVERY })
+
       return request_options
     end
 
@@ -799,7 +789,6 @@ module BlacklightCornellRequests
           # for DD, it is the entire holdings data since it matters whether the item is available as a whole or not
           available = false
           self.all_items.each do |item|
-            Rails.logger.warn "mjc12test: item: #{item[:status]}"
             if item[:status] == NOT_CHARGED
               available = true
               break
