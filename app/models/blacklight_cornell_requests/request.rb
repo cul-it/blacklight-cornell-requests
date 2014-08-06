@@ -201,7 +201,7 @@ module BlacklightCornellRequests
         end
 
       end
-  
+
       #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
       if !target.blank?
         self.service = target
@@ -210,8 +210,14 @@ module BlacklightCornellRequests
         # there's no other choice
         if (request_options[0][:service] == DOCUMENT_DELIVERY) and 
            (request_options.length > 1)
-           request_options[0], request_options[1] = request_options[1], request_options[0]
+
+           # There may be more than one DD option in the queue, so we have to
+           # check the whole list. (There really shouldn't be more than one,
+           # probably!)
+           index = request_options.index{ |o| o[:service] != DOCUMENT_DELIVERY }
+           request_options[0], request_options[index] = request_options[index], request_options[0]
         end
+        
         self.service = request_options[0][:service]
       else
         self.service = ASK_LIBRARIAN
@@ -539,6 +545,15 @@ module BlacklightCornellRequests
       [9].include? loan_code.to_i
     end
 
+    # There is a specific nocirc loan typecode (9), but there could also be
+    # a note in the holdings record that the item doesn't circulate (even
+    # with a different typecode)
+    def noncirculating?(item)
+      return (item.key?('perm_location') and 
+             item['perm_location'].key?('name') and
+             item['perm_location']['name'].include? 'Non-Circulating')
+    end
+
     # Locate and translate the actual item status from the text string in the holdings data
     def item_status item_status
       if item_status == NOT_CHARGED
@@ -628,7 +643,7 @@ module BlacklightCornellRequests
       # Rails.logger.info "sk274_log: type id: #{typeCode.inspect}, item loan type: #{item_loan_type.inspect}, status: #{item[:status].inspect}"
 
       request_options = []
-      if item_loan_type == 'nocirc'
+      if item_loan_type == 'nocirc' or noncirculating? item
         # if borrowDirect_available? bdParams
           # request_options.push({ :service => BD, :iid => [], :estimate => get_bd_delivery_time })
           # if target.blank?
@@ -703,7 +718,7 @@ module BlacklightCornellRequests
       item_loan_type = loan_type typeCode
       request_options = []
 
-      if item_loan_type == 'nocirc'
+      if item_loan_type == 'nocirc' or noncirculating? item
         # do nothing
       elsif item_loan_type == 'regular' and item[:status] == NOT_CHARGED
         request_options = [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
