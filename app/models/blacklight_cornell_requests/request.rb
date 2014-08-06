@@ -217,7 +217,7 @@ module BlacklightCornellRequests
            index = request_options.index{ |o| o[:service] != DOCUMENT_DELIVERY }
            request_options[0], request_options[index] = request_options[index], request_options[0]
         end
-        
+
         self.service = request_options[0][:service]
       else
         self.service = ASK_LIBRARIAN
@@ -707,7 +707,10 @@ module BlacklightCornellRequests
       end
 
       # Document delivery should be available for all items - see DISCOVERYACCESS-1149
-      request_options.push( {:service => DOCUMENT_DELIVERY })
+      # But with a few exceptions!
+      if docdel_eligible? item
+        request_options.push( {:service => DOCUMENT_DELIVERY })
+      end
 
       return request_options
     end
@@ -752,6 +755,32 @@ module BlacklightCornellRequests
     # Custom sort method: sort by delivery time estimate from a hash
     def sort_request_options request_options
       return request_options.sort_by { |option| option[:estimate][0] }
+    end
+
+    # Determine whether document delivery should be available for a given item
+    # This is based on library location and item format
+    def docdel_eligible? item
+
+      # Specifically exclude based on item_type
+      eligible_formats = ['Book', 
+                          'Image', 
+                          'Journal', 
+                          'Manuscript/Archive', 
+                          'Musical Recording', 
+                          'Musical Score', 
+                          'Non-musical Recording', 
+                          'Research Guide', 
+                          'Thesis']
+
+      item_formats = self.document[:format]
+      item_formats.each do |f|
+        return true if eligible_formats.include? f
+        # microform, is available via the annex but not from other locations
+        return true if f == 'Microform' and item[:perm_location][:code].include? 'anx'
+      end
+
+      return false
+
     end
 
     def get_delivery_time service, item_data, return_range = true
