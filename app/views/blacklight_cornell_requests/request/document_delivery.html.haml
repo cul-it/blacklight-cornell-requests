@@ -18,7 +18,6 @@
       Click the button below to go to the Document Delivery form and place your request.
     .control-group
     .controls.clearfix
-      - Rails.logger.warn "mjc12test: output: #{@iis}"
       %a{:href => BlacklightCornellRequests::Request::DOCUMENT_DELIVERY_URL, :title =>'Submit Document Delivery Request',:class => 'btn btn-danger pull-left'}
         Go to Document Delivery
       %div.accordion-heading.request-options.form-alternative-action.pull-left
