@@ -15,6 +15,8 @@ module BlacklightCornellRequests
     ASK_LIBRARIAN = 'ask'
     LIBRARY_ANNEX = 'Library Annex'
     DOCUMENT_DELIVERY = 'document_delivery'
+    # The doc del form can't be pre-populated as we do with the ILL form, so the URL is constant
+    DOCUMENT_DELIVERY_URL = '***REMOVED***?Action=10&Form=22'
     HOLD_PADDING_TIME = 3
     OCLC_TYPE_ID = 'OCoLC'
     
@@ -196,15 +198,26 @@ module BlacklightCornellRequests
             request_options.push *item[:services]
           end
           request_options = sort_request_options request_options
-        
         end
 
       end
-  
+
       #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
       if !target.blank?
         self.service = target
       elsif request_options.present?
+        # Don't present document delivery as the default option unless
+        # there's no other choice
+        if (request_options[0][:service] == DOCUMENT_DELIVERY) and 
+           (request_options.length > 1)
+
+           # There may be more than one DD option in the queue, so we have to
+           # check the whole list. (There really shouldn't be more than one,
+           # probably!)
+           index = request_options.index{ |o| o[:service] != DOCUMENT_DELIVERY }
+           request_options[0], request_options[index] = request_options[index], request_options[0]
+        end
+
         self.service = request_options[0][:service]
       else
         self.service = ASK_LIBRARIAN
@@ -213,27 +226,7 @@ module BlacklightCornellRequests
       request_options.push ( { :service => ASK_LIBRARIAN, :estimate => get_delivery_time( ASK_LIBRARIAN, nil ) } )
       populate_options self.service, request_options unless self.service == ASK_LIBRARIAN
 
-      if document[:format].present? and document[:format].include? 'Journal'
-        if self.alternate_options.nil?
-          self.alternate_options = []
-        end
-        # this article form cannot be prepopulated...
-        dd_link = '***REMOVED***?Action=10&Form=22'
-        dd_estimate = get_delivery_time DOCUMENT_DELIVERY, nil
-        if self.service != DOCUMENT_DELIVERY
-          dd_iids = { :itemid => 'document_delivery', :url => dd_link }
-          self.alternate_options.unshift ( { :service => DOCUMENT_DELIVERY, :iid => dd_iids, :estimate => dd_estimate } )
-        else
-          dd_iids = { :itemid => 'document_delivery', :url => dd_link }
-          if !self.request_options.nil?
-            self.alternate_options.unshift *self.request_options
-          end
-          self.request_options = [ { :service => DOCUMENT_DELIVERY, :iid => dd_iids, :estimate => dd_estimate } ]
-        end
-      end
-
       self.document = document
-
     end
     
     def populate_options target, request_options
@@ -552,6 +545,15 @@ module BlacklightCornellRequests
       [9].include? loan_code.to_i
     end
 
+    # There is a specific nocirc loan typecode (9), but there could also be
+    # a note in the holdings record that the item doesn't circulate (even
+    # with a different typecode)
+    def noncirculating?(item)
+      return (item.key?('perm_location') and 
+             item['perm_location'].key?('name') and
+             item['perm_location']['name'].include? 'Non-Circulating')
+    end
+
     # Locate and translate the actual item status from the text string in the holdings data
     def item_status item_status
       if item_status == NOT_CHARGED
@@ -595,7 +597,7 @@ module BlacklightCornellRequests
 
     ############  Return eligible delivery services for request #################
     def delivery_services
-      [L2L, BD, HOLD, RECALL, PURCHASE, PDA, ILL, ASK_LIBRARIAN, ASK_CIRCULATION]
+      [L2L, BD, HOLD, RECALL, PURCHASE, PDA, ILL, ASK_LIBRARIAN, ASK_CIRCULATION, DOCUMENT_DELIVERY]
     end
 
     # Main entry point for determining which delivery services are available for a given item
@@ -641,7 +643,7 @@ module BlacklightCornellRequests
       # Rails.logger.info "sk274_log: type id: #{typeCode.inspect}, item loan type: #{item_loan_type.inspect}, status: #{item[:status].inspect}"
 
       request_options = []
-      if item_loan_type == 'nocirc'
+      if item_loan_type == 'nocirc' or noncirculating? item
         # if borrowDirect_available? bdParams
           # request_options.push({ :service => BD, :iid => [], :estimate => get_bd_delivery_time })
           # if target.blank?
@@ -704,6 +706,12 @@ module BlacklightCornellRequests
         request_options.push( {:service => ILL, :location => item[:location] } )
       end
 
+      # Document delivery should be available for all items - see DISCOVERYACCESS-1149
+      # But with a few exceptions!
+      if docdel_eligible? item
+        request_options.push( {:service => DOCUMENT_DELIVERY })
+      end
+
       return request_options
     end
 
@@ -713,7 +721,7 @@ module BlacklightCornellRequests
       item_loan_type = loan_type typeCode
       request_options = []
 
-      if item_loan_type == 'nocirc'
+      if item_loan_type == 'nocirc' or noncirculating? item
         # do nothing
       elsif item_loan_type == 'regular' and item[:status] == NOT_CHARGED
         request_options = [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
@@ -747,6 +755,32 @@ module BlacklightCornellRequests
     # Custom sort method: sort by delivery time estimate from a hash
     def sort_request_options request_options
       return request_options.sort_by { |option| option[:estimate][0] }
+    end
+
+    # Determine whether document delivery should be available for a given item
+    # This is based on library location and item format
+    def docdel_eligible? item
+
+      # Specifically exclude based on item_type
+      eligible_formats = ['Book', 
+                          'Image', 
+                          'Journal', 
+                          'Manuscript/Archive', 
+                          'Musical Recording', 
+                          'Musical Score', 
+                          'Non-musical Recording', 
+                          'Research Guide', 
+                          'Thesis']
+
+      item_formats = self.document[:format]
+      item_formats.each do |f|
+        return true if eligible_formats.include? f
+        # microform, is available via the annex but not from other locations
+        return true if f == 'Microform' and item[:perm_location][:code].include? 'anx'
+      end
+
+      return false
+
     end
 
     def get_delivery_time service, item_data, return_range = true
@@ -799,7 +833,6 @@ module BlacklightCornellRequests
           # for DD, it is the entire holdings data since it matters whether the item is available as a whole or not
           available = false
           self.all_items.each do |item|
-            Rails.logger.warn "mjc12test: item: #{item[:status]}"
             if item[:status] == NOT_CHARGED
               available = true
               break
