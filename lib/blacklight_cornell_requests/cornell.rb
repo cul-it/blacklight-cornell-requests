@@ -49,8 +49,16 @@ module BlacklightCornellRequests
 
             # This is a brute-force approach because I can't make sense of LDAP
             # Just match all the attributes of the form 'CN=rg.whatever'
+            # Cornell reference groups are listed at 
+            # http://www.it.cornell.edu/services/group/about/reference.cfm
             reference_groups = entry.to_ldif.scan(/CN=(rg.*?),/).flatten
-            if reference_groups.include? "rg.cuniv.employee" or reference_groups.include? "rg.cuniv.student"
+            if reference_groups.include? 'rg.cuniv.employee' or
+               reference_groups.include? 'rg.cuniv.student' or
+               reference_groups.include? 'rg.cuniv.retirees' or
+               reference_groups.include? 'rg.cuniv.emeritus' or
+               reference_groups.include? 'rg.cuniv.trustee' or
+               reference_groups.include? 'rg.cuniv.trustee-emeritus'
+              
               return "cornell"
             else
               return "guest"
