@@ -14,13 +14,14 @@ module BlacklightCornellRequests
       @document = @document
 
       req = BlacklightCornellRequests::Request.new(@id)
-      req.netid = request.env['REMOTE_USER']
+      req.netid = request.env['REMOTE_USER'] 
       req.netid.sub! '@CORNELL.EDU', ''
       req.magic_request @document, request.env['HTTP_HOST'], {:target => target, :volume => params[:volume]}
 
       if ! req.service.nil?
         @service = req.service
       else
+        # This is the default option when nothing else can be done. A cry for help!
         @service = { :service => BlacklightCornellRequests::Request::ASK_LIBRARIAN }
       end
 
@@ -41,9 +42,16 @@ module BlacklightCornellRequests
         pda_url, note = pda_url.split('|')
         @iis = {:pda => { :itemid => 'pda', :url => pda_url, :note => note }}
       end
+
       # @volumes = req.set_volumes(req.all_items)
       @volumes = req.volumes
-      if req.volumes.present? and params[:volume].blank?
+      # Note: the if statement here only shows the volume select screen
+      # if a doc del request has *not* been specified. This is because 
+      # (a) without that statement, the user just loops endlessly through
+      # volume selection and doc del requesting; and (b) since we can't
+      # pre-populate the doc del request form with bibliographic data, there's
+      # no point in forcing the user to select a volume before showing the form.
+      if req.volumes.present? and params[:volume].blank? and target != Request::DOCUMENT_DELIVERY
         if req.volumes.count != 1
           render 'shared/_volume_select'
           return
@@ -60,11 +68,11 @@ module BlacklightCornellRequests
         end
         @volumes = req.set_volumes(req.all_items)
         #@volumes = req.volumes
-
+      end
         @alternate_request_options = []
         req.alternate_options.each do |option|
           @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
-        end
+        
 
       end
       
