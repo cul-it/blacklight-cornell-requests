@@ -14,7 +14,7 @@ module BlacklightCornellRequests
       @document = @document
 
       req = BlacklightCornellRequests::Request.new(@id)
-      req.netid = request.env['REMOTE_USER']
+      req.netid = request.env['REMOTE_USER'] 
       req.netid.sub! '@CORNELL.EDU', ''
       req.magic_request @document, request.env['HTTP_HOST'], {:target => target, :volume => params[:volume]}
 
@@ -68,11 +68,11 @@ module BlacklightCornellRequests
         end
         @volumes = req.set_volumes(req.all_items)
         #@volumes = req.volumes
-
+      end
         @alternate_request_options = []
         req.alternate_options.each do |option|
           @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
-        end
+        
 
       end
       
