@@ -27,3 +27,7 @@
           -if copyd[:chron].present?
             %span.copy-chron.label
               = copyd[:chron]
+-else
+  .controls
+    %input(id="copy-any" class="copy-select" type="radio" name="holding_id" value="any" data-exclude-location="[]" checked)
+    %label.radio-label{ :for => "copy-any"} Any Copy
