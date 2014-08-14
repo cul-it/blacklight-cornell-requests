@@ -36,6 +36,7 @@
       .control-group
         %label.control-label Delivery time:
         .controls.delivery-estimate
+        - if !@estimate.blank?
           Approximately
           = delivery_estimate_display @estimate
       -if @alternate_request_options.count >= 2

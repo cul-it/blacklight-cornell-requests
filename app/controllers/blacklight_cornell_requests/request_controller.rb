@@ -64,7 +64,7 @@ module BlacklightCornellRequests
       elsif req.request_options.present?
         req.request_options.each do |item|
           iid = item[:iid]
-          @iis[iid[:item_id]] = iid
+          @iis[iid[:item_id]] = iid unless iid.blank?
         end
         @volumes = req.set_volumes(req.all_items)
         #@volumes = req.volumes
