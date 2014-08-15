@@ -2,14 +2,7 @@
 -subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
 -responsibility = render_document_show_field_value :document => @document, :field => 'title_responsibility_display'
 - @selected_volume = params[:volume]
-- if @counter.blank?
-  = link_to catalog_path(@id), { :title => @ti } do
-    %i.fa.fa-arrow-circle-left
-    Back to item
-- else
-  = link_to catalog_path(@id), { :title => @ti, 'data-counter'.to_sym => @counter } do
-    %i.fa.fa-arrow-circle-left
-    Back to item
+= render :partial => 'shared/back_to_item'
 %h1.request-type
   - user =  request.env['REMOTE_USER'].inspect
   = "Request a hold for " + user
@@ -36,14 +29,14 @@
       .control-group
         %label.control-label Delivery time:
         .controls.delivery-estimate
-        - if !@estimate.blank?
-          Approximately
-          = delivery_estimate_display @estimate
-      -if @alternate_request_options.count >= 2
+          - if !@estimate.blank?
+            Approximately
+            = delivery_estimate_display @estimate
+      -if @alternate_request_options and @alternate_request_options.count >= 2
         .control-group
           .controls.clearfix
             %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit hold request")
-          = render :partial => 'shared/request_options'
+        = render :partial => 'shared/request_options'
       -else
         .control-group
           .controls.clearfix
