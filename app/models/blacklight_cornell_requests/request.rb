@@ -203,6 +203,10 @@ module BlacklightCornellRequests
       end
 
       #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
+      if  working_items.size < 1 
+        hld_entry = {:service => HOLD, :location => '', :status => ''}
+        request_options.push hld_entry
+      end
       if !target.blank?
         self.service = target
       elsif request_options.present?
