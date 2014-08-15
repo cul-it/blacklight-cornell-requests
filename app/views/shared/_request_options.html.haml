@@ -77,7 +77,7 @@
         - elsif option[:option] == 'ill'
           %tr
             %td
-              = link_to request_ill_path(@id), {:title => @ti} do
+              = link_to request_ill_path(:bibid => @id, :volume => @volume), {:title => @ti} do
                 %h2.blacklight-title_display
                   %i.fa.fa-arrow-circle-right
                   Interlibrary Loan
