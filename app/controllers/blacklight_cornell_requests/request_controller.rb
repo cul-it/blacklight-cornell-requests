@@ -69,11 +69,12 @@ module BlacklightCornellRequests
         @volumes = req.set_volumes(req.all_items)
         #@volumes = req.volumes
       end
-        @alternate_request_options = []
+
+      @alternate_request_options = []
+      if !req.alternate_options.nil?
         req.alternate_options.each do |option|
           @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
-        
-
+        end
       end
       
       @counter = params[:counter]
