@@ -18,9 +18,10 @@
     %div.request-author=responsibility
     %p
       To request this item, search Borrow Direct  and place a request.
-    %p
-      Delivery time: 
-      = delivery_estimate_display @estimate
+    - if !@estimate.blank?
+      %p
+        Delivery time: 
+        = delivery_estimate_display @estimate
     .control-group
       .controls.clearfix
         - if @isbn.present?
