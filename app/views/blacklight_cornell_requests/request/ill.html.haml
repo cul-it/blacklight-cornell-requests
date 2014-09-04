@@ -12,8 +12,9 @@
     %p
       To request this item, complete the interlibrary loan form.
     %p
-      Delivery time: 
-      = delivery_estimate_display @estimate
+      - if !@estimate.blank?
+        Delivery time: 
+        = delivery_estimate_display @estimate
     .control-group
       .controls.clearfix
         %a{:href => @ill_link, :class => 'btn btn-danger pull-left'}
