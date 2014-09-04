@@ -180,7 +180,8 @@ module BlacklightCornellRequests
           
           self.request_options = request_options
           self.alternate_options = alternate_options
-          
+
+          populate_options self.service, request_options 
           return
         end
       #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} bd/pda processed."+ Time.new.inspect
