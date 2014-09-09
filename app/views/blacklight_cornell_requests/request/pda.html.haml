@@ -29,3 +29,8 @@
               or
               =link_to 'Ask a Librarian','http://ask.library.cornell.edu'
               for help.
+          - if !@estimate.blank?
+            %br
+            A purchase request will take approximately
+            = succeed "." do
+              = delivery_estimate_display @estimate
