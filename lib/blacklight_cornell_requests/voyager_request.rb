@@ -7,13 +7,13 @@ module BlacklightCornellRequests
     require 'nokogiri'
 
 
-    HOLDINGS_URL = "***REMOVED***"
-    REQUEST_URL = "***REMOVED***"
-    NETID_URL = "***REMOVED***"
-    COOKIE_STORE = "***REMOVED***"
-    DB     = '***REMOVED***'
-    DB_ID     = "1@#{DB}"
-    REST_URL  = '***REMOVED***'
+    HOLDINGS_URL = ENV['HOLDINGS_URL']
+    REQUEST_URL = ENV['REQUEST_URL']
+    NETID_URL = ENV['NETID_URL']
+    COOKIE_STORE = ENV['COOKIE_STORE']
+    DB     = ENV['VOYAGER_DB']
+    DB_ID     = ENV['VOYAGER_DB_ID']
+    REST_URL  = ENV['REST_URL']
 
 
     attr_reader   :bibid
@@ -323,8 +323,6 @@ module BlacklightCornellRequests
           http_client do |hc|
             begin
                # res = hc.request('POST', Rails.configuration.voyager_request_url,body:@req)
-               # ***REMOVED***/circulationActions/requests?institution=LOCAL&patron_homedb=1@***REMOVED***
-               # 30114/vxws/patron/1000007/circulationActions/requests/callslips/QA20012DB20020613131313%7C931?patron_homedb=1@QA20012DB20020613131313
                #cancsurl=  REST_URL+"/patron/#{patronid}/circulationActions/requests/#{type}/#{DB}%7C#{holdid}?patron_homedb=#{DB_ID}"
                #cancsurl=  "http://catalog-test.library.cornell.edu:7074" + "/patron/#{patronid}/circulationActions/requests/#{type}/#{DB}%7C#{holdid}?patron_homedb=#{DB_ID}"
                cancsurl = REST_URL + "/patron/#{patronid}/circulationActions/requests/#{type}/#{DB}%7C#{holdid}?patron_homedb=#{DB_ID}"
@@ -375,7 +373,6 @@ module BlacklightCornellRequests
       else
          rest_url = @rest_url  + "/record/#{bibid}/items/#{itemid}/#{type}?patron=#{patronid}&patron_homedb=#{DB_ID}" 
       end 
-      # http://10.100.2.37:30114/vxws/record/155/items/303/hold?patron=185&patron_homedb=1@QA20012DB20020613131313&patron_group=1
       #rest_url = @rest_url  + "/record/#{bibid}/items/#{itemid}/#{type}?patron=#{patronid}&patron_homedb=#{DB_ID}" 
         logger_info "Request rest url: #{rest_url}"
         logger_info "Request Body: #{@req}"
