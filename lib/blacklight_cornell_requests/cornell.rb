@@ -84,7 +84,7 @@ module BlacklightCornellRequests
             :scope =>  Net::LDAP::SearchScope_BaseObject,
             :attrs =>  ['tokenGroups'] }
           ldap.search(search_params) do |entry|
-            display_name = entry.to_ldif.scan(/displayname: ([a-zA-Z ]+)/)
+            display_name = entry.to_ldif.scan(/displayname: ([a-zA-Z \.\-']+)/)
             return !display_name.empty? ? display_name[0][0] : nil 
           end
 
