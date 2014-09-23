@@ -25,9 +25,9 @@ class MiniTest::Unit::TestCase
 end
 
 class VoyagerRequestTestCase < MiniTest::Unit::TestCase
-  VOYAGER_GET_HOLDS = "***REMOVED***/GetHoldingsService"
-  VOYAGER_REQ_HOLDS = "***REMOVED***/SendPatronRequestService"
-  MYACC_URL  = '***REMOVED***/MyAccountService'
+  VOYAGER_GET_HOLDS = ENV['DUMMY_GET_HOLDS']
+  VOYAGER_REQ_HOLDS = ENV['TEST_REQ_HOLDS']
+  MYACC_URL  = ENV['MY_ACCOUNT_URL']
   include BlacklightCornellRequests
 end
 

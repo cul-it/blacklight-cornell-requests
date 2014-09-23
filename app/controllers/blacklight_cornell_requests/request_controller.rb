@@ -15,7 +15,7 @@ module BlacklightCornellRequests
 
       req = BlacklightCornellRequests::Request.new(@id)
       req.netid = request.env['REMOTE_USER'] 
-      req.netid.sub! '@CORNELL.EDU', ''
+      req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
       req.magic_request @document, request.env['HTTP_HOST'], {:target => target, :volume => params[:volume]}
 
       if ! req.service.nil?

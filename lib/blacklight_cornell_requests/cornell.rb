@@ -10,13 +10,13 @@ module BlacklightCornellRequests
       def bind_ldap
 
         # Login credentials (provided by Desktop Services)
-        holding_id_dn = '***REMOVED***'
-        holding_pw = '***REMOVED***'
+        holding_id_dn = ENV['HOLDING_ID_DN']
+        holding_pw = ENV['HOLDING_PW']
 
         # Set up LDAP connection
         ldap = Net::LDAP.new
-        ldap.host = '***REMOVED***'
-        ldap.port = ***REMOVED***
+        ldap.host = ENV['LDAP_HOST']
+        ldap.port = ENV['LDAP_PORT']
         ldap.auth holding_id_dn, holding_pw
 
         if ldap.bind
@@ -84,7 +84,7 @@ module BlacklightCornellRequests
             :scope =>  Net::LDAP::SearchScope_BaseObject,
             :attrs =>  ['tokenGroups'] }
           ldap.search(search_params) do |entry|
-            display_name = entry.to_ldif.scan(/displayname: ([a-zA-Z ]+)/)
+            display_name = entry.to_ldif.scan(/displayname: ([a-zA-Z \.\-']+)/)
             return !display_name.empty? ? display_name[0][0] : nil 
           end
 
@@ -97,8 +97,8 @@ module BlacklightCornellRequests
       def get_ldap_dn netid
 
         # Login credentials (provided by Desktop Services)
-        holding_id_dn = '***REMOVED***'
-        holding_pw = '***REMOVED***'
+        holding_id_dn = ENV['HOLDING_ID_DN']
+        holding_pw = ENV['HOLDING_PW']
 
         ldap = bind_ldap
         return unless ldap

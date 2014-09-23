@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20131209165258) do
+ActiveRecord::Schema.define(:version => 20141205183449) do
 
   create_table "blacklight_cornell_requests_circ_policy_locs", :force => true do |t|
     t.integer "CIRC_GROUP_ID"

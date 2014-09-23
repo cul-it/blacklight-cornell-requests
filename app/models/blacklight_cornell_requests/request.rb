@@ -16,7 +16,7 @@ module BlacklightCornellRequests
     LIBRARY_ANNEX = 'Library Annex'
     DOCUMENT_DELIVERY = 'document_delivery'
     # The doc del form can't be pre-populated as we do with the ILL form, so the URL is constant
-    DOCUMENT_DELIVERY_URL = '***REMOVED***?Action=10&Form=22'
+    DOCUMENT_DELIVERY_URL = ENV['ILLIAD_URL'] + '?Action=10&Form=22'
     HOLD_PADDING_TIME = 3
     OCLC_TYPE_ID = 'OCoLC'
     
@@ -81,7 +81,6 @@ module BlacklightCornellRequests
 
     ##################### Calculate optimum request method ##################### 
     def magic_request(document, env_http_host, options = {})
-
       target = options[:target]
       volume = options[:volume]
       request_options = []
@@ -486,6 +485,7 @@ module BlacklightCornellRequests
             # logger.debug "sk274_log: " + circ_group_id.inspect
             # there might not be an entry in this table  
             if !circ_group_id.blank? 
+              circ_group_id[0]['circ_group_id'] = Float(circ_group_id[0]['circ_group_id'])
               if circ_group_id[0]['circ_group_id'] == 3 || circ_group_id[0]['circ_group_id'] == 19
                 ## include both group id if Olin or Uris
                 circ_group_id = [3, 19]
@@ -884,7 +884,7 @@ module BlacklightCornellRequests
     def create_ill_link
 
       document = self.document
-      ill_link = '***REMOVED***?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
+      ill_link = ENV['ILLIAD_URL'] + '?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
       if self.isbn.present?
         isbns = self.isbn.join(',')
         ill_link = ill_link + "&rft.isbn=#{isbns}"
