@@ -7,4 +7,7 @@ VCR.configure do |c|
   c.filter_sensitive_data('<REST_URL>')  { "#{ENV['REST_URL']}"}
   c.filter_sensitive_data('<VOYAGER_DB>') { "#{ENV['VOYAGER_DB']}"}
   c.filter_sensitive_data('<DUMMY_VOYAGER_HOLDINGS>') { "#{ENV['DUMMY_VOYAGER_HOLDINGS']}"}
+  c.filter_sensitive_data('<TEST_LASTNAME>') { "#{ENV['TEST_LASTNAME']}"}
+  c.filter_sensitive_data('<TEST_USER_BARCODE>') { "#{ENV['TEST_USER_BARCODE']}"}
+  c.filter_sensitive_data('<TEST_USER_ID>') { "#{ENV['TEST_USER_ID']}"}
 end
