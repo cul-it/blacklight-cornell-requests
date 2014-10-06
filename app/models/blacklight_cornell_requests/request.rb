@@ -96,7 +96,7 @@ module BlacklightCornellRequests
 
       # Get holdings
       self.holdings_data = get_holdings document unless self.holdings_data
-      Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} holdings data returned."+ Time.new.inspect
+      Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} holdings data returned."+ Time.new.inspect
 
       # Get item status and location for each item in each holdings record; store in working_items
       # We now have two item arrays! working_items (which eventually gets set in self.items) is a 
@@ -126,7 +126,7 @@ module BlacklightCornellRequests
 
       self.items = working_items
       self.document = document
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} working items processed. number of items: #{self.items.size} at"+ Time.new.inspect
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} working items processed. number of items: #{self.items.size} at"+ Time.new.inspect
 
       unless document.nil?
 
@@ -135,14 +135,14 @@ module BlacklightCornellRequests
         n = 0
         working_items.each do |item|
           n = n + 1
-          #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} prepare for deliv options for each item. (#{n})"+ Time.new.inspect
+          #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} prepare for deliv options for each item. (#{n})"+ Time.new.inspect
           services = get_delivery_options item, bd_params
-          #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} delivoptions for each item. (#{n}) (#{service.inspect})"+ Time.new.inspect
+          #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} delivoptions for each item. (#{n}) (#{service.inspect})"+ Time.new.inspect
           item[:services] = services
         end
         populate_document_values
         
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} services established for each item."+ Time.new.inspect
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} services established for each item."+ Time.new.inspect
         
         # handle pda
         patron_type = get_patron_type self.netid
@@ -183,9 +183,9 @@ module BlacklightCornellRequests
           populate_options self.service, request_options 
           return
         end
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} bd/pda processed."+ Time.new.inspect
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} bd/pda processed."+ Time.new.inspect
 
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
         # Determine whether this is a multi-volume thing or not (i.e, multi-copy)
         # They will be handled differently depending
         if self.document[:multivol_b] and volume.blank?
@@ -202,7 +202,7 @@ module BlacklightCornellRequests
 
       end
 
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
       if  working_items.size < 1 
         hld_entry = {:service => HOLD, :location => '', :status => ''}
         request_options.push hld_entry
@@ -406,14 +406,14 @@ module BlacklightCornellRequests
     # environments file.
     # holdings_param = { :bibid => <bibid>, :type => retrieve|retrieve_detail_raw}
     def get_holdings document
-      #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} entered get_holdings"
+      #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} entered get_holdings"
       holdings = document[:item_record_display].present? ? document[:item_record_display].map { |item| parseJSON item } : Array.new
-      #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
+      #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
 
       return nil unless self.bibid
 
       response = parseJSON(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/status_short/#{self.bibid}"))
-      #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} #{response.inspect}"
+      #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{response.inspect}"
       
       if response[self.bibid.to_s] and response[self.bibid.to_s][self.bibid.to_s] and response[self.bibid.to_s][self.bibid.to_s][:records]
         statuses = {}
@@ -427,7 +427,7 @@ module BlacklightCornellRequests
           end
         end
         
-        #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} #{call_numbers.inspect}"
+        #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{call_numbers.inspect}"
         location_seen = Hash.new
         location_ids = Array.new
         ## assume there is one holdings location per bibid
@@ -512,7 +512,7 @@ module BlacklightCornellRequests
         end
       end
       
-      #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
+      #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
       holdings
 
     end
@@ -612,12 +612,12 @@ module BlacklightCornellRequests
     # the fastest (i.e., the "best") delivery option.
     def get_delivery_options item, bd_params = {}
 
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} start of deliv options (#{item.inspect})"+ Time.new.inspect
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} start of deliv options (#{item.inspect})"+ Time.new.inspect
       patron_type = get_patron_type self.netid
-      Rails.logger.info "***REMOVED***_debug: " + "#{__FILE__}  #{__LINE__} #{self.netid}, #{patron_type}"
+      Rails.logger.info "es287_debug: " + "#{__FILE__}  #{__LINE__} #{self.netid}, #{patron_type}"
 
       if patron_type == 'cornell'
-        #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} get_cornell_delivery_options."+ Time.new.inspect
+        #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} get_cornell_delivery_options."+ Time.new.inspect
         options = get_cornell_delivery_options item, bd_params
       else
         # Rails.logger.info "sk274_debug: get guest options"
@@ -626,13 +626,13 @@ module BlacklightCornellRequests
 
       # Get delivery time estimates for each option
       options.each do |option|
-        #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} get_option_time.."+ Time.new.inspect
+        #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} get_option_time.."+ Time.new.inspect
         option[:estimate] = get_delivery_time(option[:service], option)
         option[:iid] = item
       end
       
       # Rails.logger.info "sk274_log: #{options.inspect}"
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} end of deliv options (#{options.inspect})"+ Time.new.inspect
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} end of deliv options (#{options.inspect})"+ Time.new.inspect
 
       #return sort_request_options options
       return options

@@ -2,7 +2,7 @@ module BlacklightCornellRequests
 
   class VoyagerRequest
 
-    # Most of this code is by Rick ***REMOVED***, ***REMOVED***
+    # Most of this code is by Rick Silterra, es287
 
     require 'nokogiri'
 
