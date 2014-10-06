@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: put
-    uri: <REST_URL>/record/8073079/hold?patron=***REMOVED***&patron_homedb=1@<VOYAGER_DB>
+    uri: <REST_URL>/record/8073079/hold?patron=<TEST_USER_ID>&patron_homedb=1@<VOYAGER_DB>
     body:
       encoding: US-ASCII
       string: ! "<?xml version='1.0' encoding='UTF-8'?>\n<hold-title-parameters>        <pickup-location>189</pickup-location>\n

@@ -10,4 +10,7 @@ VCR.configure do |c|
   c.filter_sensitive_data('<TEST_LASTNAME>') { "#{ENV['TEST_LASTNAME']}"}
   c.filter_sensitive_data('<TEST_USER_BARCODE>') { "#{ENV['TEST_USER_BARCODE']}"}
   c.filter_sensitive_data('<TEST_USER_ID>') { "#{ENV['TEST_USER_ID']}"}
+  c.filter_sensitive_data('<TEST_NETID>') { "#{ENV['TEST_NETID']}"}
+  c.filter_sensitive_data('<NETID_URL>') { "#{ENV['NETID_URL']}"}
+  c.filter_sensitive_data('<TEST_FIRSTNAME>') { "#{ENV['TEST_FIRSTNAME']}"}
 end

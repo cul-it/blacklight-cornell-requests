@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: delete
-    uri: ***REMOVED***/patron/***REMOVED***/circulationActions/requests/holds/***REMOVED***%7C972737?patron_homedb=1@***REMOVED***
+    uri: <REST_URL>/patron/<TEST_USER_ID>/circulationActions/requests/holds/<VOYAGER_DB>%7C972737?patron_homedb=1@<VOYAGER_DB>
     body:
       encoding: US-ASCII
       string: ''

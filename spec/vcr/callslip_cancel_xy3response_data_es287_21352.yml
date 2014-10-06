@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: delete
-    uri: <REST_URL>/patron/***REMOVED***/circulationActions/requests/callslips/<VOYAGER_DB>%7C322161?patron_homedb=1@<VOYAGER_DB>
+    uri: <REST_URL>/patron/<TEST_USER_ID>/circulationActions/requests/callslips/<VOYAGER_DB>%7C322161?patron_homedb=1@<VOYAGER_DB>
     body:
       encoding: US-ASCII
       string: ''
