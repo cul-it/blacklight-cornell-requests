@@ -14,12 +14,14 @@ module BlacklightCornellRequests
       @document = @document
 
       req = BlacklightCornellRequests::Request.new(@id)
-      req.netid = request.env['REMOTE_USER']
+      req.netid = request.env['REMOTE_USER'] 
+      req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
       req.magic_request @document, request.env['HTTP_HOST'], {:target => target, :volume => params[:volume]}
 
       if ! req.service.nil?
         @service = req.service
       else
+        # This is the default option when nothing else can be done. A cry for help!
         @service = { :service => BlacklightCornellRequests::Request::ASK_LIBRARIAN }
       end
 
@@ -36,13 +38,20 @@ module BlacklightCornellRequests
       @iis = ActiveSupport::HashWithIndifferentAccess.new
       if !@document[:url_pda_display].blank? && !@document[:url_pda_display][0].blank?
         pda_url = @document[:url_pda_display][0]
-        Rails.logger.debug "***REMOVED***_log #{__FILE__} #{__LINE__}:" + pda_url.inspect
+        Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}:" + pda_url.inspect
         pda_url, note = pda_url.split('|')
         @iis = {:pda => { :itemid => 'pda', :url => pda_url, :note => note }}
       end
+
       # @volumes = req.set_volumes(req.all_items)
       @volumes = req.volumes
-      if req.volumes.present? and params[:volume].blank?
+      # Note: the if statement here only shows the volume select screen
+      # if a doc del request has *not* been specified. This is because 
+      # (a) without that statement, the user just loops endlessly through
+      # volume selection and doc del requesting; and (b) since we can't
+      # pre-populate the doc del request form with bibliographic data, there's
+      # no point in forcing the user to select a volume before showing the form.
+      if req.volumes.present? and params[:volume].blank? and target != Request::DOCUMENT_DELIVERY
         if req.volumes.count != 1
           render 'shared/_volume_select'
           return
@@ -55,16 +64,17 @@ module BlacklightCornellRequests
       elsif req.request_options.present?
         req.request_options.each do |item|
           iid = item[:iid]
-          @iis[iid[:item_id]] = iid
+          @iis[iid[:item_id]] = iid unless iid.blank?
         end
         @volumes = req.set_volumes(req.all_items)
         #@volumes = req.volumes
+      end
 
-        @alternate_request_options = []
+      @alternate_request_options = []
+      if !req.alternate_options.nil?
         req.alternate_options.each do |option|
           @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
         end
-
       end
       
       @counter = params[:counter]
@@ -110,6 +120,10 @@ module BlacklightCornellRequests
       return magic_request Request::ASK_LIBRARIAN
     end
 
+    def circ
+      return magic_request Request::ASK_CIRCULATION
+    end
+
     def document_delivery
       return magic_request Request::DOCUMENT_DELIVERY
     end
@@ -141,7 +155,7 @@ module BlacklightCornellRequests
         # Hand off the data to the request model for sending
         req = BlacklightCornellRequests::Request.new(params[:bibid])
         req.netid = request.env['REMOTE_USER']
-        
+        req.netid.sub! '@CORNELL.EDU', ''
         # If the holding_id = 'any', then set to blank. Voyager expects an empty value for 'any copy',
         # but validation above expects a non-blank value!
         if params[:holding_id] == 'any'

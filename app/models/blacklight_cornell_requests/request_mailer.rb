@@ -4,13 +4,12 @@ module BlacklightCornellRequests
     
     default :from => "culsearch@cornell.edu"
     default :subject => "Purchase Request"
-    default :to => "***REMOVED***"
+    default :to => "aa19@cornell.edu"
     
     def email_request(user, params)
       @params = params
       @user = user
-      
-      mail().deliver
+      mail(:from => "#{@params['name']} <#{@params['email']}>", :subject => "Request for library materials for #{@params['name']}").deliver
       logger.debug "Sent purchase request on behalf of #{user}."
     end
   end

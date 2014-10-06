@@ -9,7 +9,7 @@ class TestRequest < VoyagerRequestTestCase
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    assert_equal '***REMOVED***', req.lastname
+    assert_equal ENV['TEST_LASTNAME'], req.lastname
   end
 
   def test_hold_request
@@ -19,7 +19,7 @@ class TestRequest < VoyagerRequestTestCase
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    assert_equal '***REMOVED***', req.lastname
+    assert_equal ENV['TEST_LASTNAME'], req.lastname
     VCR.use_cassette("hold_response_data_#{@itemid}") do
       req.itemid = @itemid;
       req.mfhdid = @mfhdid;
@@ -37,7 +37,7 @@ class TestRequest < VoyagerRequestTestCase
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    assert_equal '***REMOVED***', req.lastname
+    assert_equal ENV['TEST_LASTNAME'], req.lastname
     VCR.use_cassette("hold_response_data_fail_#{@itemid}") do
       req.itemid = @itemid + "xxx"
       req.mfhdid = @mfhdid
@@ -55,7 +55,7 @@ class TestRequest < VoyagerRequestTestCase
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    assert_equal '***REMOVED***', req.lastname
+    assert_equal ENV['TEST_LASTNAME'], req.lastname
     VCR.use_cassette("recall_response_data_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -73,7 +73,7 @@ class TestRequest < VoyagerRequestTestCase
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    assert_equal '***REMOVED***', req.lastname
+    assert_equal ENV['TEST_LASTNAME'], req.lastname
     VCR.use_cassette("recall_response_data_fail_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -91,7 +91,7 @@ class TestRequest < VoyagerRequestTestCase
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    assert_equal '***REMOVED***', req.lastname
+    assert_equal ENV['TEST_LASTNAME'], req.lastname
     VCR.use_cassette("callslip_response_data_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -109,7 +109,7 @@ class TestRequest < VoyagerRequestTestCase
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    assert_equal '***REMOVED***', req.lastname
+    assert_equal ENV['TEST_LASTNAME'], req.lastname
     VCR.use_cassette("callslip_response_data_fail_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -146,7 +146,7 @@ class TestRequest < VoyagerRequestTestCase
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    assert_equal '***REMOVED***', req.lastname
+    assert_equal ENV['TEST_LASTNAME'], req.lastname
     # Generate a callslip
     VCR.use_cassette("callslip_response_data_#{@itemid}") do
       req.itemid = @itemid
@@ -186,7 +186,7 @@ private
      "21352",
      "189",
      "2014-09-27",
-     "***REMOVED***"]
+     "#{ENV['TEST_NETID']}"
   end
 
   # bibid,mfhdid,itemid, libraryid,date,netid
@@ -195,7 +195,7 @@ private
   #
   def requestholder
    [ "6873904", "7315768", "8751586",
-     "189", "2013-09-27", "***REMOVED***" ]
+     "189", "2013-09-27", "#{ENV['TEST_NETID']}" ]
   end
 
   @odd = 0
@@ -203,9 +203,9 @@ private
   def many_requestholder
    @odd = @odd==1 ? 0 : 1
    @odd==0 ?  [ "6873904", "7315768", "8751586",
-            "189", "2013-09-27", "***REMOVED***" ]
+            "189", "2013-09-27", "#{ENV['TEST_NETID']}" ]
    :       [ "3792882", "4367276", "5811637",
-           "189", "2013-09-27", "***REMOVED***" ]
+           "189", "2013-09-27", "#{ENV['TEST_NETID_2']}" ]
   end
 
 end

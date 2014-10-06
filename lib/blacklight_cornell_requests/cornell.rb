@@ -10,13 +10,13 @@ module BlacklightCornellRequests
       def bind_ldap
 
         # Login credentials (provided by Desktop Services)
-        holding_id_dn = '***REMOVED***'
-        holding_pw = '***REMOVED***'
+        holding_id_dn = ENV['HOLDING_ID_DN']
+        holding_pw = ENV['HOLDING_PW']
 
         # Set up LDAP connection
         ldap = Net::LDAP.new
-        ldap.host = '***REMOVED***'
-        ldap.port = ***REMOVED***
+        ldap.host = ENV['LDAP_HOST']
+        ldap.port = ENV['LDAP_PORT']
         ldap.auth holding_id_dn, holding_pw
 
         if ldap.bind
@@ -49,8 +49,16 @@ module BlacklightCornellRequests
 
             # This is a brute-force approach because I can't make sense of LDAP
             # Just match all the attributes of the form 'CN=rg.whatever'
+            # Cornell reference groups are listed at 
+            # http://www.it.cornell.edu/services/group/about/reference.cfm
             reference_groups = entry.to_ldif.scan(/CN=(rg.*?),/).flatten
-            if reference_groups.include? "rg.cuniv.employee" or reference_groups.include? "rg.cuniv.student"
+            if reference_groups.include? 'rg.cuniv.employee' or
+               reference_groups.include? 'rg.cuniv.student' or
+               reference_groups.include? 'rg.cuniv.retirees' or
+               reference_groups.include? 'rg.cuniv.emeritus' or
+               reference_groups.include? 'rg.cuniv.trustee' or
+               reference_groups.include? 'rg.cuniv.trustee-emeritus'
+              
               return "cornell"
             else
               return "guest"
@@ -76,7 +84,8 @@ module BlacklightCornellRequests
             :scope =>  Net::LDAP::SearchScope_BaseObject,
             :attrs =>  ['tokenGroups'] }
           ldap.search(search_params) do |entry|
-            return entry.to_ldif.scan(/displayname: ([a-zA-Z ]+)/)[0][0] 
+            display_name = entry.to_ldif.scan(/displayname: ([a-zA-Z \.\-']+)/)
+            return !display_name.empty? ? display_name[0][0] : nil 
           end
 
         end
@@ -88,8 +97,8 @@ module BlacklightCornellRequests
       def get_ldap_dn netid
 
         # Login credentials (provided by Desktop Services)
-        holding_id_dn = '***REMOVED***'
-        holding_pw = '***REMOVED***'
+        holding_id_dn = ENV['HOLDING_ID_DN']
+        holding_pw = ENV['HOLDING_PW']
 
         ldap = bind_ldap
         return unless ldap

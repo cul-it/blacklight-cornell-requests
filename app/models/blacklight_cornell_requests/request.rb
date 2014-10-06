@@ -15,6 +15,8 @@ module BlacklightCornellRequests
     ASK_LIBRARIAN = 'ask'
     LIBRARY_ANNEX = 'Library Annex'
     DOCUMENT_DELIVERY = 'document_delivery'
+    # The doc del form can't be pre-populated as we do with the ILL form, so the URL is constant
+    DOCUMENT_DELIVERY_URL = ENV['ILLIAD_URL'] + '?Action=10&Form=22'
     HOLD_PADDING_TIME = 3
     OCLC_TYPE_ID = 'OCoLC'
     
@@ -79,7 +81,6 @@ module BlacklightCornellRequests
 
     ##################### Calculate optimum request method ##################### 
     def magic_request(document, env_http_host, options = {})
-
       target = options[:target]
       volume = options[:volume]
       request_options = []
@@ -95,7 +96,7 @@ module BlacklightCornellRequests
 
       # Get holdings
       self.holdings_data = get_holdings document unless self.holdings_data
-      Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} holdings data returned."+ Time.new.inspect
+      Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} holdings data returned."+ Time.new.inspect
 
       # Get item status and location for each item in each holdings record; store in working_items
       # We now have two item arrays! working_items (which eventually gets set in self.items) is a 
@@ -125,7 +126,7 @@ module BlacklightCornellRequests
 
       self.items = working_items
       self.document = document
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} working items processed. number of items: #{self.items.size} at"+ Time.new.inspect
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} working items processed. number of items: #{self.items.size} at"+ Time.new.inspect
 
       unless document.nil?
 
@@ -134,14 +135,14 @@ module BlacklightCornellRequests
         n = 0
         working_items.each do |item|
           n = n + 1
-          #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} prepare for deliv options for each item. (#{n})"+ Time.new.inspect
+          #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} prepare for deliv options for each item. (#{n})"+ Time.new.inspect
           services = get_delivery_options item, bd_params
-          #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} delivoptions for each item. (#{n}) (#{service.inspect})"+ Time.new.inspect
+          #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} delivoptions for each item. (#{n}) (#{service.inspect})"+ Time.new.inspect
           item[:services] = services
         end
         populate_document_values
         
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} services established for each item."+ Time.new.inspect
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} services established for each item."+ Time.new.inspect
         
         # handle pda
         patron_type = get_patron_type self.netid
@@ -178,12 +179,13 @@ module BlacklightCornellRequests
           
           self.request_options = request_options
           self.alternate_options = alternate_options
-          
+
+          populate_options self.service, request_options 
           return
         end
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} bd/pda processed."+ Time.new.inspect
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} bd/pda processed."+ Time.new.inspect
 
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
         # Determine whether this is a multi-volume thing or not (i.e, multi-copy)
         # They will be handled differently depending
         if self.document[:multivol_b] and volume.blank?
@@ -196,15 +198,30 @@ module BlacklightCornellRequests
             request_options.push *item[:services]
           end
           request_options = sort_request_options request_options
-        
         end
 
       end
-  
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
+
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
+      if  working_items.size < 1 
+        hld_entry = {:service => HOLD, :location => '', :status => ''}
+        request_options.push hld_entry
+      end
       if !target.blank?
         self.service = target
       elsif request_options.present?
+        # Don't present document delivery as the default option unless
+        # there's no other choice
+        if (request_options[0][:service] == DOCUMENT_DELIVERY) and 
+           (request_options.length > 1)
+
+           # There may be more than one DD option in the queue, so we have to
+           # check the whole list. (There really shouldn't be more than one,
+           # probably!)
+           index = request_options.index{ |o| o[:service] != DOCUMENT_DELIVERY }
+           request_options[0], request_options[index] = request_options[index], request_options[0]
+        end
+
         self.service = request_options[0][:service]
       else
         self.service = ASK_LIBRARIAN
@@ -213,27 +230,7 @@ module BlacklightCornellRequests
       request_options.push ( { :service => ASK_LIBRARIAN, :estimate => get_delivery_time( ASK_LIBRARIAN, nil ) } )
       populate_options self.service, request_options unless self.service == ASK_LIBRARIAN
 
-      if document[:format].present? and document[:format].include? 'Journal'
-        if self.alternate_options.nil?
-          self.alternate_options = []
-        end
-        # this article form cannot be prepopulated...
-        dd_link = '***REMOVED***?Action=10&Form=22'
-        dd_estimate = get_delivery_time DOCUMENT_DELIVERY, nil
-        if self.service != DOCUMENT_DELIVERY
-          dd_iids = { :itemid => 'document_delivery', :url => dd_link }
-          self.alternate_options.unshift ( { :service => DOCUMENT_DELIVERY, :iid => dd_iids, :estimate => dd_estimate } )
-        else
-          dd_iids = { :itemid => 'document_delivery', :url => dd_link }
-          if !self.request_options.nil?
-            self.alternate_options.unshift *self.request_options
-          end
-          self.request_options = [ { :service => DOCUMENT_DELIVERY, :iid => dd_iids, :estimate => dd_estimate } ]
-        end
-      end
-
       self.document = document
-
     end
     
     def populate_options target, request_options
@@ -409,14 +406,14 @@ module BlacklightCornellRequests
     # environments file.
     # holdings_param = { :bibid => <bibid>, :type => retrieve|retrieve_detail_raw}
     def get_holdings document
-      #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} entered get_holdings"
+      #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} entered get_holdings"
       holdings = document[:item_record_display].present? ? document[:item_record_display].map { |item| parseJSON item } : Array.new
-      #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
+      #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
 
       return nil unless self.bibid
 
       response = parseJSON(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/status_short/#{self.bibid}"))
-      #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} #{response.inspect}"
+      #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{response.inspect}"
       
       if response[self.bibid.to_s] and response[self.bibid.to_s][self.bibid.to_s] and response[self.bibid.to_s][self.bibid.to_s][:records]
         statuses = {}
@@ -430,7 +427,7 @@ module BlacklightCornellRequests
           end
         end
         
-        #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} #{call_numbers.inspect}"
+        #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{call_numbers.inspect}"
         location_seen = Hash.new
         location_ids = Array.new
         ## assume there is one holdings location per bibid
@@ -488,6 +485,7 @@ module BlacklightCornellRequests
             # logger.debug "sk274_log: " + circ_group_id.inspect
             # there might not be an entry in this table  
             if !circ_group_id.blank? 
+              circ_group_id[0]['circ_group_id'] = Float(circ_group_id[0]['circ_group_id'])
               if circ_group_id[0]['circ_group_id'] == 3 || circ_group_id[0]['circ_group_id'] == 19
                 ## include both group id if Olin or Uris
                 circ_group_id = [3, 19]
@@ -514,7 +512,7 @@ module BlacklightCornellRequests
         end
       end
       
-      #Rails.logger.debug "***REMOVED***_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
+      #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
       holdings
 
     end
@@ -550,6 +548,15 @@ module BlacklightCornellRequests
     # Check whether a loan type is non-circulating
     def nocirc_loan?(loan_code)
       [9].include? loan_code.to_i
+    end
+
+    # There is a specific nocirc loan typecode (9), but there could also be
+    # a note in the holdings record that the item doesn't circulate (even
+    # with a different typecode)
+    def noncirculating?(item)
+      return (item.key?('perm_location') and 
+             item['perm_location'].key?('name') and
+             item['perm_location']['name'].include? 'Non-Circulating')
     end
 
     # Locate and translate the actual item status from the text string in the holdings data
@@ -595,7 +602,7 @@ module BlacklightCornellRequests
 
     ############  Return eligible delivery services for request #################
     def delivery_services
-      [L2L, BD, HOLD, RECALL, PURCHASE, PDA, ILL, ASK_LIBRARIAN, ASK_CIRCULATION]
+      [L2L, BD, HOLD, RECALL, PURCHASE, PDA, ILL, ASK_LIBRARIAN, ASK_CIRCULATION, DOCUMENT_DELIVERY]
     end
 
     # Main entry point for determining which delivery services are available for a given item
@@ -605,12 +612,12 @@ module BlacklightCornellRequests
     # the fastest (i.e., the "best") delivery option.
     def get_delivery_options item, bd_params = {}
 
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} start of deliv options (#{item.inspect})"+ Time.new.inspect
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} start of deliv options (#{item.inspect})"+ Time.new.inspect
       patron_type = get_patron_type self.netid
-      # Rails.logger.info "sk274_debug: " + "#{self.netid}, #{patron_type}"
+      Rails.logger.info "es287_debug: " + "#{__FILE__}  #{__LINE__} #{self.netid}, #{patron_type}"
 
       if patron_type == 'cornell'
-        #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} get_cornell_delivery_options."+ Time.new.inspect
+        #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} get_cornell_delivery_options."+ Time.new.inspect
         options = get_cornell_delivery_options item, bd_params
       else
         # Rails.logger.info "sk274_debug: get guest options"
@@ -619,13 +626,13 @@ module BlacklightCornellRequests
 
       # Get delivery time estimates for each option
       options.each do |option|
-        #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} get_option_time.."+ Time.new.inspect
+        #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} get_option_time.."+ Time.new.inspect
         option[:estimate] = get_delivery_time(option[:service], option)
         option[:iid] = item
       end
       
       # Rails.logger.info "sk274_log: #{options.inspect}"
-      #Rails.logger.debug "***REMOVED***_log :#{__FILE__}:#{__LINE__} end of deliv options (#{options.inspect})"+ Time.new.inspect
+      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} end of deliv options (#{options.inspect})"+ Time.new.inspect
 
       #return sort_request_options options
       return options
@@ -641,7 +648,7 @@ module BlacklightCornellRequests
       # Rails.logger.info "sk274_log: type id: #{typeCode.inspect}, item loan type: #{item_loan_type.inspect}, status: #{item[:status].inspect}"
 
       request_options = []
-      if item_loan_type == 'nocirc'
+      if item_loan_type == 'nocirc' or noncirculating? item
         # if borrowDirect_available? bdParams
           # request_options.push({ :service => BD, :iid => [], :estimate => get_bd_delivery_time })
           # if target.blank?
@@ -704,6 +711,12 @@ module BlacklightCornellRequests
         request_options.push( {:service => ILL, :location => item[:location] } )
       end
 
+      # Document delivery should be available for all items - see DISCOVERYACCESS-1149
+      # But with a few exceptions!
+      if docdel_eligible? item
+        request_options.push( {:service => DOCUMENT_DELIVERY })
+      end
+
       return request_options
     end
 
@@ -713,7 +726,7 @@ module BlacklightCornellRequests
       item_loan_type = loan_type typeCode
       request_options = []
 
-      if item_loan_type == 'nocirc'
+      if item_loan_type == 'nocirc' or noncirculating? item
         # do nothing
       elsif item_loan_type == 'regular' and item[:status] == NOT_CHARGED
         request_options = [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
@@ -747,6 +760,32 @@ module BlacklightCornellRequests
     # Custom sort method: sort by delivery time estimate from a hash
     def sort_request_options request_options
       return request_options.sort_by { |option| option[:estimate][0] }
+    end
+
+    # Determine whether document delivery should be available for a given item
+    # This is based on library location and item format
+    def docdel_eligible? item
+
+      # Specifically exclude based on item_type
+      eligible_formats = ['Book', 
+                          'Image', 
+                          'Journal', 
+                          'Manuscript/Archive', 
+                          'Musical Recording', 
+                          'Musical Score', 
+                          'Non-musical Recording', 
+                          'Research Guide', 
+                          'Thesis']
+
+      item_formats = self.document[:format]
+      item_formats.each do |f|
+        return true if eligible_formats.include? f
+        # microform, is available via the annex but not from other locations
+        return true if f == 'Microform' and item[:perm_location][:code].include? 'anx'
+      end
+
+      return false
+
     end
 
     def get_delivery_time service, item_data, return_range = true
@@ -799,7 +838,7 @@ module BlacklightCornellRequests
           # for DD, it is the entire holdings data since it matters whether the item is available as a whole or not
           available = false
           self.all_items.each do |item|
-            if item[:status] == 'Not Charged'
+            if item[:status] == NOT_CHARGED
               available = true
               break
             end
@@ -845,7 +884,7 @@ module BlacklightCornellRequests
     def create_ill_link
 
       document = self.document
-      ill_link = '***REMOVED***?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
+      ill_link = ENV['ILLIAD_URL'] + '?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
       if self.isbn.present?
         isbns = self.isbn.join(',')
         ill_link = ill_link + "&rft.isbn=#{isbns}"
@@ -862,7 +901,7 @@ module BlacklightCornellRequests
       # using pub_info_display, which gloms everything together,
       # or by using the separate pubplace_display, publisher_display
       # and pub_date_display
-      pub_info_combo = document[:pub_info_display][0]
+      pub_info_combo = document[:pub_info_display][0] unless document[:pub_info_display].blank?
       pub_date = (document[:pub_date_display] ? document[:pub_date_display][0] : pub_info_combo)
       pub_info = (document[:publisher_display] ? document[:publisher_display][0] : pub_info_combo)
       pub_place = (document[:pubplace_display] ? document[:pubplace_display][0] : pub_info_combo)

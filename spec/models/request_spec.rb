@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'blacklight_cornell_requests/request'
+#require 'blacklight_cornell_requests/request'
 require 'blacklight_cornell_requests/borrow_direct'
 
 describe BlacklightCornellRequests::Request do
@@ -184,7 +184,8 @@ describe BlacklightCornellRequests::Request do
         context 'at least one item is available' do
 
           before { 
-            items << { :status => 'Not Charged' }
+            #items << { :status => 'Not Charged' }
+            items << { :status => 1 }
             request.all_items = items 
           }
           it 'returns a range of [2,2]' do
@@ -194,7 +195,7 @@ describe BlacklightCornellRequests::Request do
 
           it 'returns a single value of 2' do
             result = request.get_delivery_time 'document_delivery', {  }, false
-            expect(result).to equal(2)        
+            expect(result).to eq(2)
           end
 
         end
@@ -267,7 +268,6 @@ describe BlacklightCornellRequests::Request do
       it 'puts requests in order by delivery times' do
         request = FactoryGirl.create(:request)
         sorted_options = request.sort_request_options options
-        puts "sorted: #{sorted_options}"
         expect(sorted_options).to eq([{:estimate=>[1, 1]}, {:estimate=>[3, 5]}, {:estimate=>[4, 6]}])
       end
 

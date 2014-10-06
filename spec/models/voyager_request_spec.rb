@@ -4,9 +4,9 @@ require 'vcr'
 require 'james_monkeys'
 
 describe BlacklightCornellRequests::VoyagerRequest do
- VOYAGER_GET_HOLDS = "***REMOVED***/GetHoldingsService"
- VOYAGER_REQ_HOLDS = "***REMOVED***/SendPatronRequestService"
- MYACC_URL  = '***REMOVED***/MyAccountService'
+ VOYAGER_GET_HOLDS = ENV['DUMMY_GET_HOLDS']
+ VOYAGER_REQ_HOLDS = ENV['TEST_REQ_HOLDS']
+ MYACC_URL  = ENV['MY_ACCOUNT_URL']
   it "has a valid factory" do
     FactoryGirl.create(:request).should be_valid
   end
@@ -26,7 +26,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
   end
   def munch
   context "When the global global mode is not rest"  do
@@ -50,7 +50,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
       areq
     }
     it "reports success properly" do
-      expect( req.lastname).to eq('***REMOVED***')
+      expect( req.lastname).to eq(ENV['TEST_LASTNAME'])
       was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
       cassette = "hold_title_response_data_#{@bibid}"
       if (BlacklightCornellRequests::VoyagerRequest.rest())
@@ -90,7 +90,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     areq
   }
   it "reports success properly" do 
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
     cassette = "hold_response_data_#{@itemid}"
     if (BlacklightCornellRequests::VoyagerRequest.rest()) 
@@ -107,7 +107,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
   end
   it "reports error properly" do
-    expect( req.lastname).to eq('***REMOVED***')
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME'])
     VCR.use_cassette("hold_response_data_fail_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -119,7 +119,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
   end
 
   it "reports error properly for an invalid item id" do 
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     VCR.use_cassette("hold_response_data_fail_#{@itemid}") do
       req.itemid = @itemid + "xxx"
       req.mfhdid = @mfhdid
@@ -167,7 +167,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     areq
   }
   it "reports success properly" do 
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
     VCR.use_cassette("rest_hold_response_data_#{@itemid}") do
       req.itemid = @itemid;
@@ -181,7 +181,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(was)
   end
   it "reports error properly" do
-    expect( req.lastname).to eq('***REMOVED***')
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME'])
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
     VCR.use_cassette("rest_hold_response_data_fail_#{@itemid}") do
       req.itemid = @itemid
@@ -192,12 +192,12 @@ describe BlacklightCornellRequests::VoyagerRequest do
       req.place_hold_item!
     end
     expect( req.mtype).to_not eq 'success'
-    expect( req.bcode).to eq '8' 
+    expect( req.bcode).to eq '25' 
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(was)
   end
 
   it "reports error properly for an invalid item id" do 
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     req.itemid = @itemid + "xxx"
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
     VCR.use_cassette("rest_hold_response_data_fail_#{req.itemid}") do
@@ -239,7 +239,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
       areq
     }
     it "reports success properly" do
-      expect( req.lastname).to eq('***REMOVED***')
+      expect( req.lastname).to eq(ENV['TEST_LASTNAME'])
       was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
       cassette = "recall_title_response_data_#{@bibid}"
       if (BlacklightCornellRequests::VoyagerRequest.rest())
@@ -279,7 +279,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
   }
 
   it "reports success properly" do 
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     VCR.use_cassette("recall_response_data_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -291,7 +291,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
   end
 
   it "reports error properly" do 
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     VCR.use_cassette("recall_response_data_fail_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -302,7 +302,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     expect( req.mtype).to eq 'blocked' 
   end
   it "reports error properly for a invalid item id" do 
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     VCR.use_cassette("recall_response_data_fail_#{@itemid}") do
       req.itemid = @itemid + "xxx"
       req.mfhdid = @mfhdid
@@ -349,7 +349,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
   }
 
   it "reports success properly" do 
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
     cassette = "recall_response_data_#{@itemid}"
     if (BlacklightCornellRequests::VoyagerRequest.rest()) 
@@ -367,7 +367,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
   end
 
   it "reports error properly" do 
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
     VCR.use_cassette("rest_recall_response_data_fail_#{@itemid}") do
       req.itemid = @itemid
@@ -380,7 +380,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(false)
   end
   it "reports error properly for a invalid item id" do 
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     req.itemid = '9999999' + @itemid
     VCR.use_cassette("rest_recall_response_data_fail_#{req.itemid}") do
       req.mfhdid = @mfhdid
@@ -418,7 +418,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     areq
   }
   it "reports success properly"   do
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     VCR.use_cassette("callslip_title_response_data_#{@bibid}") do
       req.itemid = '';
       req.mfhdid = '';
@@ -454,7 +454,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     areq
   }
   it "reports success properly"   do
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     VCR.use_cassette("callslip_response_data_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -466,7 +466,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
   end
 
   it "reports error properly"   do
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     VCR.use_cassette("callslip_response_data_fail_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -477,7 +477,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     expect( req.mtype).to_not eq 'success' 
   end
   it "reports error properly for an invalid item id" do 
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     VCR.use_cassette("callslip_response_data_fail_#{@itemid}") do
       req.itemid = @itemid + "xxx"
       req.mfhdid = @mfhdid
@@ -524,7 +524,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     areq
   }
   it "reports success properly"   do
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     was = BlacklightCornellRequests::VoyagerRequest.use_rest(true)
     cassette =  "callslip_response_data_#{@itemid}"
     if (BlacklightCornellRequests::VoyagerRequest.rest()) 
@@ -543,7 +543,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
   end
 
   it "reports error properly"   do
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     VCR.use_cassette("rest_callslip_response_data_fail_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -554,7 +554,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     expect( req.mtype).to_not eq 'success' 
   end
   it "reports error properly for an invalid item id" do 
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     req.itemid = "1"  
     VCR.use_cassette("rest_callslip_response_data_fail_#{req.itemid}") do
       req.mfhdid = @mfhdid
@@ -588,7 +588,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     # Generate a callslip
     VCR.use_cassette("callslip_xy3response_data_to_cancel_#{@itemid}") do
       req.itemid = @itemid
@@ -620,7 +620,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     VCR.use_cassette("callslip_cancel_xy3response_data_#{@netid}_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -641,7 +641,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     # Generate a hold 
     VCR.use_cassette("hold_xyresponse_data_#{@itemid}") do
       req.itemid = @itemid
@@ -675,7 +675,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     VCR.use_cassette("hold_cancel_xy2response_data_#{@netid}_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -696,7 +696,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     # Generate a hold 
     VCR.use_cassette("recall_xyresponse_data_#{@itemid}") do
       req.itemid = @itemid
@@ -730,7 +730,7 @@ describe BlacklightCornellRequests::VoyagerRequest do
     VCR.use_cassette("patron_data_#{@netid}") do
       req.patron(@netid)
     end
-    expect( req.lastname).to eq('***REMOVED***') 
+    expect( req.lastname).to eq(ENV['TEST_LASTNAME']) 
     VCR.use_cassette("recall_cancel_xy2response_data_#{@netid}_#{@itemid}") do
       req.itemid = @itemid
       req.mfhdid = @mfhdid
@@ -757,7 +757,7 @@ private
      "21352",
      "189",
      "2014-09-27",
-     "***REMOVED***"]
+     "#{ENV['TEST_NETID']}"]
   end
   def callslipper_rest
   [
@@ -766,7 +766,7 @@ private
      "5641078",
      "181",
      "20140927",
-     "***REMOVED***"]
+     "#{ENV['TEST_NETID']}"]
   end
 
   # bibid,mfhdid,itemid, libraryid,date,netid
@@ -775,19 +775,19 @@ private
   #
   def requestholder
    [ "6873904", "7315768", "8751586",
-     "189", "2013-12-27", "***REMOVED***" ]
+     "189", "2013-12-27", "#{ENV['TEST_NETID']}" ]
   end
 
   def requestholder_title
 # 8073079 when the emperor was divine
 #   [ "5476547", "", "", # Freakonomics
    [ "8073079", "", "", # when the emperor was divine
-     "189", "2013-12-29", "***REMOVED***" ]
+     "189", "2013-12-29", "#{ENV['TEST_NETID']}" ]
   end
 
   def requestholder_rest
    [ "6873904", "7315768", "8751586",
-     "189", "20131227", "***REMOVED***" ]
+     "189", "20131227", "#{ENV['TEST_NETID']}" ]
   end
 
   @odd = 0
@@ -795,9 +795,9 @@ private
   def many_requestholder
    @odd = @odd==1 ? 0 : 1
    @odd==0 ?  [ "6873904", "7315768", "8751586",
-            "189", "2013-12-27", "***REMOVED***" ]
+            "189", "2013-12-27", "#{ENV['TEST_NETID']}" ]
    :       [ "3792882", "4367276", "5811637",
-           "189", "2013-12-27", "***REMOVED***" ]
+           "189", "2013-12-27", "#{ENV['TEST_NETID_2']}" ]
   end
 
 

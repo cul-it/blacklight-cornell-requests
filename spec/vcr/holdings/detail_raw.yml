@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: ***REMOVED***/holdings/retrieve_detail_raw/6665264
+    uri: <DUMMY_VOYAGER_HOLDINGS>/holdings/retrieve_detail_raw/6665264
     body:
       encoding: US-ASCII
       string: ''
@@ -52,10 +52,10 @@ http_interactions:
       encoding: US-ASCII
       string: ! '{"6665264":{"records":[{"bibid":"6665264","holding_id":"7109768","location_name":"afr","call_number":"Sound
         disc 24","shelving_title":"","summary_holdings":["1 sound disc"],"supplements":["1
-        DVD","1 booklet"],"indexes":[],"notes":[],"reproduction_note":"","urls":[],"item_count":2,"temp_locations":[],"item_status":{"itemdata":[{"href":"http://catalog-test.library.cornell.edu/vxws/record/6665264/items/8650519","itemid":"8650519","permLocation":"Africana
+        DVD","1 booklet"],"indexes":[],"notes":[],"reproduction_note":"","urls":[],"item_count":2,"temp_locations":[],"item_status":{"itemdata":[{"href":"<REST_URL>/record/6665264/items/8650519","itemid":"8650519","permLocation":"Africana
         Library (Africana Center)","location_id":"2","tempLocation":"","location":"Africana
         Library (Africana Center)","callNumber":"Sound disc 24","copy":"c. 1","itemBarcode":"31924110712761","enumeration":"","chron":"","year":"","caption":"","freeText":"","typeCode":"11","typeDesc":"3dayloan","tempType":"0","itemStatus":"Not
-        Charged","spineLabel":"","itemNote":"1","onReserve":"N","exclude_location_id":[149]},{"href":"http://catalog-test.library.cornell.edu/vxws/record/6665264/items/8687724","itemid":"8687724","permLocation":"Africana
+        Charged","spineLabel":"","itemNote":"1","onReserve":"N","exclude_location_id":[149]},{"href":"<REST_URL>/record/6665264/items/8687724","itemid":"8687724","permLocation":"Africana
         Library (Africana Center)","location_id":"2","tempLocation":"","location":"Africana
         Library (Africana Center)","callNumber":"Sound disc 24","copy":"c. 1","itemBarcode":"31924064067782","enumeration":"booklet
         to sound disc 24","chron":"","year":"","caption":"","freeText":"","typeCode":"22","typeDesc":"1hrloan","tempType":"0","itemStatus":"Not

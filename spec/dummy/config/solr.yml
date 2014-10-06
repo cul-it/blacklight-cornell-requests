@@ -11,13 +11,13 @@
 # how to start up solr, generally for automated testing.
 
 development:
-  url: ***REMOVED***
+  url: <% ENV['DUMMY_SOLR_URL'] %>
 
 test: &test
-  url: ***REMOVED***
+  url: <% ENV['DUMMY_SOLR_URL'] %>
 
 production:
-  url: ***REMOVED***
+  url: <% ENV['DUMMY_SOLR_URL'] %>
 
 cucumber:
   <<: *test

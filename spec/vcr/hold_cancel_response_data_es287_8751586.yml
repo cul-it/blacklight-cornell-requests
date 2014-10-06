@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: ***REMOVED***/SendPatronRequestService?patronHomeUbId=1@***REMOVED***&patronId=***REMOVED***
+    uri: <REST_URL>/SendPatronRequestService?patronHomeUbId=1@<CORNELL_DB>&patronId=<TEST_USER_ID>
     body:
       encoding: US-ASCII
       string: ''
