@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: ***REMOVED***?netid=xxxxadp78
+    uri: <NETID_URL>?netid=xxxxadp78
     body:
       encoding: US-ASCII
       string: ''

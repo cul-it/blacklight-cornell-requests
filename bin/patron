@@ -29,9 +29,9 @@ class Hold
     require 'httpclient'
     require 'voyager_request'
   end
-  VOYAGER_REQ_HOLDS = "***REMOVED***/SendPatronRequestService"
-  HOLDINGS_URL      = "***REMOVED***/GetHoldingsService"
-  MYACC_URL  = '***REMOVED***/MyAccountService'
+  VOYAGER_REQ_HOLDS = "#{ENV['REST_URL']}/SendPatronRequestService"
+  HOLDINGS_URL      = "#{ENV['REST_URL']}/GetHoldingsService"
+  MYACC_URL  = "#{ENV['REST_URL']}/MyAccountService"
 
   def usage(s)
     $stderr.puts(s)

@@ -2,12 +2,12 @@
 http_interactions:
 - request:
     method: put
-    uri: ***REMOVED***/record/8073079/hold?patron=***REMOVED***&patron_homedb=1@***REMOVED***
+    uri: <REST_URL>/record/8073079/hold?patron=<TEST_USER_ID>&patron_homedb=1@<VOYAGER_DB>
     body:
       encoding: US-ASCII
       string: ! "<?xml version='1.0' encoding='UTF-8'?>\n<hold-title-parameters>        <pickup-location>189</pickup-location>\n
         \       <last-interest-date>20131229</last-interest-date>\n        <comment></comment>\n
-        \       <dbkey>1@***REMOVED***</dbkey>\n</hold-title-parameters>"
+        \       <dbkey>1@<VOYAGER_DB></dbkey>\n</hold-title-parameters>"
     headers:
       Content-Type:
       - application/x-www-form-urlencoded

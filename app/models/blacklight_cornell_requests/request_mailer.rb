@@ -4,7 +4,7 @@ module BlacklightCornellRequests
     
     default :from => "culsearch@cornell.edu"
     default :subject => "Purchase Request"
-    default :to => "***REMOVED***"
+    default :to => "aa19@cornell.edu"
     
     def email_request(user, params)
       @params = params

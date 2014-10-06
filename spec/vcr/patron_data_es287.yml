@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: ***REMOVED***?netid=***REMOVED***
+    uri: <NETID_URL>?netid=<TEST_NETID>
     body:
       encoding: US-ASCII
       string: ''
@@ -32,17 +32,17 @@ http_interactions:
       encoding: US-ASCII
       string: ! '{
 
-        "pid": "***REMOVED***",
+        "pid": "<TEST_USER_ID>",
 
-        "netid": "***REMOVED***",
+        "netid": "<TEST_NETID>",
 
-        "bc": "***REMOVED***",
+        "bc": "<TEST_USER_BARCODE>",
 
         "inid": "001433955",
 
-        "last": "***REMOVED***",
+        "last": "<TEST_LASTNAME>",
 
-        "given": "***REMOVED***",
+        "given": "<TEST_FIRSTNAME>",
 
         "host": "database",
 

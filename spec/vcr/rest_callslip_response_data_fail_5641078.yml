@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: put
-    uri: ***REMOVED***/record/3623453/items/5641078/callslip?patron=***REMOVED***&patron_homedb=1@***REMOVED***
+    uri: <REST_URL>/record/3623453/items/5641078/callslip?patron=<TEST_USER_ID>&patron_homedb=1@<VOYAGER_DB>
     body:
       encoding: US-ASCII
       string: ! '<?xml version="1.0" encoding="UTF-8"?>
@@ -11,7 +11,7 @@ http_interactions:
 
         <comment></comment>
 
-        <dbkey>1@***REMOVED***</dbkey>
+        <dbkey>1@<VOYAGER_DB></dbkey>
 
         <reqinput field="1"></reqinput>
 

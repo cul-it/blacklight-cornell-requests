@@ -25,9 +25,9 @@ class MiniTest::Unit::TestCase
 end
 
 class VoyagerRequestTestCase < MiniTest::Unit::TestCase
-  VOYAGER_GET_HOLDS = ENV['DUMMY_GET_HOLDS']
-  VOYAGER_REQ_HOLDS = ENV['TEST_REQ_HOLDS']
-  MYACC_URL  = ENV['MY_ACCOUNT_URL']
+  VOYAGER_GET_HOLDS = "#{ENV['REST_URL']}/GetHoldingsService"
+  VOYAGER_REQ_HOLDS = "#{ENV['REST_URL']}/SendPatronRequestService"
+  MYACC_URL  = "#{ENV['REST_URL']}/MyAccountService"
   include BlacklightCornellRequests
 end
 
@@ -39,6 +39,15 @@ VCR.configure do |c|
   c.cassette_library_dir = 'test/fixtures/vcr_cassettes'
   c.default_cassette_options = {:re_record_interval => 720.days}
   c.hook_into :webmock # or :fakeweb
+  c.filter_sensitive_data('<REST_URL>')  { "#{ENV['REST_URL']}"}
+  c.filter_sensitive_data('<VOYAGER_DB>') { "#{ENV['VOYAGER_DB']}"}
+  c.filter_sensitive_data('<DUMMY_VOYAGER_HOLDINGS>') { "#{ENV['DUMMY_VOYAGER_HOLDINGS']}"}
+  c.filter_sensitive_data('<TEST_LASTNAME>') { "#{ENV['TEST_LASTNAME']}"}
+  c.filter_sensitive_data('<TEST_USER_BARCODE>') { "#{ENV['TEST_USER_BARCODE']}"}
+  c.filter_sensitive_data('<TEST_USER_ID>') { "#{ENV['TEST_USER_ID']}"}
+  c.filter_sensitive_data('<TEST_NETID>') { "#{ENV['TEST_NETID']}"}
+  c.filter_sensitive_data('<NETID_URL>') { "#{ENV['NETID_URL']}"}
+  c.filter_sensitive_data('<TEST_FIRSTNAME>') { "#{ENV['TEST_FIRSTNAME']}"}
 end
 
 MiniTest::Unit.autorun

@@ -2,7 +2,7 @@ module BlacklightCornellRequests
 
   class VoyagerRequest
 
-    # Most of this code is by Rick ***REMOVED***, ***REMOVED***
+    # Most of this code is by Rick Silterra, es287
 
     require 'nokogiri'
 
@@ -12,7 +12,7 @@ module BlacklightCornellRequests
     NETID_URL = ENV['NETID_URL']
     COOKIE_STORE = ENV['COOKIE_STORE']
     DB     = ENV['VOYAGER_DB']
-    DB_ID     = ENV['VOYAGER_DB_ID']
+    DB_ID     = "1@#{DB}"
     REST_URL  = ENV['REST_URL']
 
 

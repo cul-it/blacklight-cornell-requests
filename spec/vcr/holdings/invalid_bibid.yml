@@ -2,7 +2,7 @@
 http_interactions:
 - request:
     method: get
-    uri: ***REMOVED***/holdings/status_short/500000000
+    uri: <DUMMY_VOYAGER_HOLDINGS>/holdings/status_short/500000000
     body:
       encoding: UTF-8
       string: ''
