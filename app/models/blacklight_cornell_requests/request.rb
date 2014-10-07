@@ -262,7 +262,6 @@ module BlacklightCornellRequests
       ## if the field is blank, use 'z' to rank low
       ## record number of occurances for each of the 
       items.each do |item|
-        Rails.logger.warn "mjc12test: item: #{item}"
         
         # item[:numeric_enumeration] = item[:item_enum][/\d+/]  
         enums = item[:item_enum].scan(/\d+/)  
@@ -313,7 +312,7 @@ module BlacklightCornellRequests
           item[:year_compare] = item[:year]
         end
       end
-      Rails.logger.warn "mjc12test: items: #{items}"
+
       ## sort based on number of occurances of each of three fields
       ## when tied, year has highest weight followed by enum
       sorted_items = {}
