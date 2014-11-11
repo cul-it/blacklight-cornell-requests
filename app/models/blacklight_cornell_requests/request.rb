@@ -724,37 +724,23 @@ module BlacklightCornellRequests
     def get_guest_delivery_options item
       typeCode = (item[:temp_item_type_id].blank? or item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
-      request_options = []
 
-      if item_loan_type == 'nocirc' or noncirculating? item
-        # do nothing
-      elsif item_loan_type == 'regular' and item[:status] == NOT_CHARGED
-        request_options = [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
-      elsif item_loan_type == 'regular' and item[:status] == CHARGED
-        request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
-      elsif item_loan_type == 'regular' and item[:status] == MISSING
-        ## do nothing
-      elsif item_loan_type == 'regular' and item[:status] == LOST
-        ## do nothing
-      elsif item_loan_type == 'day' and item[:status] == NOT_CHARGED
-        request_options = [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
-      elsif item_loan_type == 'day' and item[:status] == CHARGED
-        request_options = [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
-      elsif item_loan_type == 'day' and item[:status] == MISSING
-        ## do nothing
-      elsif item_loan_type == 'day' and item[:status] == LOST
-        ## do nothing
-      elsif item_loan_type == 'minute' and item[:status] == NOT_CHARGED
-        request_options = [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
-      elsif item_loan_type == 'minute' and item[:status] == CHARGED
-        request_options = [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
-      elsif item_loan_type == 'minute' and item[:status] == MISSING
-        ## do nothing
-      elsif item_loan_type == 'minute' and item[:status] == LOST
-        ## do nothing
+      if noncirculating? item 
+        []
+      elsif item[:status] == NOT_CHARGED and (item_loan_type == 'regular' or item_loan_type == 'day') 
+        [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
+      elsif item[:status] == CHARGED and (item_loan_type == 'regular' or item_loan_type == 'day')
+        [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
+      elsif item_loan_type == 'minute' and (item[:status] == NOT_CHARGED or item[:status] == CHARGED)
+        [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
+      else
+        # default case covers:
+        # item_loan_type == 'nocirc' 
+        # item[:status] == MISSING or item[:status] == LOST
+        # anything else
+        []
       end
 
-      return request_options
     end
 
     # Custom sort method: sort by delivery time estimate from a hash
