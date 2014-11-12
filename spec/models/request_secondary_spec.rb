@@ -299,7 +299,7 @@ describe BlacklightCornellRequests::Request do
         expect(request.item_status(R::DAMAGED)).to eq(R::CHARGED)   
         expect(request.item_status(R::WITHDRAWN)).to eq(R::CHARGED) 
         expect(request.item_status(R::ON_HOLD)).to eq(R::CHARGED)  
-  
+
       end
 
       it "returns MISSING for missing items" do 
@@ -322,7 +322,18 @@ describe BlacklightCornellRequests::Request do
 
     end #describe item status
  
+    describe "sort_request_options" do
+      
+      let (:request)  { FactoryGirl.create(:request) }
 
+      it "sorts options from slowest to fastest delivery time" do
+        options = [{:estimate => [7]}, {:estimate => [3]}, 
+                   {:estimate => [10]}, {:estimate => [5]}]
+        sorted_options = request.sort_request_options options
+        expect(sorted_options[0][:estimate][0]).to eq(3)
+        expect(sorted_options[3][:estimate][0]).to eq(10)
+      end
+    end
 
   end # describe secondary functions
 
