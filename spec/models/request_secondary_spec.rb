@@ -273,7 +273,55 @@ describe BlacklightCornellRequests::Request do
 
     end #describe sort request options
 
+    describe "item_status" do
 
+      let (:request)  { FactoryGirl.create(:request) }
+      R = BlacklightCornellRequests::Request
+
+      it "returns NOT_CHARGED for not-charged items" do
+        expect(request.item_status(R::NOT_CHARGED)).to eq(R::NOT_CHARGED)
+        expect(request.item_status(R::DISCHARGED)).to eq(R::NOT_CHARGED)
+        expect(request.item_status(R::CATALOG_REVIEW)).to eq(R::NOT_CHARGED)
+        expect(request.item_status(R::CIRCULATION_REVIEW)).to eq(R::NOT_CHARGED)  
+        expect(request.item_status(R::IN_TRANSIT)).to eq(R::NOT_CHARGED)   
+        expect(request.item_status(R::IN_TRANSIT_DISCHARGED)).to eq(R::NOT_CHARGED) 
+      end
+
+      it "returns CHARGED for charged items" do
+        expect(request.item_status(R::CHARGED)).to eq(R::CHARGED)
+        expect(request.item_status(R::RENEWED)).to eq(R::CHARGED)
+        expect(request.item_status(R::CALL_SLIP_REQUEST)).to eq(R::CHARGED)
+        expect(request.item_status(R::RECALL_REQUEST)).to eq(R::CHARGED)
+        expect(request.item_status(R::HOLD_REQUEST)).to eq(R::CHARGED)
+        expect(request.item_status(R::IN_TRANSIT_ON_HOLD)).to eq(R::CHARGED)
+        expect(request.item_status(R::OVERDUE)).to eq(R::CHARGED)   
+        expect(request.item_status(R::CLAIMS_RETURNED)).to eq(R::CHARGED)   
+        expect(request.item_status(R::DAMAGED)).to eq(R::CHARGED)   
+        expect(request.item_status(R::WITHDRAWN)).to eq(R::CHARGED) 
+        expect(request.item_status(R::ON_HOLD)).to eq(R::CHARGED)  
+  
+      end
+
+      it "returns MISSING for missing items" do 
+        expect(request.item_status(R::MISSING)).to eq(R::MISSING)  
+      end
+
+      it "returns LOST for lost items" do
+        expect(request.item_status(R::LOST_LIBRARY_APPLIED)).to eq(R::LOST)
+        expect(request.item_status(R::LOST_SYSTEM_APPLIED)).to eq(R::LOST)
+        expect(request.item_status(R::LOST)).to eq(R::LOST)
+      end
+
+      it "returns AT_BINDERY for items at bindery" do 
+        expect(request.item_status(R::AT_BINDERY)).to eq(R::AT_BINDERY)
+      end
+
+      it "echoes an unidentifiable status" do 
+        expect(request.item_status('asdfasdf')).to eq('asdfasdf')
+      end
+
+    end #describe item status
+ 
 
 
   end # describe secondary functions
