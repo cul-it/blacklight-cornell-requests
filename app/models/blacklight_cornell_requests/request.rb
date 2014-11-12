@@ -534,45 +534,40 @@ module BlacklightCornellRequests
              item['perm_location']['name'].include? 'Non-Circulating')
     end
 
-    # Locate and translate the actual item status from the text string in the holdings data
+    # Locate and translate the actual item status 
+    # from the text string in the holdings data
     def item_status item_status
-      if item_status == NOT_CHARGED
-        NOT_CHARGED
-      elsif item_status == DISCHARGED
-        NOT_CHARGED
-      elsif item_status == CATALOG_REVIEW
-        NOT_CHARGED
-      elsif item_status == CIRCULATION_REVIEW
-        NOT_CHARGED
-      elsif item_status == CHARGED
-        CHARGED
-      elsif item_status == RENEWED
-        CHARGED
-      elsif item_status == CALL_SLIP_REQUEST or item_status == RECALL_REQUEST or item_status == HOLD_REQUEST
-        CHARGED
-      elsif item_status == MISSING
-        MISSING
-      elsif item_status == LOST_LIBRARY_APPLIED or item_status == LOST_SYSTEM_APPLIED
-        LOST
-      elsif item_status == IN_TRANSIT_ON_HOLD
-        CHARGED
-      elsif item_status == IN_TRANSIT or item_status == IN_TRANSIT_DISCHARGED
-        NOT_CHARGED
-      elsif item_status == ON_HOLD
-        CHARGED
-      elsif item_status == OVERDUE
-        CHARGED
-      elsif item_status == CLAIMS_RETURNED
-        CHARGED
-      elsif item_status == DAMAGED
-        CHARGED
-      elsif item_status == WITHDRAWN
-        CHARGED
-      elsif item_status == AT_BINDERY
-        AT_BINDERY
-      else
-        item_status
+
+      case item_status
+        when DISCHARGED,
+             CATALOG_REVIEW,
+             CIRCULATION_REVIEW,
+             IN_TRANSIT,
+             IN_TRANSIT_DISCHARGED
+          return NOT_CHARGED
+
+        when RENEWED,
+             CALL_SLIP_REQUEST,
+             RECALL_REQUEST,
+             HOLD_REQUEST,
+             IN_TRANSIT_ON_HOLD,
+             OVERDUE,
+             CLAIMS_RETURNED,
+             DAMAGED,
+             WITHDRAWN,
+             ON_HOLD
+          return CHARGED
+
+        when LOST_LIBRARY_APPLIED,
+             LOST_SYSTEM_APPLIED
+          return LOST
+
+        else
+          # covers self-returning statuses 
+          # like LOST, MISSING, AT_BINDERY, CHARGED, NOT_CHARGED
+          return item_status
       end
+
     end
 
     ############  Return eligible delivery services for request #################
