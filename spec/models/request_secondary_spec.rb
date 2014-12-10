@@ -8,7 +8,7 @@ describe BlacklightCornellRequests::Request do
 
 
   ################### Functions outside the main routine #######################
-  describe "Secondary functions" do
+  describe "Secondary request functions" do
 
     # make_voyager_request
     # create_ill_link
@@ -56,7 +56,7 @@ describe BlacklightCornellRequests::Request do
         end
       end
 
-    end
+    end #describe populate document values
 
     describe 'get_delivery_time' do
 
@@ -259,7 +259,7 @@ describe BlacklightCornellRequests::Request do
 
       end
 
-    end
+    end #describe get delivery time
 
     describe 'sort_request_options' do 
 
@@ -271,13 +271,72 @@ describe BlacklightCornellRequests::Request do
         expect(sorted_options).to eq([{:estimate=>[1, 1]}, {:estimate=>[3, 5]}, {:estimate=>[4, 6]}])
       end
 
+    end #describe sort request options
+
+    describe "item_status" do
+
+      let (:request)  { FactoryGirl.create(:request) }
+      R = BlacklightCornellRequests::Request
+
+      it "returns NOT_CHARGED for not-charged items" do
+        expect(request.item_status(R::NOT_CHARGED)).to eq(R::NOT_CHARGED)
+        expect(request.item_status(R::DISCHARGED)).to eq(R::NOT_CHARGED)
+        expect(request.item_status(R::CATALOG_REVIEW)).to eq(R::NOT_CHARGED)
+        expect(request.item_status(R::CIRCULATION_REVIEW)).to eq(R::NOT_CHARGED)  
+        expect(request.item_status(R::IN_TRANSIT)).to eq(R::NOT_CHARGED)   
+        expect(request.item_status(R::IN_TRANSIT_DISCHARGED)).to eq(R::NOT_CHARGED) 
+      end
+
+      it "returns CHARGED for charged items" do
+        expect(request.item_status(R::CHARGED)).to eq(R::CHARGED)
+        expect(request.item_status(R::RENEWED)).to eq(R::CHARGED)
+        expect(request.item_status(R::CALL_SLIP_REQUEST)).to eq(R::CHARGED)
+        expect(request.item_status(R::RECALL_REQUEST)).to eq(R::CHARGED)
+        expect(request.item_status(R::HOLD_REQUEST)).to eq(R::CHARGED)
+        expect(request.item_status(R::IN_TRANSIT_ON_HOLD)).to eq(R::CHARGED)
+        expect(request.item_status(R::OVERDUE)).to eq(R::CHARGED)   
+        expect(request.item_status(R::CLAIMS_RETURNED)).to eq(R::CHARGED)   
+        expect(request.item_status(R::DAMAGED)).to eq(R::CHARGED)   
+        expect(request.item_status(R::WITHDRAWN)).to eq(R::CHARGED) 
+        expect(request.item_status(R::ON_HOLD)).to eq(R::CHARGED)  
+
+      end
+
+      it "returns MISSING for missing items" do 
+        expect(request.item_status(R::MISSING)).to eq(R::MISSING)  
+      end
+
+      it "returns LOST for lost items" do
+        expect(request.item_status(R::LOST_LIBRARY_APPLIED)).to eq(R::LOST)
+        expect(request.item_status(R::LOST_SYSTEM_APPLIED)).to eq(R::LOST)
+        expect(request.item_status(R::LOST)).to eq(R::LOST)
+      end
+
+      it "returns AT_BINDERY for items at bindery" do 
+        expect(request.item_status(R::AT_BINDERY)).to eq(R::AT_BINDERY)
+      end
+
+      it "echoes an unidentifiable status" do 
+        expect(request.item_status('asdfasdf')).to eq('asdfasdf')
+      end
+
+    end #describe item status
+ 
+    describe "sort_request_options" do
+      
+      let (:request)  { FactoryGirl.create(:request) }
+
+      it "sorts options from slowest to fastest delivery time" do
+        options = [{:estimate => [7]}, {:estimate => [3]}, 
+                   {:estimate => [10]}, {:estimate => [5]}]
+        sorted_options = request.sort_request_options options
+        expect(sorted_options[0][:estimate][0]).to eq(3)
+        expect(sorted_options[3][:estimate][0]).to eq(10)
+      end
     end
 
+  end # describe secondary functions
 
 
 
-  end
-
-
-
-end
+end #describe request
