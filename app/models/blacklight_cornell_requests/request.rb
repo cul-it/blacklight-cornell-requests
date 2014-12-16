@@ -473,6 +473,12 @@ module BlacklightCornellRequests
                 location_seen[location] = exclude_location_list
                 holding[:exclude_location_id] = exclude_location_list
                 next
+              elsif circ_group_id[0]['circ_group_id'] == 14 
+                ## skip law library next time
+                # logger.debug "sk274_log: Library detected, skipping"
+                location_seen[location] = exclude_location_list
+                holding[:exclude_location_id] = exclude_location_list
+                next
               end
               # logger.debug "sk274_log: circ group id: " + circ_group_id.inspect
               locs = Circ_policy_locs.select('location_id').where( :circ_group_id =>  circ_group_id, :pickup_location => 'Y' )
