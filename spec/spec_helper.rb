@@ -4,6 +4,9 @@ require 'webmock/rspec'
 require 'vcr'
 require "factory_girl_rails"
 require 'blacklight'
+require 'dotenv'
+Dotenv.load
+
 FactoryGirl.find_definitions
 
 ENV['RAILS_ENV'] ||= 'test'
