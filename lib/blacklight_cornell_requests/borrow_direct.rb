@@ -7,9 +7,9 @@ module BlacklightCornellRequests
     # Main function to call. This exists mostly to wrap the meat of the pazpar2 querying within a begin/rescue block
     # params = { :isbn, :title } - the two parameters that we're using to query Borrow Direct availabiilty.
     # ISBN is best, but title will work if ISBN isn't available.
-    def borrowDirect_available? params
+    def available_in_bd? params
 
-      return _borrowDirect_available? params
+      return true
 
     end
 

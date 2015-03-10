@@ -947,7 +947,7 @@ module BlacklightCornellRequests
         return @bd
       else
         begin
-          @bd = _borrowDirect_available? params
+          @bd = available_in_bd? params
           return  @bd
         rescue => e
           Rails.logger.info "Error checking borrow direct availability: exception #{e.class.name} : #{e.message}"
