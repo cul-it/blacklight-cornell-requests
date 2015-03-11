@@ -1,15 +1,52 @@
-require 'zoom'
+require 'dotenv'
+require 'borrow_direct'
 
 module BlacklightCornellRequests
 
-  module BorrowDirect
+  module CULBorrowDirect
 
-    # Main function to call. This exists mostly to wrap the meat of the pazpar2 querying within a begin/rescue block
-    # params = { :isbn, :title } - the two parameters that we're using to query Borrow Direct availabiilty.
+    # Determine Borrow Direct availability for an ISBN or title
+    # params = { :isbn, :title }
     # ISBN is best, but title will work if ISBN isn't available.
-    def available_in_bd? params
+    def self.available_in_bd? netid, params
 
-      return true
+      # Set up params for BorrowDirect gem
+      BorrowDirect::Defaults.library_symbol = "CORNELL"
+      BorrowDirect::Defaults.find_item_patron_barcode = patron_barcode(netid)
+      BorrowDirect::Defaults.timeout = 15 # (seconds)
+
+      ####### possible FALSE test isbn?
+      #response = BorrowDirect::FindItem.new.find(:isbn => "1212121212")
+
+      response = nil
+      # This block can throw timeout errors if BD takes to long to respond
+      begin
+        if !params[:isbn].nil?
+          response = BorrowDirect::FindItem.new.find(:isbn => params[:isbn])
+        end
+
+        return response.requestable?
+
+      rescue BorrowDirect::HttpTimeoutError
+        Rails.logger.warn 'Requests: Borrow Direct check timed out'
+
+      end
+
+    end
+
+    # Use the external netid lookup script to figure out the patron's barcode
+    # (this might duplicate what's being done in the voyager_request patron method)
+    def self.patron_barcode(netid)
+
+      uri = URI.parse(ENV['NETID_URL'] + "?netid=#{netid}")
+      response = Net::HTTP.get_response(uri)
+
+      # Make sure that we got a real result. Unfortunately, the CGI doesn't
+      # return a nice error code
+      return nil if response.body.include? 'Software error'
+
+      # Return the barcode
+      JSON.parse(response.body)['bc']
 
     end
 
