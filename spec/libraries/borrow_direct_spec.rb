@@ -24,6 +24,22 @@ describe BlacklightCornellRequests::CULBorrowDirect do
       end
     end
 
+    it "returns true for an available title (phrase search)" do
+      bd.stub(:patron_barcode).and_return(ENV['TEST_USER_BARCODE'])
+      VCR.use_cassette('bd_title_success') do
+        response = bd.available_in_bd?('abcde', {:title =>'Masscult and Midcult'})
+        expect(response).to be true
+      end
+    end
+
+    it "returns false for an unavailable title (phrase search)" do
+      bd.stub(:patron_barcode).and_return(ENV['TEST_USER_BARCODE'])
+      VCR.use_cassette('bd_title_failure') do
+        response = bd.available_in_bd?('abcde', {:title =>'ZVBXRPL'})
+        expect(response).to be false
+      end
+    end
+
   end
 
   describe ".patron_barcode" do
