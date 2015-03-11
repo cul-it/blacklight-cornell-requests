@@ -11,7 +11,10 @@ module BlacklightCornellRequests
     def self.available_in_bd? netid, params
 
       # Set up params for BorrowDirect gem
-      #BorrowDirect::Defaults.api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
+      if Rails.env.production?
+        # if this isn't specified, defaults to BD test database
+        BorrowDirect::Defaults.api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
+      end
       BorrowDirect::Defaults.library_symbol = "CORNELL"
       BorrowDirect::Defaults.find_item_patron_barcode = patron_barcode(netid)
       BorrowDirect::Defaults.timeout = 15 # (seconds)
@@ -27,7 +30,7 @@ module BlacklightCornellRequests
         elsif !params[:title].nil?
           response = BorrowDirect::FindItem.new.find(:phrase => params[:title])
         end
-        
+
         return response.requestable?
 
       rescue BorrowDirect::HttpTimeoutError
