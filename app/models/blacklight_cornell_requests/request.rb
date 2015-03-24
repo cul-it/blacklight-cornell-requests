@@ -1,5 +1,6 @@
 require 'blacklight_cornell_requests/cornell'
-require 'blacklight_cornell_requests/borrow_direct'
+#require 'blacklight_cornell_requests/borrow_direct'
+require 'borrow_direct'
 
 module BlacklightCornellRequests
   class Request
@@ -949,11 +950,12 @@ module BlacklightCornellRequests
 
 
     def xxborrowDirect_available? params
+
       if !@bd.nil?
         return @bd
       else
         begin
-          @bd = available_in_bd? params
+          @bd = available_in_bd?(self.netid, params)
           return  @bd
         rescue => e
           Rails.logger.info "Error checking borrow direct availability: exception #{e.class.name} : #{e.message}"
@@ -961,6 +963,57 @@ module BlacklightCornellRequests
           return @bd
         end
       end
+    end
+
+    # Determine Borrow Direct availability for an ISBN or title
+    # params = { :isbn, :title }
+    # ISBN is best, but title will work if ISBN isn't available.
+    def available_in_bd? netid, params
+
+      # Set up params for BorrowDirect gem
+      if Rails.env.production?
+        # if this isn't specified, defaults to BD test database
+        BorrowDirect::Defaults.api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
+      end
+      BorrowDirect::Defaults.library_symbol = "CORNELL"
+      BorrowDirect::Defaults.find_item_patron_barcode = patron_barcode(netid)
+      BorrowDirect::Defaults.timeout = 15 # (seconds)
+
+      ####### possible FALSE test isbn?
+      #response = BorrowDirect::FindItem.new.find(:isbn => "1212121212")
+
+      response = nil
+      # This block can throw timeout errors if BD takes to long to respond
+      begin
+        if !params[:isbn].nil?
+          response = BorrowDirect::FindItem.new.find(:isbn => params[:isbn])
+        elsif !params[:title].nil?
+          response = BorrowDirect::FindItem.new.find(:phrase => params[:title])
+        end
+Rails.logger.warn "mjc12test: response: #{response.requestable?}"
+        return response.requestable?
+
+      rescue BorrowDirect::HttpTimeoutError
+        Rails.logger.warn 'Requests: Borrow Direct check timed out'
+
+      end
+
+    end
+
+    # Use the external netid lookup script to figure out the patron's barcode
+    # (this might duplicate what's being done in the voyager_request patron method)
+    def patron_barcode(netid)
+
+      uri = URI.parse(ENV['NETID_URL'] + "?netid=#{netid}")
+      response = Net::HTTP.get_response(uri)
+
+      # Make sure that we got a real result. Unfortunately, the CGI doesn't
+      # return a nice error code
+      return nil if response.body.include? 'Software error'
+
+      # Return the barcode
+      JSON.parse(response.body)['bc']
+
     end
 
   end

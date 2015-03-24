@@ -5,6 +5,13 @@ module BlacklightCornellRequests
 
   module CULBorrowDirect
 
+    ######################## NOTE: THIS LIBRARY IS NO LONGER IN USE ##################
+    #
+    # The two functions below have been moved into request.rb. This whole file can
+    # probably be deleted sooner or later (along with its rspec file).
+    #
+    ##################################################################################
+
     # Determine Borrow Direct availability for an ISBN or title
     # params = { :isbn, :title }
     # ISBN is best, but title will work if ISBN isn't available.
