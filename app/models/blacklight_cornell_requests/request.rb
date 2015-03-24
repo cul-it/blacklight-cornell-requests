@@ -156,7 +156,7 @@ module BlacklightCornellRequests
           pda_entry = { :service => PDA, :iid => iids, :estimate => get_delivery_time(PDA, nil) }
 
           bd_entry = nil
-          if xxborrowDirect_available? bd_params
+          if available_in_bd? self.netid, bd_params
             bd_entry = { :service => BD, :iid => {}, :estimate => get_delivery_time(BD, nil) }
           end
           ill_entry = { :service => ILL, :iid => {}, :estimate => get_delivery_time(ILL, nil) }
@@ -638,7 +638,7 @@ module BlacklightCornellRequests
       #   item status is charged, lost, or missing
       if (item_loan_type == 'nocirc' or noncirculating? item) or
         (! [AT_BINDERY, NOT_CHARGED].include?(item[:status]))
-        if xxborrowDirect_available? params
+        if available_in_bd? self.netid, params
           request_options.push( {:service => BD, :location => item[:location] } )
         end
       end
@@ -949,21 +949,21 @@ module BlacklightCornellRequests
     end
 
 
-    def xxborrowDirect_available? params
-
-      if !@bd.nil?
-        return @bd
-      else
-        begin
-          @bd = available_in_bd?(self.netid, params)
-          return  @bd
-        rescue => e
-          Rails.logger.info "Error checking borrow direct availability: exception #{e.class.name} : #{e.message}"
-          @bd = false
-          return @bd
-        end
-      end
-    end
+    # def xxborrowDirect_available? params
+    #
+    #   if !@bd.nil?
+    #     return @bd
+    #   else
+    #     begin
+    #       @bd = available_in_bd?(self.netid, params)
+    #       return  @bd
+    #     rescue => e
+    #       Rails.logger.info "Error checking borrow direct availability: exception #{e.class.name} : #{e.message}"
+    #       @bd = false
+    #       return @bd
+    #     end
+    #   end
+    # end
 
     # Determine Borrow Direct availability for an ISBN or title
     # params = { :isbn, :title }
@@ -990,7 +990,7 @@ module BlacklightCornellRequests
         elsif !params[:title].nil?
           response = BorrowDirect::FindItem.new.find(:phrase => params[:title])
         end
-Rails.logger.warn "mjc12test: response: #{response.requestable?}"
+
         return response.requestable?
 
       rescue BorrowDirect::HttpTimeoutError
