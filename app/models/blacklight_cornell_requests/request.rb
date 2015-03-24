@@ -384,7 +384,7 @@ module BlacklightCornellRequests
       #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} entered get_holdings"
       holdings = document[:item_record_display].present? ? document[:item_record_display].map { |item| parseJSON item } : Array.new
       #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
-
+Rails.logger.warn "mjc12test: document: #{document.inspect}"
       return nil unless self.bibid
 
       response = parseJSON(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/status_short/#{self.bibid}"))
@@ -537,9 +537,18 @@ module BlacklightCornellRequests
     # a note in the holdings record that the item doesn't circulate (even
     # with a different typecode)
     def noncirculating?(item)
-      return (item.key?('perm_location') and
-             item['perm_location'].key?('name') and
-             item['perm_location']['name'].include? 'Non-Circulating')
+
+Rails.logger.warn "mjc12test: item: #{item}"
+      # If item is in a temp location, concentrate on that
+      if item.key?('temp_location_id') and item['temp_location_id'] > 0
+        return (item.key?('temp_location_display_name') and
+               (item['temp_location_display_name'].include? 'Reserve' or
+                item['temp_location_display_name'].include? 'reserve'))
+      else
+        return (item.key?('perm_location') and
+                item['perm_location'].key?('name') and
+                item['perm_location']['name'].include? 'Non-Circulating')
+      end
     end
 
     # Locate and translate the actual item status
@@ -622,7 +631,7 @@ module BlacklightCornellRequests
 
       typeCode = (item[:temp_item_type_id].blank? or item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
-
+Rails.logger.warn "mjc12test: loantype: #{item_loan_type}, status: #{item[:status]}"
       request_options = []
 
       # Borrow direct check where appropriate:
