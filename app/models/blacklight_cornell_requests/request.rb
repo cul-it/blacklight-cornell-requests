@@ -1,5 +1,6 @@
 require 'blacklight_cornell_requests/cornell'
-require 'blacklight_cornell_requests/borrow_direct'
+#require 'blacklight_cornell_requests/borrow_direct'
+require 'borrow_direct'
 
 module BlacklightCornellRequests
   class Request
@@ -155,7 +156,7 @@ module BlacklightCornellRequests
           pda_entry = { :service => PDA, :iid => iids, :estimate => get_delivery_time(PDA, nil) }
 
           bd_entry = nil
-          if xxborrowDirect_available? bd_params
+          if available_in_bd? self.netid, bd_params
             bd_entry = { :service => BD, :iid => {}, :estimate => get_delivery_time(BD, nil) }
           end
           ill_entry = { :service => ILL, :iid => {}, :estimate => get_delivery_time(ILL, nil) }
@@ -384,7 +385,6 @@ module BlacklightCornellRequests
       #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} entered get_holdings"
       holdings = document[:item_record_display].present? ? document[:item_record_display].map { |item| parseJSON item } : Array.new
       #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
-
       return nil unless self.bibid
 
       response = parseJSON(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/status_short/#{self.bibid}"))
@@ -537,9 +537,17 @@ module BlacklightCornellRequests
     # a note in the holdings record that the item doesn't circulate (even
     # with a different typecode)
     def noncirculating?(item)
-      return (item.key?('perm_location') and
-             item['perm_location'].key?('name') and
-             item['perm_location']['name'].include? 'Non-Circulating')
+
+      # If item is in a temp location, concentrate on that
+      if item.key?('temp_location_id') and item['temp_location_id'] > 0
+        return (item.key?('temp_location_display_name') and
+               (item['temp_location_display_name'].include? 'Reserve' or
+                item['temp_location_display_name'].include? 'reserve'))
+      else
+        return (item.key?('perm_location') and
+                item['perm_location'].key?('name') and
+                item['perm_location']['name'].include? 'Non-Circulating')
+      end
     end
 
     # Locate and translate the actual item status
@@ -622,7 +630,6 @@ module BlacklightCornellRequests
 
       typeCode = (item[:temp_item_type_id].blank? or item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
-
       request_options = []
 
       # Borrow direct check where appropriate:
@@ -631,7 +638,7 @@ module BlacklightCornellRequests
       #   item status is charged, lost, or missing
       if (item_loan_type == 'nocirc' or noncirculating? item) or
         (! [AT_BINDERY, NOT_CHARGED].include?(item[:status]))
-        if xxborrowDirect_available? params
+        if available_in_bd? self.netid, params
           request_options.push( {:service => BD, :location => item[:location] } )
         end
       end
@@ -942,19 +949,71 @@ module BlacklightCornellRequests
     end
 
 
-    def xxborrowDirect_available? params
-      if !@bd.nil?
-        return @bd
-      else
-        begin
-          @bd = _borrowDirect_available? params
-          return  @bd
-        rescue => e
-          Rails.logger.info "Error checking borrow direct availability: exception #{e.class.name} : #{e.message}"
-          @bd = false
-          return @bd
-        end
+    # def xxborrowDirect_available? params
+    #
+    #   if !@bd.nil?
+    #     return @bd
+    #   else
+    #     begin
+    #       @bd = available_in_bd?(self.netid, params)
+    #       return  @bd
+    #     rescue => e
+    #       Rails.logger.info "Error checking borrow direct availability: exception #{e.class.name} : #{e.message}"
+    #       @bd = false
+    #       return @bd
+    #     end
+    #   end
+    # end
+
+    # Determine Borrow Direct availability for an ISBN or title
+    # params = { :isbn, :title }
+    # ISBN is best, but title will work if ISBN isn't available.
+    def available_in_bd? netid, params
+
+      # Set up params for BorrowDirect gem
+      if Rails.env.production?
+        # if this isn't specified, defaults to BD test database
+        BorrowDirect::Defaults.api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
       end
+      BorrowDirect::Defaults.library_symbol = "CORNELL"
+      BorrowDirect::Defaults.find_item_patron_barcode = patron_barcode(netid)
+      BorrowDirect::Defaults.timeout = 15 # (seconds)
+
+      ####### possible FALSE test isbn?
+      #response = BorrowDirect::FindItem.new.find(:isbn => "1212121212")
+
+      response = nil
+      # This block can throw timeout errors if BD takes to long to respond
+      begin
+        if !params[:isbn].nil?
+          response = BorrowDirect::FindItem.new.find(:isbn => params[:isbn])
+        elsif !params[:title].nil?
+          response = BorrowDirect::FindItem.new.find(:phrase => params[:title])
+        end
+
+        return response.requestable?
+
+      rescue BorrowDirect::HttpTimeoutError
+        Rails.logger.warn 'Requests: Borrow Direct check timed out'
+
+      end
+
+    end
+
+    # Use the external netid lookup script to figure out the patron's barcode
+    # (this might duplicate what's being done in the voyager_request patron method)
+    def patron_barcode(netid)
+
+      uri = URI.parse(ENV['NETID_URL'] + "?netid=#{netid}")
+      response = Net::HTTP.get_response(uri)
+
+      # Make sure that we got a real result. Unfortunately, the CGI doesn't
+      # return a nice error code
+      return nil if response.body.include? 'Software error'
+
+      # Return the barcode
+      JSON.parse(response.body)['bc']
+
     end
 
   end
