@@ -367,17 +367,25 @@ describe BlacklightCornellRequests::Request do
     describe "#available_in_bd?" do
 
       let (:request)  { FactoryGirl.create(:request) }
+      before (:each) do
+        request.stub(:patron_barcode).and_return(ENV['TEST_USER_BARCODE'])
+      end
 
       it "returns true for an available ISBN" do
-        request.stub(:patron_barcode).and_return(ENV['TEST_USER_BARCODE'])
         VCR.use_cassette('bd_isbn_success') do
           response = request.available_in_bd?('abcde', {:isbn => '9781590174470'})
           expect(response).to be true
         end
       end
+      
+      it "returns true for an available (but messy) ISBN" do
+        VCR.use_cassette('bd_isbn_success2') do
+          response = request.available_in_bd?('abcde', {:isbn => '9781590174470 (hardcover)'})
+          expect(response).to be true
+        end
+      end
 
       it "returns false for an unavailable ISBN" do
-        request.stub(:patron_barcode).and_return(ENV['TEST_USER_BARCODE'])
         VCR.use_cassette('bd_isbn_failure') do
           response = request.available_in_bd?('abcde', {:isbn =>'1'})
           expect(response).to be false
@@ -385,7 +393,6 @@ describe BlacklightCornellRequests::Request do
       end
 
       it "returns true for an available title (phrase search)" do
-        request.stub(:patron_barcode).and_return(ENV['TEST_USER_BARCODE'])
         VCR.use_cassette('bd_title_success') do
           response = request.available_in_bd?('abcde', {:title =>'Masscult and Midcult'})
           expect(response).to be true
@@ -393,7 +400,6 @@ describe BlacklightCornellRequests::Request do
       end
 
       it "returns false for an unavailable title (phrase search)" do
-        request.stub(:patron_barcode).and_return(ENV['TEST_USER_BARCODE'])
         VCR.use_cassette('bd_title_failure') do
           response = request.available_in_bd?('abcde', {:title =>'ZVBXRPL'})
           expect(response).to be false

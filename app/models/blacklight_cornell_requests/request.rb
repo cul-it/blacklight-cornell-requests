@@ -977,14 +977,13 @@ module BlacklightCornellRequests
       BorrowDirect::Defaults.find_item_patron_barcode = patron_barcode(netid)
       BorrowDirect::Defaults.timeout = 30 # (seconds)
 
-      ####### possible FALSE test isbn?
-      #response = BorrowDirect::FindItem.new.find(:isbn => "1212121212")
-
       response = nil
       # This block can throw timeout errors if BD takes to long to respond
       begin
         if !params[:isbn].nil?
-          response = BorrowDirect::FindItem.new.find(:isbn => (params[:isbn].map!{|i| i.clean_isbn}))
+          # Note: [*<variable>] gives us an array if we don't already have one,
+          # which we need for the map.
+          response = BorrowDirect::FindItem.new.find(:isbn => ([*params[:isbn]].map!{|i| i.clean_isbn}))
         elsif !params[:title].nil?
           response = BorrowDirect::FindItem.new.find(:phrase => params[:title])
         end
