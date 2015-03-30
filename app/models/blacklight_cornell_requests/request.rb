@@ -977,9 +977,6 @@ module BlacklightCornellRequests
       BorrowDirect::Defaults.find_item_patron_barcode = patron_barcode(netid)
       BorrowDirect::Defaults.timeout = 30 # (seconds)
 
-      ####### possible FALSE test isbn?
-      #response = BorrowDirect::FindItem.new.find(:isbn => "1212121212")
-
       response = nil
       # This block can throw timeout errors if BD takes to long to respond
       begin
