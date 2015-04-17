@@ -25,7 +25,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'blacklight',['~> 4.3']
   s.add_dependency 'i18n'
   s.add_dependency 'nokogiri'
-  s.add_dependency 'zoom'
   s.add_dependency 'dotenv'
   s.add_dependency 'dotenv-rails'
   s.add_dependency 'dotenv-deployment'
