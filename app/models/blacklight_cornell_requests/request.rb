@@ -55,7 +55,7 @@ module BlacklightCornellRequests
     include BorrowDirect
 
     attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :alternate_options
-    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items, :volumes, :all_items
+    attr_accessor :au, :ti, :isbn, :document, :ill_link, :pub_info, :netid, :estimate, :items, :volumes, :all_items, :in_borrow_direct
     attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN, :DOCUMENT_DELIVERY
     attr_accessor :NOT_CHARGED, :CHARGED, :RENEWED, :OVERDUE, :RECALL_REQUEST, :HOLD_REQUEST, :ON_HOLD
     attr_accessor :IN_TRANSIT, :IN_TRANSIT_DISCHARGED, :IN_TRANSIT_ON_HOLD, :DISCHARGED, :MISSING
@@ -99,6 +99,11 @@ module BlacklightCornellRequests
       self.holdings_data = get_holdings document unless self.holdings_data
       Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} holdings data returned."+ Time.new.inspect
 
+      # Check borrow direct availability
+      bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
+      self.in_borrow_direct = available_in_bd? self.netid, bd_params
+
+
       # Get item status and location for each item in each holdings record; store in working_items
       # We now have two item arrays! working_items (which eventually gets set in self.items) is a 
       # list of all 'active' items, e.g., those for a particular volume or other set. 
@@ -132,12 +137,12 @@ module BlacklightCornellRequests
       unless document.nil?
 
         # Iterate through all items and get list of delivery methods
-        bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
+      #  bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
         n = 0
         working_items.each do |item|
           n = n + 1
           #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} prepare for deliv options for each item. (#{n})"+ Time.new.inspect
-          services = get_delivery_options item, bd_params
+          services = get_delivery_options item
           #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} delivoptions for each item. (#{n}) (#{service.inspect})"+ Time.new.inspect
           item[:services] = services
         end
@@ -595,14 +600,14 @@ module BlacklightCornellRequests
     # { :service => SERVICE NAME, :estimate => ESTIMATED DELIVERY TIME }
     # The array is sorted by delivery time estimate, so the first array item should be 
     # the fastest (i.e., the "best") delivery option.
-    def get_delivery_options item, bd_params = {}
+    def get_delivery_options item
 
       #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} start of deliv options (#{item.inspect})"+ Time.new.inspect
       patron_type = get_patron_type self.netid
       Rails.logger.info "es287_debug: " + "#{__FILE__}:#{__LINE__} netid=#{self.netid}, patron_type=#{patron_type}"
       if patron_type == 'cornell'
         #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} get_cornell_delivery_options."+ Time.new.inspect
-        options = get_cornell_delivery_options item, bd_params
+        options = get_cornell_delivery_options item
       else
         # Rails.logger.info "sk274_debug: get guest options"
         options = get_guest_delivery_options item
@@ -624,7 +629,7 @@ module BlacklightCornellRequests
     end
 
     # Determine delivery options for a single item if the patron is a Cornell affiliate
-    def get_cornell_delivery_options item, params
+    def get_cornell_delivery_options item
 
       typeCode = (item[:temp_item_type_id].blank? or item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
@@ -636,7 +641,8 @@ module BlacklightCornellRequests
       #   item status is charged, lost, or missing
       if (item_loan_type == 'nocirc' or noncirculating? item) or
         (! [AT_BINDERY, NOT_CHARGED].include?(item[:status]))
-        if available_in_bd? self.netid, params
+        #if available_in_bd? self.netid, params
+        if self.in_borrow_direct
           request_options.push( {:service => BD, :location => item[:location] } )
         end
       end
