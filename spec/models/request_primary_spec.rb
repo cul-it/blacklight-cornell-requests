@@ -73,6 +73,13 @@ describe BlacklightCornellRequests::Request do
           expect(contains?(options, ['l2l'])).to be true
           expect(options.count).to eq(1)
         end
+        
+        it "returns RECALL, HOLD if item is in transit" do
+          item = { :item_type_id => 2, :status => 9 }
+          options = request.get_cornell_delivery_options(item)
+          expect(contains?(options, ['recall', 'hold'])).to be true
+          expect(options.count).to eq(2)
+        end
 
         context "available through borrow direct" do
 
