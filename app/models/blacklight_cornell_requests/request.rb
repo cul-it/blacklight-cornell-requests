@@ -652,7 +652,7 @@ module BlacklightCornellRequests
       if docdel_eligible? item
         request_options.push( {:service => DOCUMENT_DELIVERY })
       end
-
+Rails.logger.warn "mjc12test: loantype: #{item_loan_type}, status: #{item[:status ]}"
       # Check the rest of the cases
       if item_loan_type == 'nocirc' or noncirculating? item
         return request_options.push({:service => ILL, 
@@ -668,6 +668,12 @@ module BlacklightCornellRequests
                                     {:service => HOLD, 
                                      :location => item[:location], 
                                      :status => item[:status]})
+      elsif item_loan_type == 'regular' and
+            [IN_TRANSIT_DISCHARGED, IN_TRANSIT_ON_HOLD].include? item[:status]
+        return request_options.push({:service => RECALL,
+                                     :location => item[:location]},
+                                    {:service => HOLD,
+                                     :location => item[:location]})
       elsif (['regular','day'].include? item_loan_type) and 
             ([MISSING, LOST].include? item[:status])
         return request_options.push({:service => PURCHASE, 
