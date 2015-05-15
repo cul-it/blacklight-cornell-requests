@@ -405,6 +405,12 @@ describe BlacklightCornellRequests::Request do
           expect(response).to be false
         end
       end
+      
+      it "handles a connection refused error gracefully" do 
+        stub_request(:any, /.*/).to_raise(Errno::ECONNREFUSED)
+        response = request.available_in_bd?('abcde', {:title => ''})
+        expect(response).to be false
+      end
 
     end
 

@@ -652,7 +652,7 @@ module BlacklightCornellRequests
       if docdel_eligible? item
         request_options.push( {:service => DOCUMENT_DELIVERY })
       end
-
+      Rails.logger.debug "mjc12test: loantype: #{item_loan_type}, status: #{item[:status ]}"
       # Check the rest of the cases
       if item_loan_type == 'nocirc' or noncirculating? item
         return request_options.push({:service => ILL, 
@@ -668,6 +668,12 @@ module BlacklightCornellRequests
                                     {:service => HOLD, 
                                      :location => item[:location], 
                                      :status => item[:status]})
+      elsif item_loan_type == 'regular' and
+            [IN_TRANSIT_DISCHARGED, IN_TRANSIT_ON_HOLD].include? item[:status]
+        return request_options.push({:service => RECALL,
+                                     :location => item[:location]},
+                                    {:service => HOLD,
+                                     :location => item[:location]})
       elsif (['regular','day'].include? item_loan_type) and 
             ([MISSING, LOST].include? item[:status])
         return request_options.push({:service => PURCHASE, 
@@ -997,6 +1003,11 @@ module BlacklightCornellRequests
         Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} response from bd ."+ response.inspect
         return response.requestable?
 
+      rescue Errno::ECONNREFUSED => e
+        Rails.logger.warn 'Requests: Borrow Direct connection was refused'
+        Rails.logger.warn e.message
+        Rails.logger.warn e.backtrace.inspect
+        return false
       rescue BorrowDirect::HttpTimeoutError => e
         Rails.logger.warn 'Requests: Borrow Direct check timed out'
         Rails.logger.warn e.message
