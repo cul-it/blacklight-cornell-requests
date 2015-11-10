@@ -1,5 +1,10 @@
 # Release Notes - blacklight-cornell-requests
 
+## Next release (version TBD)
+
+### Bug fixes
+- Fixed the broken purchase request submit button (DISCOVERYACCESS-1790)
+
 ## v1.1.4
 
 ### Bug fixes
