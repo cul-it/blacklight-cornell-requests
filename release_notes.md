@@ -4,6 +4,7 @@
 
 ### Bug fixes
 - Fixed the broken purchase request submit button (DISCOVERYACCESS-1790)
+- Fixed a bug where request comments were not carried through to Voyager (DISCOVERYACCESS-2084)
 
 ## v1.1.4
 
