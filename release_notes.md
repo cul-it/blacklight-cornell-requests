@@ -2,8 +2,12 @@
 
 ## Next release (version TBD)
 
+### Enhancements
+- Borrow Direct settings have been updated to work with the new BD production database (DISCOVERYACCESS-2006)
+
 ### Bug fixes
 - Fixed the broken purchase request submit button (DISCOVERYACCESS-1790)
+- Fixed a bug where request comments were not carried through to Voyager (DISCOVERYACCESS-2084)
 
 ## v1.1.4
 
