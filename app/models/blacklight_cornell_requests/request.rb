@@ -983,7 +983,7 @@ module BlacklightCornellRequests
     # params = { :isbn, :title }
     # ISBN is best, but title will work if ISBN isn't available.
     def available_in_bd? netid, params
-      
+
       # Set up params for BorrowDirect gem
       BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_TEST_API_KEY']
       BorrowDirect::Defaults.library_symbol = 'CORNELL'
@@ -1011,16 +1011,25 @@ module BlacklightCornellRequests
         return response.requestable?
 
       rescue Errno::ECONNREFUSED => e
+        if ENV['ROUTE_EXCEPTIONS_TO_HIPCHAT'] == 'true'
+          ExceptionNotifier.notify_exception(e)
+        end
         Rails.logger.warn 'Requests: Borrow Direct connection was refused'
         Rails.logger.warn e.message
         Rails.logger.warn e.backtrace.inspect
         return false
       rescue BorrowDirect::HttpTimeoutError => e
+        if ENV['ROUTE_EXCEPTIONS_TO_HIPCHAT'] == 'true'
+          ExceptionNotifier.notify_exception(e)
+        end
         Rails.logger.warn 'Requests: Borrow Direct check timed out'
         Rails.logger.warn e.message
         Rails.logger.warn e.backtrace.inspect
         return false
       rescue BorrowDirect::Error => e
+        if ENV['ROUTE_EXCEPTIONS_TO_HIPCHAT'] == 'true'
+          ExceptionNotifier.notify_exception(e)
+        end
         Rails.logger.warn 'Requests: Borrow Direct gave error.'
         Rails.logger.warn e.message
         Rails.logger.warn e.backtrace.inspect
@@ -1054,4 +1063,5 @@ def clean_isbn
   return self.gsub! /[^0-9X]*/, ''
 end
 end
+
 

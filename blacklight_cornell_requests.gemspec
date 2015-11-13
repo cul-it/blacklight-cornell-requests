@@ -29,6 +29,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'dotenv-rails'
   s.add_dependency 'dotenv-deployment'
   s.add_dependency 'borrow_direct'
+  s.add_dependency 'exception_notification'
 
   s.add_development_dependency "sqlite3"
 
