@@ -1,6 +1,6 @@
 # Release Notes - blacklight-cornell-requests
 
-## Next release (version TBD)
+## v1.2
 
 ### Enhancements
 - Borrow Direct settings have been updated to work with the new BD production database (DISCOVERYACCESS-2006)
