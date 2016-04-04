@@ -5,7 +5,7 @@
 - unless flash[:success]
   %h1.request-type Purchase Request
   %div.row
-    %div.span8.well
+    %div.well
       %h2.item-title-request.blacklight-title_display=title
       %div.request-author=responsibility
       %form#req.form-horizontal{:method => 'post', :action => blacklight_cornell_request.make_purchase_request_path}
