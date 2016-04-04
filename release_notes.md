@@ -1,5 +1,12 @@
 # Release Notes - blacklight-cornell-requests
 
+## v1.2.2
+
+- Cleaned up markup in request forms
+
+### Bug fixes
+
+
 ## v1.2.1
 - Improved parsing of ISBNs for Borrow Direct searches
 
