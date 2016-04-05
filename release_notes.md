@@ -3,6 +3,7 @@
 ## v1.2.2
 
 - Cleaned up markup in request forms
+- Updated tests
 
 ### Bug fixes
 

@@ -13,4 +13,5 @@ VCR.configure do |c|
   c.filter_sensitive_data('<TEST_NETID>') { "#{ENV['TEST_NETID']}"}
   c.filter_sensitive_data('<NETID_URL>') { "#{ENV['NETID_URL']}"}
   c.filter_sensitive_data('<TEST_FIRSTNAME>') { "#{ENV['TEST_FIRSTNAME']}"}
+  c.filter_sensitive_data('<BD_API_KEY>') { "#{ENV['BORROW_DIRECT_TEST_API_KEY']}"}
 end
