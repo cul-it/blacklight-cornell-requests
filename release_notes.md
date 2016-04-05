@@ -2,9 +2,13 @@
 
 ## v1.2.2
 
+### Enhancements
 - Cleaned up markup in request forms
+- Updated tests
+- Added item location to copy selection view (DISCOVERYACCESS-2278)
 
 ### Bug fixes
+
 
 
 ## v1.2.1
