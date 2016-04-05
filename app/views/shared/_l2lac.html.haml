@@ -24,3 +24,7 @@
             -if copyd[:chron].present?
               %span.copy-chron.label
                 = copyd[:chron]
+            - if copyd[:temp_location].is_a?(Hash) && copyd[:temp_location].key?('name')
+              = " - #{copyd[:temp_location][:name]}"
+            - elsif copyd[:perm_location].is_a?(Hash) && copyd[:perm_location].key?('name')
+              = " - #{copyd[:perm_location][:name]}"
