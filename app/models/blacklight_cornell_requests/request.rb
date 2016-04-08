@@ -103,8 +103,6 @@ module BlacklightCornellRequests
 
       # Check borrow direct availability
       bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
-      Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__}  isbn_display=#{document[:isbn_display]} "
-      Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__}  bd_params=#{bd_params} "
       self.in_borrow_direct = available_in_bd? self.netid, bd_params
 
       # Get item status and location for each item in each holdings record; store in working_items
@@ -135,6 +133,7 @@ module BlacklightCornellRequests
 
       self.items = working_items
       self.document = document
+
       #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} working items processed. number of items: #{self.items.size} at"+ Time.new.inspect
 
       unless document.nil?
@@ -636,7 +635,6 @@ module BlacklightCornellRequests
 
     # Determine delivery options for a single item if the patron is a Cornell affiliate
     def get_cornell_delivery_options item
-
       typeCode = (item[:temp_item_type_id].blank? or item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
       request_options = []
@@ -988,6 +986,7 @@ module BlacklightCornellRequests
 
       # Set up params for BorrowDirect gem
       BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_TEST_API_KEY']
+      BorrowDirect::Defaults.api_base = 'https://bdtest.relais-host.com/'
       BorrowDirect::Defaults.library_symbol = 'CORNELL'
       BorrowDirect::Defaults.find_item_patron_barcode = patron_barcode(netid)
       BorrowDirect::Defaults.timeout = 30 # (seconds)
@@ -1003,7 +1002,20 @@ module BlacklightCornellRequests
         if !params[:isbn].nil?
           # Note: [*<variable>] gives us an array if we don't already have one,
           # which we need for the map.
-
+          
+          #################### TEMPORARY ######################
+          # Temporary "fix" for BD multiple-ISBN problem:
+          # If we have an array of ISBNs, just use the first one
+          # 
+          # This is probably bad, but so is having searches return false negatives
+          # Once the underlying issue is fixed, remove the following
+          Rails.logger.debug "mjc12test: before: #{params[:isbn]}"
+          if params[:isbn].is_a? Array
+            params[:isbn] = params[:isbn][0]
+          end
+          Rails.logger.debug "mjc12test: after: #{params[:isbn]}"
+          #################### END TEMPORARY ###################
+          
           response = BorrowDirect::FindItem.new.find(:isbn => ([*params[:isbn]].map!{|i| i = i.clean_isbn}))
         elsif !params[:title].nil?
           response = BorrowDirect::FindItem.new.find(:phrase => params[:title])
@@ -1060,10 +1072,6 @@ module BlacklightCornellRequests
   end
 end
 
-#class String
-#def clean_isbn
-#  return self.gsub! /[^0-9X]*/, ''
-#end
 class String
   def clean_isbn
     temp = self
@@ -1075,6 +1083,5 @@ class String
     temp
   end
 end
-
 
 

@@ -8,7 +8,7 @@
 - Added item location to copy selection view (DISCOVERYACCESS-2278)
 
 ### Bug fixes
-
+- TEMPORARY fix: Send only one ISBN to Borrow Direct to eliminate some false negatives (DISCOVERYACCESS-2261)
 
 
 ## v1.2.1
