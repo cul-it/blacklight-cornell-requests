@@ -1002,20 +1002,6 @@ module BlacklightCornellRequests
         if !params[:isbn].nil?
           # Note: [*<variable>] gives us an array if we don't already have one,
           # which we need for the map.
-          
-          #################### TEMPORARY ######################
-          # Temporary "fix" for BD multiple-ISBN problem:
-          # If we have an array of ISBNs, just use the first one
-          # 
-          # This is probably bad, but so is having searches return false negatives
-          # Once the underlying issue is fixed, remove the following
-          Rails.logger.debug "mjc12test: before: #{params[:isbn]}"
-          if params[:isbn].is_a? Array
-            params[:isbn] = params[:isbn][0]
-          end
-          Rails.logger.debug "mjc12test: after: #{params[:isbn]}"
-          #################### END TEMPORARY ###################
-          
           response = BorrowDirect::FindItem.new.find(:isbn => ([*params[:isbn]].map!{|i| i = i.clean_isbn}))
         elsif !params[:title].nil?
           response = BorrowDirect::FindItem.new.find(:phrase => params[:title])
