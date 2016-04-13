@@ -3,8 +3,12 @@ require 'blacklight_cornell_requests/cornell'
 require 'borrow_direct'
 
 module BlacklightCornellRequests
+  # @author Matt Connolly, Shinwoo Kim, Rick Silterra
   class Request
 
+    # TODO: refactor all these constants with something like this? 
+    # http://stackoverflow.com/questions/8026344/best-place-to-store-model-specific-constants-in-rails-3-1
+    
     L2L = 'l2l'
     BD = 'bd'
     HOLD = 'hold'
@@ -80,8 +84,14 @@ module BlacklightCornellRequests
       HOLD_PADDING_TIME
     end
 
-    ##################### Calculate optimum request method ##################### 
-    def magic_request(document, env_http_host, options = {})
+    # Calculate optimum request method
+    #
+    # @param document [Hash] The Solr document associated with this.bibid
+    # @param [Hash] options
+    # @option options [String] A specified request method (e.g., L2L, BD)
+    # @option options [String] A specified volume in enum|chron|date format 
+    #   (e.g., |v.101|1976:May-Sept.||)
+    def magic_request(document, options = {})
       target = options[:target]
       volume = options[:volume]
       request_options = []
@@ -102,7 +112,7 @@ module BlacklightCornellRequests
       Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} holdings data returned."+ Time.new.inspect
 
       # Check borrow direct availability
-      bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
+      bd_params = { :isbn => document[:isbn_display], :title => document[:title_display]}
       self.in_borrow_direct = available_in_bd? self.netid, bd_params
 
       # Get item status and location for each item in each holdings record; store in working_items
