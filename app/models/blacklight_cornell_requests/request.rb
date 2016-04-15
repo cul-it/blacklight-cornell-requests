@@ -87,32 +87,33 @@ module BlacklightCornellRequests
     # Calculate optimum request method
     #
     # @param document [Hash] The Solr document associated with this.bibid
-    # @param [Hash] options
+    # @param [Hash] options 
     # @option options [String] A specified request method (e.g., L2L, BD)
     # @option options [String] A specified volume in enum|chron|date format 
     #   (e.g., |v.101|1976:May-Sept.||)
+    #
+    # @todo Cache call to holdings for better performance
     def magic_request(document, options = {})
-      target = options[:target]
-      volume = options[:volume]
+      
       request_options = []
       alternate_options = []
-      service = ASK_LIBRARIAN
+      service = ASK_LIBRARIAN # default service for everything
       
-      
-
-      if self.bibid.nil?
-        self.request_options = request_options
-        self.service = { :service => service }
-        self.document = document
-        return
-      end
+      # If bibid hasn't been set (by initializing a class instance), then
+      # there's not much we can do. 
+      return if self.bibid.nil?
 
       # Get holdings
-      self.holdings_data = get_holdings document unless self.holdings_data
+      #self.holdings_data ||= get_holdings document
+      holdings = BlacklightCornellRequests::HoldingsData.new(self.bibid, document)
+      self.holdings_data = holdings.holdings
       Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} holdings data returned."+ Time.new.inspect
+      Rails.logger.warn "mjc12test: holdings: #{self.holdings_data}"
 
-      # Check borrow direct availability
-      bd_params = { :isbn => document[:isbn_display], :title => document[:title_display]}
+      # Set borrow direct availability
+      bd_params = { :isbn => document[:isbn_display], 
+                    :title => document[:title_display]
+                  }
       self.in_borrow_direct = available_in_bd? self.netid, bd_params
 
       # Get item status and location for each item in each holdings record; store in working_items
@@ -127,8 +128,8 @@ module BlacklightCornellRequests
         self.all_items.push h # Everything goes into all_items
         # If volume is specified, only populate items with matching enum/chron/year values
         # Unpack volume if necessary
-        if volume.present?
-          parts = volume.split '|'
+        if options[:volume].present?
+          parts = options[:volume].split '|'
           e = parts[1] || ''
           c = parts[2] || ''
           y = parts[3] || ''
@@ -178,17 +179,17 @@ module BlacklightCornellRequests
           end
           ill_entry = { :service => ILL, :iid => {}, :estimate => get_delivery_time(ILL, nil) }
           self.request_options = request_options
-          if target.blank? or target == PDA
+          if options[:target].blank? or options[:target] == PDA
             self.service = PDA
             request_options.push pda_entry
             alternate_options.push bd_entry unless bd_entry.nil?
             alternate_options.push ill_entry
-          elsif target == BD
+          elsif options[:target] == BD
             self.service = BD
             request_options.push bd_entry
             alternate_options.push pda_entry
             alternate_options.push ill_entry
-          elsif target == ILL
+          elsif options[:target] == ILL
             self.service = ILL
             request_options.push ill_entry
             alternate_options.push pda_entry
@@ -206,7 +207,7 @@ module BlacklightCornellRequests
       #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
         # Determine whether this is a multi-volume thing or not (i.e, multi-copy)
         # They will be handled differently depending
-        if self.document[:multivol_b] and volume.blank?
+        if self.document[:multivol_b] and options[:volume].blank?
           # Multi-volume
           self.set_volumes(working_items)
         else
@@ -225,8 +226,8 @@ module BlacklightCornellRequests
         hld_entry = {:service => HOLD, :location => '', :status => ''}
         request_options.push hld_entry
       end
-      if !target.blank?
-        self.service = target
+      if !options[:target].blank?
+        self.service = options[:target]
       elsif request_options.present?
         # Don't present document delivery as the default option unless
         # there's no other choice
