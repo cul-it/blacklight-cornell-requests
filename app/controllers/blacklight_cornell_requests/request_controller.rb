@@ -12,20 +12,25 @@ module BlacklightCornellRequests
       @id = params[:bibid]
       resp, @document = get_solr_response_for_doc_id(@id)
       @document = @document
-      
-
 
       Rails.logger.debug "Viewing item #{@id} (within request controller) - session: #{session}"
 
       req = BlacklightCornellRequests::Request.new(@id)
-      req.netid = request.env['REMOTE_USER'] 
+      req.netid = request.env['REMOTE_USER']
       req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
-      
+
+      # When we're entering the request system from a /catalog path, then we're starting
+      # fresh — no volume should be pre-selected (or kept in the session). However,
+      # if the referer is a different path — i.e., /request/*, then we *do* want to
+      # preserve the volume selection; this would be the case if the page is reloaded
+      # or the user selects an alternate delivery method for the same item.
+      session[:volume] = nil if request.referer.include? 'catalog'
+
       params[:volume] = session[:volume]
       # Reset session var after use so that we don't get weird results if
       # user goes to another catalog item
-      session[:volume] = nil 
-      
+      session[:volume] = nil
+
       req.magic_request @document, request.env['HTTP_HOST'], {:target => target, :volume => params[:volume]}
 
       if ! req.service.nil?
@@ -40,7 +45,7 @@ module BlacklightCornellRequests
       @au = req.au
       @isbn = req.isbn
       @ill_link = req.ill_link
-      @pub_info = req.pub_info      
+      @pub_info = req.pub_info
       @volume = params[:volume]
       @netid = req.netid
       @name = get_patron_name req.netid
@@ -56,7 +61,7 @@ module BlacklightCornellRequests
       # @volumes = req.set_volumes(req.all_items)
       @volumes = req.volumes
       # Note: the if statement here only shows the volume select screen
-      # if a doc del request has *not* been specified. This is because 
+      # if a doc del request has *not* been specified. This is because
       # (a) without that statement, the user just loops endlessly through
       # volume selection and doc del requesting; and (b) since we can't
       # pre-populate the doc del request form with bibliographic data, there's
@@ -86,7 +91,7 @@ module BlacklightCornellRequests
           @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
         end
       end
-      
+
       @counter = params[:counter]
       if @counter.blank? and session[:search].present?
         @counter = session[:search][:counter]
@@ -156,7 +161,7 @@ module BlacklightCornellRequests
       if params[:library_id].blank?
         errors << I18n.t('requests.errors.library_id.blank')
       end
-      
+
       if errors
         flash[:error] = errors.join('<br/>').html_safe
       end
@@ -227,7 +232,7 @@ module BlacklightCornellRequests
       render :partial => '/flash_msg', :layout => false
 
     end
-    
+
     # AJAX responder used with requests.js.coffee to set the volume
     # when the user selects one in the volume drop-down list
     def set_volume

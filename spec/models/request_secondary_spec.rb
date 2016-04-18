@@ -1,6 +1,7 @@
 require 'spec_helper'
 #require 'blacklight_cornell_requests/request'
 require 'blacklight_cornell_requests/borrow_direct'
+require 'vcr'
 
 describe BlacklightCornellRequests::Request do
 
@@ -377,28 +378,28 @@ describe BlacklightCornellRequests::Request do
 
       it "returns true for an available ISBN" do
         VCR.use_cassette('bd_isbn_success') do
-          response = request.available_in_bd?('abcde', {:isbn => '9781590174470'})
+          response = request.available_in_bd?('abcde', {:isbn => '9780545010221'})
           expect(response).to be true
         end
       end
       
       it "returns true for an available (but messy) ISBN" do
         VCR.use_cassette('bd_isbn_success2') do
-          response = request.available_in_bd?('abcde', {:isbn => '9781590174470 (hardcover)'})
+          response = request.available_in_bd?('abcde', {:isbn => '9780545010221 (hardcover)'})
           expect(response).to be true
         end
       end
 
       it "returns false for an unavailable ISBN" do
         VCR.use_cassette('bd_isbn_failure') do
-          response = request.available_in_bd?('abcde', {:isbn =>'1'})
+          response = request.available_in_bd?('abcde', {:isbn =>'-1'})
           expect(response).to be false
         end
       end
 
       it "returns true for an available title (phrase search)" do
         VCR.use_cassette('bd_title_success') do
-          response = request.available_in_bd?('abcde', {:title =>'Masscult and Midcult'})
+          response = request.available_in_bd?('abcde', {:title =>'Harry Potter and the deathly hallows'})
           expect(response).to be true
         end
       end

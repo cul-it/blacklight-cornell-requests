@@ -21,12 +21,11 @@
     %p
       Delivery time: 
       = delivery_estimate_display @estimate
-  .control-group
-    .controls.clearfix
-      - if @isbn.present?
-        = link_to 'Search Borrow Direct', borrowdirect_url_from_isbn(@isbn), :class => 'btn btn-danger pull-left'
-      - else
-        = link_to 'Search Borrow Direct', borrowdirect_url_from_title(@ti), :class => 'btn btn-danger pull-left'
+  .form-group
+    - if @isbn.present?
+      = link_to 'Search Borrow Direct', borrowdirect_url_from_isbn(@isbn), :class => 'btn btn-danger pull-left'
+    - else
+      = link_to 'Search Borrow Direct', borrowdirect_url_from_title(@ti), :class => 'btn btn-danger pull-left'
       
   -if @alternate_request_options and @alternate_request_options.count >= 2
     = render :partial => 'shared/request_options'
