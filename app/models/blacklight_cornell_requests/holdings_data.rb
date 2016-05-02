@@ -51,6 +51,28 @@ module BlacklightCornellRequests
       puts "hello!"
     end
     
+    def mfhds
+      @holdings.map { |h| h['mfhd_id'] }.uniq
+    end
+    
+    def items
+      @holdings.map { |h| h['item_id'] }
+    end
+    
+    def mfhds_items
+      output = Hash.new {|h, k| h[k] = [] }
+      @holdings.each do |h|
+        if output.keys.include? h['mfhd_id']
+          puts "include: #{output}"
+          output[h['mfhd_id']] << h['item_id']
+        else
+          puts "new: #{output}"
+          output[h['mfhd_id']] = h['item_id']
+        end
+      end
+      output
+    end
+    
     # Use @bibid and @document to parse a set of holdings data and assign
     # the result to @holdings
     # 
