@@ -15,6 +15,13 @@ module BlacklightCornellRequests
     DocumentDelivery
   )
   
+  LOAN_TYPES = {
+    :nocirc  => 0,
+    :minute  => 1,
+    :day     => 2,
+    :regular => 3
+  }
+  
   STATUSES = {
     :not_charged            => 1,
     :charged                => 2,
