@@ -1,8 +1,18 @@
 module BlacklightCornellRequests
   
+  # The strings defined in the DELIVERY_METHODS array are the class names
+  # of the actual delivery method definitions.
   DELIVERY_METHODS = %W(
     L2L,
-    
+    BD,
+    ILL, 
+    Hold,
+    Recall,
+    PDA,
+    PurchaseRequest,
+    AskLibrarian,
+    AskCirculation,
+    DocumentDelivery
   )
   
   STATUSES = {
