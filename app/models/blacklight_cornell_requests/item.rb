@@ -9,6 +9,7 @@ module BlacklightCornellRequests
     # 
     # @param item_data [Hash] Hash of item data values
     def initialize(options = {})
+      return nil if options['ITEM_ID'].nil?
       set_options options
     end
     

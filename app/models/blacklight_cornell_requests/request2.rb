@@ -18,26 +18,32 @@ module BlacklightCornellRequests
                 # holdings contains an array of Holding class instances for each library holding of
                 # this bibid. 
                 :holdings,
-                :bd_available
+                # The particular volume requested, if any
+                :volume,
+                :bd_available,
+                :multivolume
     
     # Basic initializer
     # 
     # @param bibid [Fixnum] The bibID being requested
     # @param netid [String] The Cornell NetID of the requester
     # @param document [Hash] The Solr documenta associated with the bibID
-    def initialize(bibid, netid, document)
+    def initialize(bibid, netid, document, volume = nil)
       @bibid = bibid
       @netid = netid
       @document = document
       @bd_available = available_in_bd?
       @holdings_data = get_holdings
       @holdings = parse_holdings
+      @volume = volume
+      @multivolume = document[:multivol_b]
     end
     
     def inspect
       puts "BibID #{@bibid} requested for '#{@netid}'"
       bd_avail = (@bd_available ? 'IS' : 'is NOT')
       puts "Item #{bd_avail} available in Borrow Direct"
+      puts "Requested volume: #{@volume}"
     #  puts "There are #{@holdings.count} holdings records (#{@holdings.each |h| { print h}})"
     end
     
