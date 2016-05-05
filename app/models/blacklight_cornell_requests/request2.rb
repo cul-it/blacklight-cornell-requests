@@ -1,4 +1,5 @@
 require 'borrow_direct'
+include BlacklightCornellRequests::Cornell::LDAP
 
 module BlacklightCornellRequests
   # @author Matt Connolly
@@ -19,9 +20,11 @@ module BlacklightCornellRequests
                 # this bibid. 
                 :holdings,
                 # The particular volume requested, if any
-                :volume,
                 :bd_available,
                 :multivolume
+                
+    attr_accessor :volume
+
     
     # Basic initializer
     # 
@@ -40,7 +43,7 @@ module BlacklightCornellRequests
     end
     
     def inspect
-      puts "BibID #{@bibid} requested for '#{@netid}'"
+      puts "BibID #{@bibid} requested for '#{@netid}' (patron type: #{get_patron_type(@netid)})"
       bd_avail = (@bd_available ? 'IS' : 'is NOT')
       puts "Item #{bd_avail} available in Borrow Direct"
       puts "Requested volume: #{@volume}"
@@ -72,6 +75,39 @@ module BlacklightCornellRequests
     
       holdings
       
+    end
+    
+    # Return an array of all associated item records (accessed via @holdings)
+    def items(volume = {})
+      result = []
+      @holdings.each do |h|
+        h.items.each do |i|
+          # If volume is specified, only add items that match
+          # i.e., append if volume is {} or equal to i's enumeration hash
+          if [{}, i.enumeration].include? volume
+            result << i
+          end
+        end
+      end
+      
+      result
+    end
+    
+    # Return an array of all viable delivery methods
+    def methods
+      result = []
+      BlacklightCornellRequests::DeliveryMethod
+      active_items = items(@volume)
+      active_items.each do |i|
+        DELIVERY_METHODS.each do |m|
+          method = Object.const_get("BlacklightCornellRequests::#{m}")
+          #### EXAMPLE CALL BELOW - need to figure out real parameters
+          result << method.description if method.available?(STATUSES[:not_charged], 
+                                                            LOAN_TYPES[:regular],
+                                                            get_patron_type(@netid))
+        end
+      end
+      result
     end
     
     # Determine Borrow Direct availability for an ISBN or title

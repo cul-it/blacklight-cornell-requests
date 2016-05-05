@@ -100,7 +100,7 @@ module BlacklightCornellRequests
       [7,14]
     end
     
-    def self.available?(status, loan_type, patron_type, noncirculating)
+    def self.available?(status, loan_type, patron_type, noncirculating = false)
       # ILL is available for CORNELL only under the following conditions:
       # (1) Loan type is regular or day AND
       # (2) Status is charged or missing or lost
