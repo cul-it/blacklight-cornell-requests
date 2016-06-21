@@ -7,36 +7,6 @@ module BlacklightCornellRequests
     attr_reader :document  # The Solr document associated with the bib ID
     attr_reader :holdings  # A parsed object of holdings data based on the holdings service and Solr doc
     
-    # Constants for item status codes
-    # @todo Condense these somehow
-    NOT_CHARGED = 1
-    CHARGED = 2
-    RENEWED = 3
-    OVERDUE = 4
-    RECALL_REQUEST = 5
-    HOLD_REQUEST = 6
-    ON_HOLD = 7
-    IN_TRANSIT = 8
-    IN_TRANSIT_DISCHARGED = 9
-    IN_TRANSIT_ON_HOLD = 10
-    DISCHARGED = 11
-    MISSING = 12
-    LOST_LIBRARY_APPLIED = 13
-    LOST_SYSTEM_APPLIED = 14
-    LOST = 26 # means LOST_LIBRARY_APPLIED or LOST_SYSTEM_APPLIED
-    CLAIMS_RETURNED = 15
-    DAMAGED = 16
-    WITHDRAWN = 17
-    AT_BINDERY = 18
-    CATALOG_REVIEW =19
-    CIRCULATION_REVIEW = 20
-    SCHEDULED = 21
-    IN_PROCESS = 22
-    CALL_SLIP_REQUEST = 23
-    SHORT_LOAN_REQUEST = 24
-    REMOTE_STORAGE_REQUEST = 25
-    REQUESTED = 27
-    
     # Basic initializer
     # 
     # @param bibid [Fixnum] The bibID associated with the holding(s) records
@@ -256,28 +226,28 @@ module BlacklightCornellRequests
       def item_status item_status
 
         case item_status
-          when DISCHARGED,
-               CATALOG_REVIEW,
-               CIRCULATION_REVIEW,
-               IN_TRANSIT,
-               IN_TRANSIT_DISCHARGED
-            return NOT_CHARGED
+          when STATUSES[:discharged],
+               STATUSES[:catalog_review],
+               STATUSES[:circulation_review],
+               STATUSES[:in_transit],
+               STATUSES[:in_transit_discharged]
+            return STATUSES[:not_charged]
 
-          when RENEWED,
-               CALL_SLIP_REQUEST,
-               RECALL_REQUEST,
-               HOLD_REQUEST,
-               IN_TRANSIT_ON_HOLD,
-               OVERDUE,
-               CLAIMS_RETURNED,
-               DAMAGED,
-               WITHDRAWN,
-               ON_HOLD
-            return CHARGED
+          when STATUSES[:renewed],
+               STATUSES[:call_slip_request],
+               STATUSES[:recall_request],
+               STATUSES[:hold_request],
+               STATUSES[:in_transit_on_hold],
+               STATUSES[:overdue],
+               STATUSES[:claims_returned],
+               STATUSES[:damaged],
+               STATUSES[:withdrawn],
+               STATUSES[:on_hold]
+            return STATUSES[:charged]
 
-          when LOST_LIBRARY_APPLIED,
-               LOST_SYSTEM_APPLIED
-            return LOST
+          when STATUSES[:lost_library_applied],
+               STATUSES[:lost_system_applied]
+            return STATUSES[:lost]
 
           else
             # covers self-returning statuses 
