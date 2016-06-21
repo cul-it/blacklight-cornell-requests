@@ -1,15 +1,13 @@
+require 'benchmark'
 require 'borrow_direct'
 include BlacklightCornellRequests::Cornell::LDAP
+include Blacklight::SolrHelper
 
 module BlacklightCornellRequests
   # @author Matt Connolly
 
   class Request2
     
-    
-    # @todo It's very annoying to have to bring document in as an initialization param.
-    # It should be set here, but I'm not having much luck calling get_solr_response_for_doc_id
-    # except in the controller.
     attr_reader :bibid, 
                 :netid, 
                 :document,
@@ -23,20 +21,49 @@ module BlacklightCornellRequests
                 :bd_available,
                 :multivolume
                 
+                
     attr_accessor :volume
-
+    
+    # Class-level constructor for building a request with test doc and holdings data
+    # (to avoid the currently very expensive calls to external services while testing)
+    def self.test_request(bibid, netid, bd)
+      instance = allocate
+      doc = hold = nil
+      if bibid == 1419
+        doc = JSON.parse(File.read('sampledoc1'), :symbolize_names => true)
+        hold = JSON.parse(File.read('samplehold1'), :symbolize_names => false)
+        puts doc[:isbn_display]
+        puts doc[:title_display]
+      elsif bibid == 1816041
+        doc = JSON.parse(File.read('sampledoc2'), :symbolize_names => true)
+        hold = JSON.parse(File.read('samplehold2'), :symbolize_names => false)
+      else
+        return nil
+      end
+      instance.send(:initialize, bibid, 'mjc12', doc, hold, bd)
+      instance
+    end
     
     # Basic initializer
     # 
     # @param bibid [Fixnum] The bibID being requested
     # @param netid [String] The Cornell NetID of the requester
     # @param document [Hash] The Solr documenta associated with the bibID
-    def initialize(bibid, netid, document, volume = nil)
+    # @param volume [Hash] The selected volume, if any. This is a hash of chron/enum/year
+    # NOTE: it's possible to load the document directly by doing the following:
+    #   1. include Blacklight::SolrHelper at the top of the file
+    #   2. create a @blacklight_config instance variable
+    #   3. set @blacklight_config to rc.blacklight_config, where rc is a RequestController instance
+    #   4. call get_solr_response_for_doc_id as an instance method
+    #   But since blacklight_config has to be copied from the controller anyway,
+    # there's no real advantage to doing this over just passing in the document
+    # as an initialization param.
+    def initialize(bibid, netid, document, holdings_data = nil, bd = false, volume = {})
       @bibid = bibid
       @netid = netid
       @document = document
-      @bd_available = available_in_bd?
-      @holdings_data = get_holdings
+      @bd_available = bd || available_in_bd?
+      @holdings_data = holdings_data || get_holdings
       @holdings = parse_holdings
       @volume = volume
       @multivolume = document[:multivol_b]
@@ -48,6 +75,20 @@ module BlacklightCornellRequests
       puts "Item #{bd_avail} available in Borrow Direct"
       puts "Requested volume: #{@volume}"
     #  puts "There are #{@holdings.count} holdings records (#{@holdings.each |h| { print h}})"
+    end
+    
+    def times
+      Benchmark.bm do |benchmark|
+        benchmark.report do
+          available_in_bd?
+        end
+        benchmark.report do
+          get_holdings
+        end
+        benchmark.report do
+          parse_holdings
+        end
+      end
     end
     
     def get_holdings
@@ -78,36 +119,47 @@ module BlacklightCornellRequests
     end
     
     # Return an array of all associated item records (accessed via @holdings)
-    def items(volume = {})
+    def items
       result = []
       @holdings.each do |h|
         h.items.each do |i|
-          # If volume is specified, only add items that match
-          # i.e., append if volume is {} or equal to i's enumeration hash
-          if [{}, i.enumeration].include? volume
             result << i
-          end
         end
       end
       
       result
     end
     
-    # Return an array of all viable delivery methods
-    def methods
-      result = []
+    # Return an array of associated item records ONLY for the set volume (if any)
+    def selected_items
+      if @volume.empty?
+        items()
+      else
+        items().select { |i| i.enumeration && i.volume_match?(@volume) }
+      end
+    end
+    
+    # Return an array of all viable delivery methods. If use_volume is true,
+    # the methods will only be calculated for selected_items. If false, then 
+    # methods will be calculated for ALL the item records
+    def delivery_methods(use_volume = true)
+      # Without the following line, the later const_get call fails ... not sure why
       BlacklightCornellRequests::DeliveryMethod
-      active_items = items(@volume)
-      active_items.each do |i|
+      
+      result = []
+      patron_type = get_patron_type(@netid)
+      item_records = use_volume ? selected_items : items
+      item_records.each do |i|
         DELIVERY_METHODS.each do |m|
+          next unless i.status   # no status code == electronic item ?
           method = Object.const_get("BlacklightCornellRequests::#{m}")
           #### EXAMPLE CALL BELOW - need to figure out real parameters
-          result << method.description if method.available?(STATUSES[:not_charged], 
+          result << method.description if method.available?(i.status[:code], 
                                                             LOAN_TYPES[:regular],
-                                                            get_patron_type(@netid))
+                                                            patron_type)
         end
       end
-      result
+      result.uniq
     end
     
     # Determine Borrow Direct availability for an ISBN or title
