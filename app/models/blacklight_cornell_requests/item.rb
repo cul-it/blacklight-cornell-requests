@@ -63,5 +63,26 @@ module BlacklightCornellRequests
       @enumeration[:year] == volume[:year]
     end
     
+    # Return an array of the delivery methods that can be used for this item
+    def delivery_methods(patron_type)
+      
+      return [] unless @status   # no status == electronic item? Is this right?
+      
+      # Without the following line, the later const_get call fails ... not sure why
+      BlacklightCornellRequests::DeliveryMethod
+      
+      result = []
+      DELIVERY_METHODS.each do |m|
+        method = Object.const_get("BlacklightCornellRequests::#{m}")
+        #### EXAMPLE CALL BELOW - need to figure out real parameters
+        result << method.description if method.available?(@status[:code], 
+                                                          LOAN_TYPES[:regular],
+                                                          patron_type)
+      end
+      
+      result
+    
+    end
+    
   end
 end

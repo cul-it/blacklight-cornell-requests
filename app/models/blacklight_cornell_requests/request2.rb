@@ -143,22 +143,14 @@ module BlacklightCornellRequests
     # the methods will only be calculated for selected_items. If false, then 
     # methods will be calculated for ALL the item records
     def delivery_methods(use_volume = true)
-      # Without the following line, the later const_get call fails ... not sure why
-      BlacklightCornellRequests::DeliveryMethod
-      
+
       result = []
       patron_type = get_patron_type(@netid)
       item_records = use_volume ? selected_items : items
       item_records.each do |i|
-        DELIVERY_METHODS.each do |m|
-          next unless i.status   # no status code == electronic item ?
-          method = Object.const_get("BlacklightCornellRequests::#{m}")
-          #### EXAMPLE CALL BELOW - need to figure out real parameters
-          result << method.description if method.available?(i.status[:code], 
-                                                            LOAN_TYPES[:regular],
-                                                            patron_type)
-        end
+        result += i.delivery_methods(patron_type)
       end
+      result << BD.description if @bd_available
       result.uniq
     end
     
