@@ -57,7 +57,7 @@ module BlacklightCornellRequests
 
     # Determine whether this item matches the specified volume
     # volume = {:enum, :chron, :year}
-    def match? volume
+    def volume_match? volume
       @enumeration[:enum] == volume[:enum] &&
       @enumeration[:chron] == volume[:chron] &&
       @enumeration[:year] == volume[:year]
