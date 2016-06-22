@@ -67,6 +67,7 @@ module BlacklightCornellRequests
       @holdings = parse_holdings
       @volume = volume
       @multivolume = document[:multivol_b]
+      set_item_docs    # Assign the appropriate chunk of the Solr document to each item record
     end
     
     def inspect
@@ -89,6 +90,21 @@ module BlacklightCornellRequests
           parse_holdings
         end
       end
+    end
+    
+    # once the holdings (and thus item records) have been parsed, go back and set
+    # each item record's solrdoc property to the correct snippet from the main Solr
+    # document
+    def set_item_docs
+      items().each { |i| i.solrdoc = solr_doc_for_item(i.id) }
+    end
+    
+    def solr_doc_for_item(item_id)
+      unless @solr_doc_items
+        @solr_doc_items = @document[:item_record_display].map { |i| JSON.parse(i) }
+      end
+      
+      @solr_doc_items.find { |i| i['item_id'] == item_id.to_s }
     end
     
     def get_holdings

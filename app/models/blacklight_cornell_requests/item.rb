@@ -4,6 +4,7 @@ module BlacklightCornellRequests
   class Item
     
     attr_reader :id, :mfhd_id, :enumeration, :location, :status
+    attr_accessor :solrdoc
     
     # Basic initializer
     # 
@@ -11,6 +12,7 @@ module BlacklightCornellRequests
     def initialize(options = {})
       return nil if options['ITEM_ID'].nil?
       set_options options
+      @solrdoc = nil
     end
     
     def inspect
@@ -72,17 +74,20 @@ module BlacklightCornellRequests
       BlacklightCornellRequests::DeliveryMethod
       
       result = []
+      loan_type_code = (@solrdoc['temp_item_type_id'].blank? or @solrdoc['temp_item_type_id'] == '0') ?
+           @solrdoc['item_type_id'] : 
+           @solrdoc['temp_item_type_id']
       DELIVERY_METHODS.each do |m|
         method = Object.const_get("BlacklightCornellRequests::#{m}")
         #### EXAMPLE CALL BELOW - need to figure out real parameters
         result << method.description if method.available?(@status[:code], 
-                                                          LOAN_TYPES[:regular],
+                                                          DeliveryMethod.loan_type(loan_type_code),
                                                           patron_type)
       end
       
       result
     
     end
-    
+  
   end
 end
