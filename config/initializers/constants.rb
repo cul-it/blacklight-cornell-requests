@@ -52,6 +52,7 @@ module BlacklightCornellRequests
     :requested              => 27
   }
   
+  OCLC_TYPE_ID = 'OCoLC'
   
   
 end
