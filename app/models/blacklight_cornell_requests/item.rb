@@ -80,7 +80,7 @@ module BlacklightCornellRequests
       DELIVERY_METHODS.each do |m|
         method = Object.const_get("BlacklightCornellRequests::#{m}")
         #### EXAMPLE CALL BELOW - need to figure out real parameters
-        result << method.description if method.available?(@status[:code], 
+        result << method if method.available?(@status[:code], 
                                                           DeliveryMethod.loan_type(loan_type_code),
                                                           patron_type)
       end

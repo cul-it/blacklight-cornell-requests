@@ -166,7 +166,7 @@ module BlacklightCornellRequests
       item_records.each do |i|
         result += i.delivery_methods(patron_type)
       end
-      result << BD.description if @bd_available
+      result << BD if @bd_available
       result.uniq
     end
     
