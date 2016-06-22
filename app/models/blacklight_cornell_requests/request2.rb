@@ -167,7 +167,9 @@ module BlacklightCornellRequests
         result += i.delivery_methods(patron_type)
       end
       result << BD if @bd_available
-      result.uniq
+      
+      # We only need unique delivery methods, sorted by delivery time (minimum)
+      result.uniq.sort { |a, b| a.time[0] <=> b.time[0] }
     end
     
     # Determine Borrow Direct availability for an ISBN or title
