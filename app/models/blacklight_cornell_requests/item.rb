@@ -79,10 +79,9 @@ module BlacklightCornellRequests
            @solrdoc['temp_item_type_id']
       DELIVERY_METHODS.each do |m|
         method = Object.const_get("BlacklightCornellRequests::#{m}")
-        #### EXAMPLE CALL BELOW - need to figure out real parameters
         result << method if method.available?(@status[:code], 
-                                                          DeliveryMethod.loan_type(loan_type_code),
-                                                          patron_type)
+                                              DeliveryMethod.loan_type(loan_type_code),
+                                              patron_type)
       end
       
       result

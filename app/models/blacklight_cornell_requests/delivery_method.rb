@@ -184,6 +184,15 @@ module BlacklightCornellRequests
     def self.available?(status, loan_type, patron_type)
       
     end
+    
+    def self.pda_data(solrdoc)
+      {} unless solrdoc['url_pda_display']
+      url, note = solrdoc['url_pda_display'][0].split('|')
+      { 
+        :url => url,
+        :note => note      
+      }
+    end
   end
   
   class PurchaseRequest < DeliveryMethod

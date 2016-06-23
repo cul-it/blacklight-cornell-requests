@@ -11,6 +11,7 @@ module BlacklightCornellRequests
     attr_reader :bibid, 
                 :netid, 
                 :document,
+                :work,
                 # holdings_data is the unprocesssed data returned by a call to the holdings service 
                 # @todo Do we really need to keep this around?
                 :holdings_data,
@@ -62,6 +63,7 @@ module BlacklightCornellRequests
       @bibid = bibid
       @netid = netid
       @document = document
+      @work = Work.new(document)
       @bd_available = bd || available_in_bd?
       @holdings_data = holdings_data || get_holdings
       @holdings = parse_holdings
@@ -96,10 +98,13 @@ module BlacklightCornellRequests
     # each item record's solrdoc property to the correct snippet from the main Solr
     # document
     def set_item_docs
+      # If this is a PDA item, there won't be item records to work with
+      return unless @document[:item_record_display].present?
+      
       items().each { |i| i.solrdoc = solr_doc_for_item(i.id) }
     end
     
-    def solr_doc_for_item(item_id)
+    def solr_doc_for_item(item_id)      
       unless @solr_doc_items
         @solr_doc_items = @document[:item_record_display].map { |i| JSON.parse(i) }
       end
@@ -166,7 +171,11 @@ module BlacklightCornellRequests
       item_records.each do |i|
         result += i.delivery_methods(patron_type)
       end
+      # Following line is needed for call to subclasses to not crash ... but why?
+      BlacklightCornellRequests::DeliveryMethod
+      
       result << BD if @bd_available
+      result << AskLibrarian    # You can always ask a librarian!
       
       # We only need unique delivery methods, sorted by delivery time (minimum)
       result.uniq.sort { |a, b| a.time[0] <=> b.time[0] }
