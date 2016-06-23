@@ -20,7 +20,7 @@ module BlacklightCornellRequests
                 :holdings,
                 # The particular volume requested, if any
                 :bd_available,
-                :multivolume
+                :multivolume, :pda_data
                 
                 
     attr_accessor :volume
@@ -70,6 +70,7 @@ module BlacklightCornellRequests
       @volume = volume
       @multivolume = document[:multivol_b]
       set_item_docs    # Assign the appropriate chunk of the Solr document to each item record
+      @pda_data = nil  # Patron-driven acquisition
     end
     
     def inspect
@@ -175,9 +176,10 @@ module BlacklightCornellRequests
       BlacklightCornellRequests::DeliveryMethod
       
       result << BD if @bd_available
+      result << PDA if @pda_data = PDA.pda_data(@document) # Yes, this is an assignment
       result << AskLibrarian    # You can always ask a librarian!
       
-      # We only need unique delivery methods, sorted by delivery time (minimum)
+      # We only need unique delivery methods, sorted by delivery time (minimum time in range)
       result.uniq.sort { |a, b| a.time[0] <=> b.time[0] }
     end
     
