@@ -20,7 +20,7 @@ module BlacklightCornellRequests
                 :holdings,
                 # The particular volume requested, if any
                 :bd_available,
-                :multivolume, :pda_data
+                :multivolume
                 
                 
     attr_accessor :volume
@@ -63,10 +63,10 @@ module BlacklightCornellRequests
       @bibid = bibid
       @netid = netid
       @document = document
-      @work = Work.new(document)
       @bd_available = bd || available_in_bd?
       @holdings_data = holdings_data || get_holdings
       @holdings = parse_holdings
+      @work = Work.new(document, items())
       @volume = volume
       @multivolume = document[:multivol_b]
       set_item_docs    # Assign the appropriate chunk of the Solr document to each item record
@@ -100,14 +100,14 @@ module BlacklightCornellRequests
     # document
     def set_item_docs
       # If this is a PDA item, there won't be item records to work with
-      return unless @document[:item_record_display].present?
+      return unless @document['item_record_display'].present?
       
       items().each { |i| i.solrdoc = solr_doc_for_item(i.id) }
     end
     
     def solr_doc_for_item(item_id)      
       unless @solr_doc_items
-        @solr_doc_items = @document[:item_record_display].map { |i| JSON.parse(i) }
+        @solr_doc_items = @document['item_record_display'].map { |i| JSON.parse(i) }
       end
       
       @solr_doc_items.find { |i| i['item_id'] == item_id.to_s }
@@ -181,6 +181,11 @@ module BlacklightCornellRequests
       
       # We only need unique delivery methods, sorted by delivery time (minimum time in range)
       result.uniq.sort { |a, b| a.time[0] <=> b.time[0] }
+    end
+    
+    # Determine whether any copy is available
+    def available?
+      selected_items.any? { |i| i.status.present? && i.status[:code] == 1 }
     end
     
     # Determine Borrow Direct availability for an ISBN or title

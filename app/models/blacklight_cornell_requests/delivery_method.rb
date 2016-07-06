@@ -186,7 +186,7 @@ module BlacklightCornellRequests
     end
     
     def self.pda_data(solrdoc)
-      {} unless solrdoc['url_pda_display']
+      return nil unless solrdoc['url_pda_display']
       url, note = solrdoc['url_pda_display'][0].split('|')
       { 
         :url => url,

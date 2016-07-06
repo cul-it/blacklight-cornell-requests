@@ -69,6 +69,7 @@ module BlacklightCornellRequests
     def delivery_methods(patron_type)
       
       return [] unless @status   # no status == electronic item? Is this right?
+      return [] unless @solrdoc  # no doc fragment == no item record (PDA item?)
       
       # Without the following line, the later const_get call fails ... not sure why
       BlacklightCornellRequests::DeliveryMethod
