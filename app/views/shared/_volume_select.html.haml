@@ -1,5 +1,5 @@
 -if @selected_volume.present?
-	%select#volume-selection.form-control{:name => "volume-selection", :data =>{:request_path =>magic_request_path(@id)}}
+	%select#volume-selection.form-control{:name => "volume-selection", :data =>{:request_path =>request_test_path(@id)}}
 		=options_for_select(@volumes, selected = @selected_volume)
 
 -else
@@ -12,5 +12,5 @@
 			%div#per_page_dropdown.dropdown
 				%label.sr-only{:for => "volume-selection"}
 					Select volume
-				%select#volume-selection.form-control{@volumes, :name => "volume-selection", :data =>{:request_path =>magic_request_path(@id)}}
-					=options_for_select({'Choose a volume...' => ''}.merge(@volumes), selected = @selected_volume)
+				%select#volume-selection.form-control{@volumes, :name => "volume-selection", :data =>{:request_path =>request_test_path(@id)}}
+					=options_for_select([{"no.7532-7539"=>{:enum=>"no.7532-7539",:chron=>"2015", :year=>nil}},{"v.457"=>{:enum=>"v.457", :chron=>"2009", :year=>nil}}], selected = @selected_volume)

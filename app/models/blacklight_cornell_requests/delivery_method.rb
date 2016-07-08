@@ -52,8 +52,11 @@ module BlacklightCornellRequests
   ###### Individual delivery method class definitions follow ########
   
   class L2L < DeliveryMethod
+    
+    TemplateName = 'l2l'
+    
     def self.description
-      'Library-to-Library delivery'
+      'Cornell library to library'
     end
     
     def self.time(options = {})
@@ -74,6 +77,9 @@ module BlacklightCornellRequests
   end
 
   class BD < DeliveryMethod
+    
+    TemplateName = 'bd'
+    
     def self.description
       'Borrow Direct'
     end
@@ -92,6 +98,9 @@ module BlacklightCornellRequests
   end
   
   class ILL < DeliveryMethod
+    
+    TemplateName = 'ill'
+    
     def self.description
       'Interlibrary Loan'
     end
@@ -123,6 +132,9 @@ module BlacklightCornellRequests
   end
   
   class Hold < DeliveryMethod
+    
+    TemplateName = 'hold'
+    
     def self.description
       'Hold'
     end
@@ -150,6 +162,9 @@ module BlacklightCornellRequests
   end
   
   class Recall < DeliveryMethod
+    
+    TemplateName = 'recall'
+    
     def self.description
       'Recall'
     end
@@ -173,6 +188,9 @@ module BlacklightCornellRequests
   end
   
   class PDA < DeliveryMethod
+    
+    TemplateName = ''
+    
     def self.description
       'Patron-driven acquisition'
     end
@@ -196,6 +214,9 @@ module BlacklightCornellRequests
   end
   
   class PurchaseRequest < DeliveryMethod
+    
+    TemplateName = 'purchase'
+    
     def self.description
       'Purchase Request'
     end
@@ -210,6 +231,9 @@ module BlacklightCornellRequests
   end
   
   class AskLibrarian < DeliveryMethod
+    
+    TemplateName = 'ask'
+    
     def self.description
       'Ask a librarian'
     end
@@ -224,6 +248,9 @@ module BlacklightCornellRequests
   end
   
   class AskCirculation < DeliveryMethod
+    
+    TemplateName = 'circ'
+    
     def self.description
       'Ask at circulation desk'
     end
@@ -241,6 +268,9 @@ module BlacklightCornellRequests
   end
   
   class DocumentDelivery < DeliveryMethod
+    
+    TemplateName = 'document_delivery'
+    
     def self.description
       'Document Delivery'
     end

@@ -154,7 +154,7 @@ module BlacklightCornellRequests
     
     # Return an array of associated item records ONLY for the set volume (if any)
     def selected_items
-      if @volume.empty?
+      if @volume.empty? || @volume.all? { |k,v| v.nil? }
         items()
       else
         items().select { |i| i.enumeration && i.volume_match?(@volume) }
@@ -165,7 +165,6 @@ module BlacklightCornellRequests
     # the methods will only be calculated for selected_items. If false, then 
     # methods will be calculated for ALL the item records
     def delivery_methods(use_volume = true)
-
       result = []
       patron_type = get_patron_type(@netid)
       item_records = use_volume ? selected_items : items
