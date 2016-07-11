@@ -15,7 +15,10 @@ module BlacklightCornellRequests
 
       Rails.logger.debug "Viewing item #{@id} (within request controller) - session: #{session}"
 
-      req = BlacklightCornellRequests::Request.new(@id)
+      # If the holdings data has been stored in the session (:holdings_status_short), 
+      # we'll pass it in to the request to be reused instead of making
+      # the expensive holdings service call again
+      req = BlacklightCornellRequests::Request.new(@id, session[:holdings_status_short])
       req.netid = request.env['REMOTE_USER']
       req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
 
@@ -24,7 +27,7 @@ module BlacklightCornellRequests
       # if the referer is a different path — i.e., /request/*, then we *do* want to
       # preserve the volume selection; this would be the case if the page is reloaded
       # or the user selects an alternate delivery method for the same item.
-      if session[:setvol].nil? && (request.referer.include? 'catalog')
+      if session[:setvol].nil? && (request.referer && request.referer.include?('catalog'))
         session[:volume] = nil 
       end
       session[:setvol] = nil
