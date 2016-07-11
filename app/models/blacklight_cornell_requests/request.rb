@@ -62,14 +62,21 @@ module BlacklightCornellRequests
     attr_accessor :LOST_LIBRARY_APPLIED, :LOST_SYSTEM_APPLIED, :LOST, :CLAIMS_RETURNED, :DAMAGED
     attr_accessor :WITHDRAWN, :AT_BINDERY, :CATALOG_REVIEW, :CIRCULATION_REVIEW, :SCHEDULED, :IN_PROCESS
     attr_accessor :CALL_SLIP_REQUEST, :SHORT_LOAN_REQUEST, :REMOTE_STORAGE_REQUEST, :REQUESTED
+    attr_reader :holdings_status_short
+    
     validates_presence_of :bibid
     def save(validate = true)
       validate ? valid? : true
     end
 
-    def initialize(bibid)
+    # The holdings_status_short parameter is used to pass in the saved result of a 
+    # call to the status_short method of the holdings service, usually stored in the
+    # session. Since session ordinarily can't be accessed from a model, we have to
+    # pass it in here and hang on to it
+    def initialize(bibid, holdings_status_short = nil)
       self.bibid = bibid
       @bd = nil
+      @holdings_status_short = holdings_status_short
     end
 
     def save!
@@ -403,7 +410,12 @@ module BlacklightCornellRequests
       #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
       return nil unless self.bibid
 
-      response = parseJSON(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/status_short/#{self.bibid}"))
+      response = nil
+      if @holdings_status_short
+        response = @holdings_status_short
+      else
+        response = parseJSON(HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/status_short/#{self.bibid}"))
+      end
       #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{response.inspect}"
       
       if response[self.bibid.to_s] and response[self.bibid.to_s][self.bibid.to_s] and response[self.bibid.to_s][self.bibid.to_s][:records]
