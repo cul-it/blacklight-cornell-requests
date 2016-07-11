@@ -17,8 +17,14 @@ module BlacklightCornellRequests
 
       # If the holdings data has been stored in the session (:holdings_status_short), 
       # we'll pass it in to the request to be reused instead of making
-      # the expensive holdings service call again
-      req = BlacklightCornellRequests::Request.new(@id, session[:holdings_status_short])
+      # the expensive holdings service call again. As soon as it's used, the session
+      # data gets cleared so that we don't end up passing stale session data for a different
+      # bibid into the request next time (if someone manipulates the URL instead of following
+      # the normal catalog path). A better way of handling this might be to compare the
+      # bibid and the key of the holdings data, which should be the same.
+      session_holdings = session[:holdings_status_short]
+      session[:holdings_status_short] = nil 
+      req = BlacklightCornellRequests::Request.new(@id, session_holdings)
       req.netid = request.env['REMOTE_USER']
       req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
 
