@@ -1,5 +1,13 @@
 # Release Notes - blacklight-cornell-requests
 
+## v1.2.4
+
+### Enhancements
+- Greatly improved request page load time (DISCOVERYACCESS-2684)
+
+### Bug fixes
+- Ensured that invalid pickup locations wouldn't appear as options in the location select list ( DISCOVERYACCESS-2682)
+
 ## v1.2.3
 
 ### Bug fixes
