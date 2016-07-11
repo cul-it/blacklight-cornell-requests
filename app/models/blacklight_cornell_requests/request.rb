@@ -285,7 +285,7 @@ module BlacklightCornellRequests
       ## record number of occurances for each of the 
       items.each do |item|
         
-        Rails.logger.warn "mjc12test: item: #{item}"
+      #  Rails.logger.warn "mjc12test: item: #{item}"
         
         # item[:numeric_enumeration] = item[:item_enum][/\d+/]  
         enums = item[:item_enum].scan(/\d+/)  
@@ -418,13 +418,18 @@ module BlacklightCornellRequests
       end
       #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{response.inspect}"
       
-      if response[self.bibid.to_s] and response[self.bibid.to_s][self.bibid.to_s] and response[self.bibid.to_s][self.bibid.to_s][:records]
+      bib = self.bibid.to_s
+      if response[bib] && 
+         response[bib][bib] && 
+         response[bib][bib][:records]
         statuses = {}
         call_numbers = {}
-        response[self.bibid.to_s][self.bibid.to_s]['records'].each do |record|
-          if record[:bibid].to_s == self.bibid.to_s
+        # Cycle through all the holdings records and populate statuses and
+        # call_numbers arrays
+        response[bib][bib][:records].each do |record|
+          if record[:bibid].to_s == bib
             record[:holdings].each do |holding|
-              statuses[holding[:ITEM_ID].to_s] = holding[:ITEM_STATUS]
+              statuses[holding[:ITEM_ID].to_s]     = holding[:ITEM_STATUS]
               call_numbers[holding[:ITEM_ID].to_s] = holding[:DISPLAY_CALL_NO]
             end
           end
@@ -432,31 +437,37 @@ module BlacklightCornellRequests
         
         #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{call_numbers.inspect}"
         location_seen = Hash.new
-        location_ids = Array.new
+        location_ids  = Array.new
         ## assume there is one holdings location per bibid
-        locations = Hash.new
-        call_number = ''
+        locations     = Hash.new
+        call_number   = ''
+        
+        # store a hash of locations {:number => :name} from the holdings record display
         document[:holdings_record_display].each do |hrd|
           hrdJSON = parseJSON hrd
           hrdJSON[:locations].each do |loc|
             locations[loc[:number].to_s] = loc[:name]
           end
-        end if document[:holdings_record_display]
+        end if document[:holdings_record_display] # ??
+        
         holdings.each do |holding|
-          holding[:status] = item_status statuses[holding['item_id'].to_s]
-          holding[:call_number] = item_status call_numbers[holding['item_id'].to_s]
+          holding[:status]      = item_status statuses[holding['item_id'].to_s]
+          # This doesn't do anything — calling item_status on a call number only
+          # returns the same call number.
+          #  holding[:call_number] = item_status call_numbers[holding['item_id'].to_s]
+          holding[:call_number] = call_numbers[holding['item_id'].to_s]
+          
+          # Pick a location to use - either perm_location or temp_location
           location = holding[:perm_location]
           if location.is_a?(Hash)
             location = location['number'].to_s 
           end
           if holding[:temp_location].is_a?(Hash)
             temp_location_s = holding[:temp_location]['number'].to_s 
-            temp_location =  holding[:temp_location]
+            temp_location   = holding[:temp_location]
           else 
             temp_location_s = holding[:temp_location]
           end
-
-          #if holding[:temp_location].to_s == '0'
           if temp_location_s == '0'
             # use holdings location
             holding[:location] = locations[holding[:perm_location].to_s]
@@ -467,13 +478,13 @@ module BlacklightCornellRequests
               tempLocJSON = temp_location 
               holding[:location] = tempLocJSON[:name]
             else
-             Rails.logger.warn "#{__FILE__}:#{__LINE__} Cannot use temp location (not a hash) Your solr database is not up to date.: #{temp_location.inspect}"
+              Rails.logger.warn "#{__FILE__}:#{__LINE__} Cannot use temp location (not a hash) Your solr database is not up to date.: #{temp_location.inspect}"
             end
           end
           
           # Rails.logger.info "sk274_log: holding: #{holding.inspect}"
-          location_seen[location] = 1 unless location_seen[location]
-          exclude_location_list = Array.new
+          location_seen[location] = location_seen[location] || 1
+          exclude_location_list   = Array.new
           
           if location_seen[location] == 1
             circ_group_id = Circ_policy_locs.select('CIRC_GROUP_ID').where( 'location_id' =>  location )
@@ -487,31 +498,30 @@ module BlacklightCornellRequests
             ## Law group can deliver to itself
             ## Others can't deliver to itself
             # logger.debug "sk274_log: " + circ_group_id.inspect
+            
             # there might not be an entry in this table  
-            if !circ_group_id.blank? 
-              res  = circ_group_id[0]['CIRC_GROUP_ID']
-              circ_group_id[0]['CIRC_GROUP_ID'] = res.nil? ? 0 : Float(circ_group_id[0]['CIRC_GROUP_ID'])
-              if circ_group_id[0]['CIRC_GROUP_ID'] == 3 || circ_group_id[0]['CIRC_GROUP_ID'] == 19
+            if circ_group_id.present? 
+              group = circ_group_id[0]['CIRC_GROUP_ID']
+              group = group.nil? ? 0 : Float(group)
+              
+              case group
+              when 3, 19
                 ## include both group id if Olin or Uris
                 circ_group_id = [3, 19]
                 # logger.debug "sk274_log: Olin or Uris detected"
-              elsif circ_group_id[0]['CIRC_GROUP_ID'] == 5
-                ## skip annex next time
+              when 5, 14
+                # 5 is annex and 14 is law
+                ## skip annex/law next time
                 # logger.debug "sk274_log: Annex detected, skipping"
                 location_seen[location] = exclude_location_list
                 holding[:exclude_location_id] = exclude_location_list
                 next
-              elsif circ_group_id[0]['CIRC_GROUP_ID'] == 14 
-                ## skip law library next time
-                # logger.debug "sk274_log: Library detected, skipping"
-                location_seen[location] = exclude_location_list
-                holding[:exclude_location_id] = exclude_location_list
-                next
               end
+              
               # logger.debug "sk274_log: circ group id: " + circ_group_id.inspect
               locs = Circ_policy_locs.select('location_id').where( :circ_group_id =>  circ_group_id, :pickup_location => 'Y' )
               locs.each do |loc|
-                exclude_location_list.push loc['location_id']
+                exclude_location_list.push loc['LOCATION_ID']
               end
               location_seen[location] = exclude_location_list
             end
