@@ -4,9 +4,11 @@
 
 ### Enhancements
 - Greatly improved request page load time (DISCOVERYACCESS-2684)
+- Added ILL link to volume select screen (DISCOVERYACCESS-2703)
 
 ### Bug fixes
 - Ensured that invalid pickup locations wouldn't appear as options in the location select list ( DISCOVERYACCESS-2682)
+- Removed hold option for records without any item records (e.g., current newspapers) (DISCOVERYACCESS-1477)
 
 ## v1.2.3
 
