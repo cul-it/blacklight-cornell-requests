@@ -26,6 +26,7 @@ module BlacklightCornellRequests
       session[:holdings_status_short] = nil 
       req = BlacklightCornellRequests::Request.new(@id, session_holdings)
       req.netid = request.env['REMOTE_USER']
+      req.netid = 'mhk33'
       req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
 
       # When we're entering the request system from a /catalog path, then we're starting
