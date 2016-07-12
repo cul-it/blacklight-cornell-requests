@@ -94,8 +94,6 @@ module BlacklightCornellRequests
       request_options = []
       alternate_options = []
       service = ASK_LIBRARIAN
-      
-      
 
       if self.bibid.nil?
         self.request_options = request_options
@@ -218,7 +216,9 @@ module BlacklightCornellRequests
       end
 
       #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} self request options: #{self.request_options}"
-      if  working_items.size < 1 
+      
+      # This is presumably just for PDA records, so limit it to that condition
+      if self.document[:url_pda_display] && working_items.size < 1 
         hld_entry = {:service => HOLD, :location => '', :status => ''}
         request_options.push hld_entry
       end
