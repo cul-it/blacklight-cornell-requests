@@ -130,7 +130,7 @@ module BlacklightCornellRequests
               
               pickup_locs = Circ_policy_locs.select('location_id').where( :circ_group_id =>  circ_group_id, :pickup_location => 'Y' )
               pickup_locs.each do |loc|
-                exclude_location_list.push loc['location_id']
+                exclude_location_list.push loc['LOCATION_ID']
               end
               location_seen[holding[:location]] = exclude_location_list
             end # if location_seen[location] == 1
