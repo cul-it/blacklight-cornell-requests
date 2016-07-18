@@ -666,7 +666,7 @@ module BlacklightCornellRequests
 
     # Determine delivery options for a single item if the patron is a Cornell affiliate
     def get_cornell_delivery_options item
-      typeCode = (item[:temp_item_type_id].blank? or item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
+      typeCode = (item[:temp_item_type_id].blank? || item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
       request_options = []
 
@@ -674,7 +674,7 @@ module BlacklightCornellRequests
       #   item type is noncirculating,
       #   item is not at bindery
       #   item status is charged, lost, or missing
-      if (item_loan_type == 'nocirc' or noncirculating? item) or
+      if (item_loan_type == 'nocirc' || noncirculating? item) ||
         (! [AT_BINDERY, NOT_CHARGED].include?(item[:status]))
         #if available_in_bd? self.netid, params
         if self.in_borrow_direct
@@ -689,13 +689,13 @@ module BlacklightCornellRequests
       end
       Rails.logger.debug "mjc12test: loantype: #{item_loan_type}, status: #{item[:status ]}"
       # Check the rest of the cases
-      if item_loan_type == 'nocirc' or noncirculating? item
+      if item_loan_type == 'nocirc' || noncirculating? item
         return request_options.push({:service => ILL, 
                                      :location => item[:location]})
-      elsif item_loan_type == 'regular' and item[:status] == NOT_CHARGED
+      elsif item_loan_type == 'regular' && item[:status] == NOT_CHARGED
         return request_options.push({:service => L2L, 
                                      :location => item[:location] } )
-      elsif item_loan_type == 'regular' and item[:status] ==  CHARGED
+      elsif item_loan_type == 'regular' && item[:status] ==  CHARGED
         return request_options.push({:service => ILL, 
                                      :location => item[:location]},
                                     {:service => RECALL,
@@ -703,7 +703,7 @@ module BlacklightCornellRequests
                                     {:service => HOLD, 
                                      :location => item[:location], 
                                      :status => item[:status]})
-      elsif item_loan_type == 'regular' and
+      elsif item_loan_type == 'regular' &&
             [IN_TRANSIT_DISCHARGED, IN_TRANSIT_ON_HOLD].include? item[:status]
         return request_options.push({:service => RECALL,
                                      :location => item[:location]},
@@ -715,13 +715,13 @@ module BlacklightCornellRequests
                                      :location => item[:location]},
                                     {:service => ILL,
                                      :location => item[:location]})
-      elsif item_loan_type == 'day' and item[:status] == CHARGED
+      elsif item_loan_type == 'day' && item[:status] == CHARGED
         return request_options.push({:service => ILL, 
                                      :location => item[:location] },
                                     {:service => HOLD, 
                                      :location => item[:location], 
                                      :status => item[:status] } )
-      elsif item_loan_type == 'day' and item[:status] == NOT_CHARGED
+      elsif item_loan_type == 'day' && item[:status] == NOT_CHARGED
         if Request.no_l2l_day_loan_types.include? typeCode
           return request_options
         else
@@ -742,16 +742,16 @@ module BlacklightCornellRequests
 
     # Determine delivery options for a single item if the patron is a guest (non-Cornell)
     def get_guest_delivery_options item
-      typeCode = (item[:temp_item_type_id].blank? or item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
+      typeCode = (item[:temp_item_type_id].blank? || item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
 
       if noncirculating? item 
         []
-      elsif item[:status] == NOT_CHARGED and (item_loan_type == 'regular' or item_loan_type == 'day') 
+      elsif item[:status] == NOT_CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day') 
         [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
-      elsif item[:status] == CHARGED and (item_loan_type == 'regular' or item_loan_type == 'day')
+      elsif item[:status] == CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day')
         [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
-      elsif item_loan_type == 'minute' and (item[:status] == NOT_CHARGED or item[:status] == CHARGED)
+      elsif item_loan_type == 'minute' && (item[:status] == NOT_CHARGED || item[:status] == CHARGED)
         [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
       else
         # default case covers:
@@ -963,6 +963,7 @@ module BlacklightCornellRequests
         #return { :error => I18n.t('requests.errors.holding_id.blank') }
         return { :error => 'test' }
       end
+
 
       # Use the VoyagerRequest class to submit the request while bypassing the holdings service
       v = VoyagerRequest.new(self.bibid, {:holdings_url => Rails.configuration.voyager_get_holds, :request_url => Rails.configuration.voyager_req_holds,:rest_url => Rails.configuration.voyager_req_holds_rest})
