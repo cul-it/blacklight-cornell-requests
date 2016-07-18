@@ -42,6 +42,13 @@ module BlacklightCornellRequests
       # Reset session var after use so that we don't get weird results if
       # user goes to another catalog item
       session[:volume] = nil
+      
+      # If there's a URL-based volume present, that overrides the session data (this
+      # should only happen now if someone is linking into requests from outside the main
+      # catalog).
+      if params[:enum] || params[:chron] || params[:year]
+        params[:volume] = "|#{params[:enum]}|#{params[:chron]}|#{params[:year]}|"        
+      end
 
       req.magic_request @document, request.env['HTTP_HOST'], {:target => target, :volume => params[:volume]}
 
