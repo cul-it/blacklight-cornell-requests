@@ -663,13 +663,47 @@ module BlacklightCornellRequests
       return options
 
     end
+    
+    # Given an item hash, return a location (either temp or permanent if no temp)
+    def get_location(item)
+      
+      location = item[:perm_location]
+      location = location['number'].to_s if location.is_a?(Hash)
+      
+      if item[:temp_location].is_a?(Hash)
+        temp_location_s = item[:temp_location]['number'].to_s 
+        temp_location   = item[:temp_location]
+      else 
+        temp_location_s = item[:temp_location]
+      end
+      
+      if temp_location_s == '0'
+        # use holdings location
+        return location
+      else
+        # use temp location
+        #tempLocJSON = parseJSON holding[:temp_location]
+        return item[:temp_location]['number'].to_s if temp_location.is_a?(Hash)
+
+        # If nothing else works
+        Rails.logger.warn "#{__FILE__}:#{__LINE__} Cannot use temp location (not a hash) Your solr database is not up to date.: #{temp_location.inspect}"
+        return nil
+
+      end
+      
+    end
+    
+    # TODO: is 88 the only location for music?
+    def at_music_library?(item)
+      get_location(item) == '88'
+    end
 
     # Determine delivery options for a single item if the patron is a Cornell affiliate
     def get_cornell_delivery_options item
       typeCode = (item[:temp_item_type_id].blank? || item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
       request_options = []
-Rails.logger.warn "mjc12test: location: #{item[:location]}"
+      
       # Borrow direct check where appropriate:
       #   item type is noncirculating,
       #   item is not at bindery
@@ -682,51 +716,62 @@ Rails.logger.warn "mjc12test: location: #{item[:location]}"
         end
       end
 
-      # Document delivery should be available for all items - see DISCOVERYACCESS-1149
+      # Document delivery should be available for all items - see DISCOVERYACCESS-1257
       # But with a few exceptions!
       if docdel_eligible? item
         request_options.push( {:service => DOCUMENT_DELIVERY })
       end
       Rails.logger.debug "mjc12test: loantype: #{item_loan_type}, status: #{item[:status ]}"
       # Check the rest of the cases
-      if item_loan_type == 'nocirc' || noncirculating?(item)
-        return request_options.push({:service => ILL, 
-                                     :location => item[:location]})
-      elsif item_loan_type == 'regular' && item[:status] == NOT_CHARGED
-        return request_options.push({:service => L2L, 
-                                     :location => item[:location] } )
-      elsif item_loan_type == 'regular' && item[:status] ==  CHARGED
-        return request_options.push({:service => ILL, 
-                                     :location => item[:location]},
-                                    {:service => RECALL,
-                                     :location => item[:location]},
-                                    {:service => HOLD, 
-                                     :location => item[:location], 
-                                     :status => item[:status]})
+      if item_loan_type == 'nocirc' || 
+         noncirculating?(item)
+        request_options.push({:service => ILL, 
+                              :location => item[:location]})
+      elsif item_loan_type == 'regular' && 
+            item[:status] == NOT_CHARGED &&
+            !at_music_library?(item)
+        request_options.push({:service => L2L, 
+                              :location => item[:location] } )                              
+      elsif item_loan_type == 'regular' && 
+            item[:status] ==  CHARGED
+        request_options.push({:service => ILL, 
+                              :location => item[:location]})
+        unless at_music_library?(item)
+          request_options.push({:service => RECALL,
+                                :location => item[:location]},
+                               {:service => HOLD, 
+                                :location => item[:location], 
+                                :status => item[:status]})
+        end
       elsif item_loan_type == 'regular' &&
-            [IN_TRANSIT_DISCHARGED, IN_TRANSIT_ON_HOLD].include?(item[:status])
-        return request_options.push({:service => RECALL,
-                                     :location => item[:location]},
-                                    {:service => HOLD,
-                                     :location => item[:location]})
+            [IN_TRANSIT_DISCHARGED, IN_TRANSIT_ON_HOLD].include?(item[:status]) &&
+            !at_music_library?(item)
+        request_options.push({:service => RECALL,
+                              :location => item[:location]},
+                             {:service => HOLD,
+                              :location => item[:location]})
       elsif ['regular','day'].include?(item_loan_type) && 
             [MISSING, LOST].include?(item[:status])
-        return request_options.push({:service => PURCHASE, 
-                                     :location => item[:location]},
-                                    {:service => ILL,
-                                     :location => item[:location]})
-      elsif item_loan_type == 'day' && item[:status] == CHARGED
-        return request_options.push({:service => ILL, 
-                                     :location => item[:location] },
-                                    {:service => HOLD, 
-                                     :location => item[:location], 
-                                     :status => item[:status] } )
-      elsif item_loan_type == 'day' && item[:status] == NOT_CHARGED
+        request_options.push({:service => PURCHASE, 
+                              :location => item[:location]},
+                             {:service => ILL,
+                              :location => item[:location]})
+      elsif item_loan_type == 'day' && 
+            item[:status] == CHARGED
+        request_options.push({:service => ILL, 
+                              :location => item[:location] })
+        unless at_music_library?(item)
+          request_options.push({:service => HOLD, 
+                                :location => item[:location], 
+                                :status => item[:status]   })
+        end
+      elsif item_loan_type == 'day' && 
+            item[:status] == NOT_CHARGED
         if Request.no_l2l_day_loan_types.include? typeCode
-          return request_options
-        else
-          return request_options.push( {:service => L2L, 
-                                        :location => item[:location] } )
+          #return request_options
+        elsif !at_music_library?(item)
+          request_options.push( {:service => L2L, 
+                                 :location => item[:location] } )
         end
       elsif item_loan_type == 'minute'
         return request_options.push( {:service => ASK_CIRCULATION, 
@@ -734,10 +779,10 @@ Rails.logger.warn "mjc12test: location: #{item[:location]}"
       elsif item[:status] == AT_BINDERY
         return request_options.push( {:service => ILL, 
                                       :location => item[:location] } )
-      else
-        return request_options
       end
-
+      
+      request_options
+      
     end
 
     # Determine delivery options for a single item if the patron is a guest (non-Cornell)
@@ -748,8 +793,8 @@ Rails.logger.warn "mjc12test: location: #{item[:location]}"
       if noncirculating? item 
         []
       elsif item[:status] == NOT_CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day') 
-        [ { :service => L2L, :location => item[:location] } ] unless no_l2l_day_loan_types? item_loan_type
-      elsif item[:status] == CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day')
+        [ { :service => L2L, :location => item[:location] } ] unless (no_l2l_day_loan_types?(item_loan_type) || at_music_library?(item))
+      elsif item[:status] == CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day') && !at_music_library?(item)
         [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
       elsif item_loan_type == 'minute' && (item[:status] == NOT_CHARGED || item[:status] == CHARGED)
         [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
@@ -780,6 +825,7 @@ Rails.logger.warn "mjc12test: location: #{item[:location]}"
                           'Musical Recording', 
                           'Musical Score', 
                           'Non-musical Recording', 
+                          'Journal/Periodical',
                           'Research Guide', 
                           'Thesis']
 
