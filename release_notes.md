@@ -5,6 +5,7 @@
 ### Enhancements
 - Greatly improved request page load time (DISCOVERYACCESS-2684)
 - Added ILL link to volume select screen (DISCOVERYACCESS-2703)
+- Restored volume selection via URL parameters (GH-62)
 
 ### Bug fixes
 - Ensured that invalid pickup locations wouldn't appear as options in the location select list ( DISCOVERYACCESS-2682)
