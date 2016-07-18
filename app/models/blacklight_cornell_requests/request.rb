@@ -669,12 +669,12 @@ module BlacklightCornellRequests
       typeCode = (item[:temp_item_type_id].blank? || item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
       request_options = []
-
+Rails.logger.warn "mjc12test: location: #{item[:location]}"
       # Borrow direct check where appropriate:
       #   item type is noncirculating,
       #   item is not at bindery
       #   item status is charged, lost, or missing
-      if (item_loan_type == 'nocirc' || noncirculating? item) ||
+      if (item_loan_type == 'nocirc' || noncirculating?(item)) ||
         (! [AT_BINDERY, NOT_CHARGED].include?(item[:status]))
         #if available_in_bd? self.netid, params
         if self.in_borrow_direct
@@ -689,7 +689,7 @@ module BlacklightCornellRequests
       end
       Rails.logger.debug "mjc12test: loantype: #{item_loan_type}, status: #{item[:status ]}"
       # Check the rest of the cases
-      if item_loan_type == 'nocirc' || noncirculating? item
+      if item_loan_type == 'nocirc' || noncirculating?(item)
         return request_options.push({:service => ILL, 
                                      :location => item[:location]})
       elsif item_loan_type == 'regular' && item[:status] == NOT_CHARGED
@@ -704,13 +704,13 @@ module BlacklightCornellRequests
                                      :location => item[:location], 
                                      :status => item[:status]})
       elsif item_loan_type == 'regular' &&
-            [IN_TRANSIT_DISCHARGED, IN_TRANSIT_ON_HOLD].include? item[:status]
+            [IN_TRANSIT_DISCHARGED, IN_TRANSIT_ON_HOLD].include?(item[:status])
         return request_options.push({:service => RECALL,
                                      :location => item[:location]},
                                     {:service => HOLD,
                                      :location => item[:location]})
-      elsif (['regular','day'].include? item_loan_type) and 
-            ([MISSING, LOST].include? item[:status])
+      elsif ['regular','day'].include?(item_loan_type) && 
+            [MISSING, LOST].include?(item[:status])
         return request_options.push({:service => PURCHASE, 
                                      :location => item[:location]},
                                     {:service => ILL,
