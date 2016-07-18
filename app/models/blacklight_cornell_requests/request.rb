@@ -697,6 +697,12 @@ module BlacklightCornellRequests
     def at_music_library?(item)
       get_location(item) == '88'
     end
+    
+    # Test for new item type, "unbound" (#39). Can do hold and recall, but not L2L
+    def unbound_type?(item_type)
+      Rails.logger.warn "mjc12test: UNBOUND!"
+      item_type == 39
+    end
 
     # Determine delivery options for a single item if the patron is a Cornell affiliate
     def get_cornell_delivery_options item
@@ -721,6 +727,7 @@ module BlacklightCornellRequests
       if docdel_eligible? item
         request_options.push( {:service => DOCUMENT_DELIVERY })
       end
+      
       Rails.logger.debug "mjc12test: loantype: #{item_loan_type}, status: #{item[:status ]}"
       # Check the rest of the cases
       if item_loan_type == 'nocirc' || 
@@ -729,7 +736,8 @@ module BlacklightCornellRequests
                               :location => item[:location]})
       elsif item_loan_type == 'regular' && 
             item[:status] == NOT_CHARGED &&
-            !at_music_library?(item)
+            !at_music_library?(item) &&
+            !unbound_type?(typeCode)
         request_options.push({:service => L2L, 
                               :location => item[:location] } )                              
       elsif item_loan_type == 'regular' && 
@@ -793,7 +801,7 @@ module BlacklightCornellRequests
       if noncirculating? item 
         []
       elsif item[:status] == NOT_CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day') 
-        [ { :service => L2L, :location => item[:location] } ] unless (no_l2l_day_loan_types?(item_loan_type) || at_music_library?(item))
+        [ { :service => L2L, :location => item[:location] } ] unless (no_l2l_day_loan_types?(item_loan_type) || at_music_library?(item) || unbound_type?(typeCode))
       elsif item[:status] == CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day') && !at_music_library?(item)
         [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
       elsif item_loan_type == 'minute' && (item[:status] == NOT_CHARGED || item[:status] == CHARGED)
@@ -816,6 +824,12 @@ module BlacklightCornellRequests
     # Determine whether document delivery should be available for a given item
     # This is based on library location and item format
     def docdel_eligible? item
+
+      Rails.logger.warn "mjc12test: dd item: #{item}"
+      # Pretty much everything at the Annex should be requestable through DD
+      # (DISCOVERYACCESS-1257)
+      annex_locations = %w[3 14 21 26 38 39 41 44 52 60 71 72 89 101 116 134 140 151]
+      return true if annex_locations.include? get_location(item)
 
       # Specifically exclude based on item_type
       eligible_formats = ['Book', 
