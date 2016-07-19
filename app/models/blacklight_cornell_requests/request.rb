@@ -700,7 +700,6 @@ module BlacklightCornellRequests
     
     # Test for new item type, "unbound" (#39). Can do hold and recall, but not L2L
     def unbound_type?(item_type)
-      Rails.logger.warn "mjc12test: UNBOUND! (#{item_type})"
       item_type == '39'
     end
 
@@ -777,7 +776,8 @@ module BlacklightCornellRequests
             item[:status] == NOT_CHARGED
         if Request.no_l2l_day_loan_types.include? typeCode
           #return request_options
-        elsif !at_music_library?(item)
+        elsif !at_music_library?(item) &&
+              !unbound_type?(item)
           request_options.push( {:service => L2L, 
                                  :location => item[:location] } )
         end
@@ -825,7 +825,6 @@ module BlacklightCornellRequests
     # This is based on library location and item format
     def docdel_eligible? item
 
-      Rails.logger.warn "mjc12test: dd item: #{item}"
       # Pretty much everything at the Annex should be requestable through DD
       # (DISCOVERYACCESS-1257)
       annex_locations = %w[3 14 19 20 21 22 23 24 26 38 39 41 44 52 60 64 71 72 82 89 101 116 123 134 140 151 168 170 173 178 210 231 236]
