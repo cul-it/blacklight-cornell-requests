@@ -695,13 +695,13 @@ module BlacklightCornellRequests
     
     # TODO: is 88 the only location for music?
     def at_music_library?(item)
-      get_location(item) == '88'
+      %w[88 90 91 92 93 179].include? get_location(item)
     end
     
     # Test for new item type, "unbound" (#39). Can do hold and recall, but not L2L
     def unbound_type?(item_type)
-      Rails.logger.warn "mjc12test: UNBOUND!"
-      item_type == 39
+      Rails.logger.warn "mjc12test: UNBOUND! (#{item_type})"
+      item_type == '39'
     end
 
     # Determine delivery options for a single item if the patron is a Cornell affiliate
@@ -828,7 +828,7 @@ module BlacklightCornellRequests
       Rails.logger.warn "mjc12test: dd item: #{item}"
       # Pretty much everything at the Annex should be requestable through DD
       # (DISCOVERYACCESS-1257)
-      annex_locations = %w[3 14 21 26 38 39 41 44 52 60 71 72 89 101 116 134 140 151]
+      annex_locations = %w[3 14 19 20 21 22 23 24 26 38 39 41 44 52 60 64 71 72 82 89 101 116 123 134 140 151 168 170 173 178 210 231 236]
       return true if annex_locations.include? get_location(item)
 
       # Specifically exclude based on item_type
