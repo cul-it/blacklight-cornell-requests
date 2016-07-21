@@ -956,7 +956,7 @@ module BlacklightCornellRequests
         ill_link = ill_link + "&rft_id=urn%3AISBN%3A#{isbns}"
       end
       if !self.ti.blank?
-        ill_link = ill_link + "&rft.btitle=#{CGI.escape(self.ti)}"
+        ill_link = ill_link + "&rft.title=#{CGI.escape(self.ti)}"
       end
       if !document[:author_display].blank?
         ill_link = ill_link + "&rft.aulast=#{document[:author_display]}"
