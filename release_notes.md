@@ -1,11 +1,11 @@
 # Release Notes - blacklight-cornell-requests
 
-## v1.2.4
+## v1.3
 
 ### Enhancements
 - Greatly improved request page load time (DISCOVERYACCESS-2684)
 - Added ILL link to volume select screen (DISCOVERYACCESS-2703)
-- Restored volume selection via URL parameters (GH-62)
+- Restored volume selection via URL parameters (GH #62)
 - Document Delivery now appears as an option for periodicals and all Annex items (DISCOVERYACCESS-1257) - Added support for item type 39 ('unbound') (DISCOVERYACCESS-1085 ; GH #36)
 
 ### Bug fixes
