@@ -1,6 +1,6 @@
 # Release Notes - blacklight-cornell-requests
 
-## v1.3
+## v1.2.4
 
 ### Enhancements
 - Greatly improved request page load time (DISCOVERYACCESS-2684)
