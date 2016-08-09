@@ -487,7 +487,7 @@ module BlacklightCornellRequests
           exclude_location_list   = Array.new
           
           if location_seen[location] == 1
-            circ_group_id = Circ_policy_locs.select('CIRC_GROUP_ID').where( 'location_id' =>  location )
+            circ_group_id = Circ_policy_locs.select('CIRC_GROUP_ID').where( 'LOCATION_ID' =>  location )
             
             ## handle exceptions
             ## group id 3  - Olin
@@ -519,7 +519,7 @@ module BlacklightCornellRequests
               end
               
               # logger.debug "sk274_log: circ group id: " + circ_group_id.inspect
-              locs = Circ_policy_locs.select('location_id').where( :circ_group_id =>  circ_group_id, :pickup_location => 'Y' )
+              locs = Circ_policy_locs.select('LOCATION_ID').where( :circ_group_id =>  circ_group_id, :pickup_location => 'Y' )
               locs.each do |loc|
                 exclude_location_list.push loc['LOCATION_ID']
               end
