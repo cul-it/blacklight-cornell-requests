@@ -650,10 +650,12 @@ module BlacklightCornellRequests
       end
 
       # Get delivery time estimates for each option
-      options.each do |option|
-        #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} get_option_time.."+ Time.new.inspect
-        option[:estimate] = get_delivery_time(option[:service], option)
-        option[:iid] = item
+      if options.present?
+        options.each do |option|
+          #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} get_option_time.."+ Time.new.inspect
+          option[:estimate] = get_delivery_time(option[:service], option)
+          option[:iid] = item
+        end
       end
       
       # Rails.logger.info "sk274_log: #{options.inspect}"
@@ -693,9 +695,16 @@ module BlacklightCornellRequests
       
     end
     
-    # TODO: is 88 the only location for music?
-    def at_music_library?(item)
-      %w[88 90 91 92 93 179].include? get_location(item)
+    # Determine whether an item at the library and can be requested
+    def music_library_requestable?(item)      
+      # 2 conditions: item is at the music library, and item type is book or music (3 or 5)
+      # bit hacky: return true if item is *not* at the music library (i.e., for everything
+      # else being tested here)
+      if %w[88 90 91 92 93 179].include?(get_location(item))
+        return [3, 5].include?(item['item_type_id'].to_i)  
+      else # if *not* at the Music library
+        return true
+      end
     end
     
     # Test for new item type, "unbound" (#39). Can do hold and recall, but not L2L
@@ -735,7 +744,7 @@ module BlacklightCornellRequests
                               :location => item[:location]})
       elsif item_loan_type == 'regular' && 
             item[:status] == NOT_CHARGED &&
-            !at_music_library?(item) &&
+            music_library_requestable?(item) &&
             !unbound_type?(typeCode)
         request_options.push({:service => L2L, 
                               :location => item[:location] } )                              
@@ -743,7 +752,7 @@ module BlacklightCornellRequests
             item[:status] ==  CHARGED
         request_options.push({:service => ILL, 
                               :location => item[:location]})
-        unless at_music_library?(item)
+        if music_library_requestable?(item)
           request_options.push({:service => RECALL,
                                 :location => item[:location]},
                                {:service => HOLD, 
@@ -752,7 +761,7 @@ module BlacklightCornellRequests
         end
       elsif item_loan_type == 'regular' &&
             [IN_TRANSIT_DISCHARGED, IN_TRANSIT_ON_HOLD].include?(item[:status]) &&
-            !at_music_library?(item)
+            music_library_requestable?(item)
         request_options.push({:service => RECALL,
                               :location => item[:location]},
                              {:service => HOLD,
@@ -767,7 +776,7 @@ module BlacklightCornellRequests
             item[:status] == CHARGED
         request_options.push({:service => ILL, 
                               :location => item[:location] })
-        unless at_music_library?(item)
+        if music_library_requestable?(item)
           request_options.push({:service => HOLD, 
                                 :location => item[:location], 
                                 :status => item[:status]   })
@@ -776,7 +785,7 @@ module BlacklightCornellRequests
             item[:status] == NOT_CHARGED
         if Request.no_l2l_day_loan_types.include? typeCode
           #return request_options
-        elsif !at_music_library?(item) &&
+        elsif music_library_requestable?(item) &&
               !unbound_type?(item)
           request_options.push( {:service => L2L, 
                                  :location => item[:location] } )
@@ -801,8 +810,8 @@ module BlacklightCornellRequests
       if noncirculating? item 
         []
       elsif item[:status] == NOT_CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day') 
-        [ { :service => L2L, :location => item[:location] } ] unless (no_l2l_day_loan_types?(item_loan_type) || at_music_library?(item) || unbound_type?(typeCode))
-      elsif item[:status] == CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day') && !at_music_library?(item)
+        [ { :service => L2L, :location => item[:location] } ] unless (no_l2l_day_loan_types?(item_loan_type) || !music_library_requestable?(item) || unbound_type?(typeCode))
+      elsif item[:status] == CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day') && music_library_requestable?(item)
         [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
       elsif item_loan_type == 'minute' && (item[:status] == NOT_CHARGED || item[:status] == CHARGED)
         [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
