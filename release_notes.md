@@ -1,5 +1,12 @@
 # Release Notes - blacklight-cornell-requests
 
+## v1.2.5
+
+### Bug fixes
+- Fixed a bug that caused a fatal error if no request options were available for an item
+- Fixed a bug in the circ policy database query
+- Fixed a bug that made books and recordings at Music unrequestable
+
 ## v1.2.4
 
 ### Enhancements
