@@ -1,5 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
+## v1.3
+
+- Updated to work with Blacklight 6 (now requires Blacklight 5.9 or higher)
+
 ## v1.2.5
 
 ### Bug fixes
