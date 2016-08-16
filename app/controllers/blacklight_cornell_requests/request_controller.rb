@@ -4,13 +4,20 @@ module BlacklightCornellRequests
 
   class RequestController < ApplicationController
 
-    include Blacklight::SolrHelper
+    include Blacklight::Catalog # needed for "fetch", replaces "include SolrHelper"
     include Cornell::LDAP
-
+    
+    # This may seem redundant, but it makes it easier to fetch the document from 
+    # various model classes
+    def get_solr_doc doc_id
+      resp, document = fetch doc_id
+      document
+    end
+        
     def magic_request target=''
 
       @id = params[:bibid]
-      resp, @document = get_solr_response_for_doc_id(@id)
+      resp, @document = fetch @id
       @document = @document
 
       Rails.logger.debug "Viewing item #{@id} (within request controller) - session: #{session}"
