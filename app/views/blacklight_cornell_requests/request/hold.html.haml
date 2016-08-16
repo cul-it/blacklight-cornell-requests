@@ -1,6 +1,5 @@
 -title = the_vernaculator('title_display', 'title_vern_display')
 -subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
--responsibility = render_document_show_field_value :document => @document, :field => 'title_responsibility_display'
 - @selected_volume = params[:volume]
 = render :partial => 'shared/back_to_item'
 %h1.request-type
@@ -9,7 +8,7 @@
 %div.row
   %div.well
     %h2.item-title-request.blacklight-title_display=title
-    %div.request-author=responsibility
+    %div.request-author=take_responsibility
     %form#req.form-horizontal{:method => 'post', :action => make_voyager_request_path}
       -if @volumes.present? && @volumes.count > 1
         .form-group
