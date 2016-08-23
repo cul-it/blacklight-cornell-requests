@@ -1,3 +1,3 @@
 module BlacklightCornellRequests
-  VERSION = "1.3beta"
+  VERSION = "1.3"
 end
