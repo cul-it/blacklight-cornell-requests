@@ -5,7 +5,8 @@
 %h2 Document Delivery
 %div.well
   %h3.item-title-request.blacklight-title_display=title
-  %div.request-author=take_responsibility
+  %div.request-author
+    =show_presenter(@document).field_value 'title_responsibility_display'
   %p
     Click the button below to go to the Document Delivery form and place your request.
   .clearfix

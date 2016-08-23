@@ -13,10 +13,5 @@ module BlacklightCornellRequests
   	
   	end
     
-    # Retrieve the 'responsibility' field value (used by several views)
-    def take_responsibility
-      Blacklight::ShowPresenter.new(@document, self).field_value 'title_responsibility_display'
-    end
-      
   end
 end

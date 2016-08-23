@@ -6,7 +6,8 @@
   %div.row
     %div.well
       %h2.item-title-request.blacklight-title_display=title
-      %div.request-author=take_responsibility
+      %div.request-author
+        =show_presenter(@document).field_value 'title_responsibility_display'
       %form#req.form-horizontal{:method => 'post', :action => blacklight_cornell_request.make_purchase_request_path}
         %input(type="hidden" name="bid" value="#{@id}" id="bid")
         %input(type="hidden" name="request_action" value="purchase" id="request_action")

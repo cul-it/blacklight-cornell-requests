@@ -13,7 +13,9 @@
         -if copyd[:item_enum].present?
           = copyd[:item_enum]
 
-  %div.request-author=take_responsibility
+  %div.request-author
+    =show_presenter(@document).field_value 'title_responsibility_display'
+
   %p
     To request this item, search Borrow Direct  and place a request.
   - if !@estimate.blank?
