@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v1.2.6
+- Added a check for empty circ_policy_locs database table with AppSignal integration
+
 ## v1.2.5
 
 ### Bug fixes
