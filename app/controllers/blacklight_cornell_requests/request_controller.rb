@@ -2,11 +2,20 @@ require_dependency "blacklight_cornell_requests/application_controller"
 
 module BlacklightCornellRequests
 
+  class RequestDatabaseException < StandardError
+    attr_reader :data
+
+    def initialize(data)
+     super
+     @data = data
+    end
+  end
+  
   class RequestController < ApplicationController
 
     include Blacklight::SolrHelper
     include Cornell::LDAP
-
+    
     def magic_request target=''
 
       @id = params[:bibid]
@@ -14,6 +23,17 @@ module BlacklightCornellRequests
       @document = @document
 
       Rails.logger.debug "Viewing item #{@id} (within request controller) - session: #{session}"
+
+      # Do a check to see whether the circ_policy_locs table is populated — for some
+      # bizarre reason, it has been turning up empty in production. 
+      begin
+        if Circ_policy_locs.count() > 1
+          raise BlacklightCornellRequests::RequestDatabaseException, 'circ_policy_locs table has less than one row'
+        end
+      rescue BlacklightCornellRequests::RequestDatabaseException => e
+        Rails.logger.error "Requests database exception: #{e}"
+        Appsignal.add_exception(e)
+      end
 
       # If the holdings data has been stored in the session (:holdings_status_short), 
       # we'll pass it in to the request to be reused instead of making
