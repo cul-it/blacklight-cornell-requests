@@ -27,7 +27,7 @@ module BlacklightCornellRequests
       # Do a check to see whether the circ_policy_locs table is populated — for some
       # bizarre reason, it has been turning up empty in production. 
       begin
-        if Circ_policy_locs.count() > 1
+        if Circ_policy_locs.count() < 1
           raise BlacklightCornellRequests::RequestDatabaseException, 'circ_policy_locs table has less than one row'
         end
       rescue BlacklightCornellRequests::RequestDatabaseException => e
