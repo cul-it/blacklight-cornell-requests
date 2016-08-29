@@ -1,8 +1,10 @@
 # Release Notes - blacklight-cornell-requests
 
 ## v1.3
+- Engine updated for compatibility with Blacklight 6
 
-- Updated to work with Blacklight 6 (now requires Blacklight 5.9 or higher)
+## v1.2.6
+  - Added a check for empty circ_policy_locs database table with AppSignal integration
 
 ## v1.2.5
 
