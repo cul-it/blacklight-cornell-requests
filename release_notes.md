@@ -2,6 +2,7 @@
 
 ## v1.3
 - Engine updated for compatibility with Blacklight 6
+- Fixed a bug that prevented reserve items from being requested through BD
 
 ## v1.2.6
   - Added a check for empty circ_policy_locs database table with AppSignal integration

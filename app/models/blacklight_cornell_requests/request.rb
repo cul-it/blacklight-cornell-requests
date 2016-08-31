@@ -405,6 +405,7 @@ module BlacklightCornellRequests
     # environments file.
     # holdings_param = { :bibid => <bibid>, :type => retrieve|retrieve_detail_raw}
     def get_holdings document
+      
       #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} entered get_holdings"
       holdings = document[:item_record_display].present? ? document[:item_record_display].map { |item| parseJSON item } : Array.new
       #Rails.logger.debug "es287_log: #{__FILE__} #{__LINE__} #{holdings.inspect}"
@@ -589,6 +590,13 @@ module BlacklightCornellRequests
         return false
       end
     end
+    
+    def on_reserve?(item)
+      item['temp_location']     &&
+      item['temp_location']['name'] &&
+      (item['temp_location']['name'].include?('Reserve') ||
+       item['temp_location']['name'].include?('reserve') )
+    end
 
     # Locate and translate the actual item status 
     # from the text string in the holdings data
@@ -718,13 +726,16 @@ module BlacklightCornellRequests
       item_loan_type = loan_type typeCode
       request_options = []
       
-      # Borrow direct check where appropriate:
+      # Allow Borrow Direct where appropriate:
       #   item type is noncirculating,
       #   item is not at bindery
       #   item status is charged, lost, or missing
-      if (item_loan_type == 'nocirc' || noncirculating?(item)) ||
-        (! [AT_BINDERY, NOT_CHARGED].include?(item[:status]))
-        #if available_in_bd? self.netid, params
+      #   item is on reserve
+      if (item_loan_type == 'nocirc' || 
+          noncirculating?(item)) ||
+         (! [AT_BINDERY, NOT_CHARGED].include?(item[:status])) ||
+         on_reserve?(item)
+         
         if self.in_borrow_direct
           request_options.push( {:service => BD, :location => item[:location] } )
         end
@@ -1153,7 +1164,6 @@ module BlacklightCornellRequests
       JSON.parse(response.body)['bc']
 
     end
-
     
   end
 end
