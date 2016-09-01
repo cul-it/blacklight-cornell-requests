@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v1.2.7
+- Fixed a bug preventing reserve items from being requested through Borrow Direct
+
 ## v1.2.6
 - Added a check for empty circ_policy_locs database table with AppSignal integration
 
