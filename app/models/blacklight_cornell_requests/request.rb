@@ -589,6 +589,13 @@ module BlacklightCornellRequests
         return false
       end
     end
+    
+    def on_reserve?(item)
+      item['temp_location']     &&
+      item['temp_location']['name'] &&
+      (item['temp_location']['name'].include?('Reserve') ||
+       item['temp_location']['name'].include?('reserve') )
+    end
 
     # Locate and translate the actual item status 
     # from the text string in the holdings data
@@ -718,12 +725,16 @@ module BlacklightCornellRequests
       item_loan_type = loan_type typeCode
       request_options = []
       
-      # Borrow direct check where appropriate:
+      # Allow Borrow Direct where appropriate:
       #   item type is noncirculating,
       #   item is not at bindery
       #   item status is charged, lost, or missing
-      if (item_loan_type == 'nocirc' || noncirculating?(item)) ||
-        (! [AT_BINDERY, NOT_CHARGED].include?(item[:status]))
+      #   item is on reserve
+      if (item_loan_type == 'nocirc' || 
+          noncirculating?(item)) ||
+         (! [AT_BINDERY, NOT_CHARGED].include?(item[:status])) ||
+         on_reserve?(item)
+         
         #if available_in_bd? self.netid, params
         if self.in_borrow_direct
           request_options.push( {:service => BD, :location => item[:location] } )
