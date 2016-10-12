@@ -110,7 +110,6 @@ module BlacklightCornellRequests
       # Check borrow direct availability
       bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
       self.in_borrow_direct = available_in_bd? self.netid, bd_params
-
       # Get item status and location for each item in each holdings record; store in working_items
       # We now have two item arrays! working_items (which eventually gets set in self.items) is a
       # list of all 'active' items, e.g., those for a particular volume or other set.
@@ -1171,9 +1170,16 @@ module BlacklightCornellRequests
     # FOD should be shown as an option in L2L delivery screens. Netids of
     # eligible users will be found in the database and return {'found':true}
     def fod_eligible?(netid)
-      uri = URI.parse(ENV['FOD_DB_URL'] + "?netid=#{netid}")
-      response = Net::HTTP.get_response(uri)
-      JSON.parse(response.body)['found']
+      begin
+        uri = URI.parse(ENV['FOD_DB_URL'] + "?netid=#{netid}")
+        response = Net::HTTP.get_response(uri)
+        JSON.parse(response.body)['found']
+      rescue Timeout::Error, Errno::EINVAL, Errno::ECONNRESET,
+             EOFError, Net::HTTPBadResponse, Errno::ECONNREFUSED => e
+        Rails.logger.error "Error connecting to FOD database: #{e}"
+        Appsignal.add_exception(e)
+        return false
+      end
     end
 
   end
