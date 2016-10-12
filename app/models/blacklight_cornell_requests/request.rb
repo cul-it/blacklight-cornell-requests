@@ -139,7 +139,7 @@ module BlacklightCornellRequests
 
       self.items = working_items
       self.document = document
-      @fod_eligible = fod_eligible?
+      @fod_eligible = fod_eligible? self.netid
 
       #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} working items processed. number of items: #{self.items.size} at"+ Time.new.inspect
 
@@ -1167,8 +1167,13 @@ module BlacklightCornellRequests
 
     end
 
-    def fod_eligible?
-      false
+    # Query the external FOD/remote programs database to determine whether
+    # FOD should be shown as an option in L2L delivery screens. Netids of
+    # eligible users will be found in the database and return {'found':true}
+    def fod_eligible?(netid)
+      uri = URI.parse(ENV['FOD_DB_URL'] + "?netid=#{netid}")
+      response = Net::HTTP.get_response(uri)
+      JSON.parse(response.body)['found']
     end
 
   end
