@@ -272,7 +272,7 @@ module BlacklightCornellRequests
     TemplateName = 'document_delivery'
     
     def self.description
-      'Document Delivery'
+      'ScanIt'
     end
     
     def self.time(options = {})
