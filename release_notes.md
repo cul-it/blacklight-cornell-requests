@@ -4,6 +4,7 @@
 
 ### Enhancements
 - "Document Delivery" labels changed to "ScanIt" (DISCOVERYACCESS-2705)
+- Delivery methods can now be individually disabled by using the ENV file configuration (#80)
 
 ### Bug fixes
 - Fixed a TypeError bug (DISCOVERYACCESS-2766)
