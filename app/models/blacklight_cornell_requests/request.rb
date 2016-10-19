@@ -1103,6 +1103,9 @@ module BlacklightCornellRequests
     # params = { :isbn, :title }
     # ISBN is best, but title will work if ISBN isn't available.
     def available_in_bd? netid, params
+      
+      # Don't bother if BD has been disabled in .env
+      return false if ENV['DISABLE_BORROW_DIRECT'].present?
 
       # Set up params for BorrowDirect gem
       BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_TEST_API_KEY']
