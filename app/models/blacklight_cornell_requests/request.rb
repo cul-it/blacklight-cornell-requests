@@ -765,7 +765,8 @@ module BlacklightCornellRequests
       elsif item_loan_type == 'regular' &&
             item[:status] == NOT_CHARGED &&
             music_library_requestable?(item) &&
-            !unbound_type?(typeCode)
+            !unbound_type?(typeCode) &&
+            !ENV['DISABLE_L2L'].present?
         request_options.push({:service => L2L,
                               :location => item[:location] } )
       elsif item_loan_type == 'regular' &&
@@ -774,18 +775,18 @@ module BlacklightCornellRequests
                               :location => item[:location]})
         if music_library_requestable?(item)
           request_options.push({:service => RECALL,
-                                :location => item[:location]},
-                               {:service => HOLD,
+                                :location => item[:location]}) unless ENV['DISABLE_RECALL'].present?
+          request_options.push({:service => HOLD,
                                 :location => item[:location],
-                                :status => item[:status]})
+                                :status => item[:status]}) unless ENV['DISABLE_HOLD'].present?
         end
       elsif item_loan_type == 'regular' &&
             [IN_TRANSIT_DISCHARGED, IN_TRANSIT_ON_HOLD].include?(item[:status]) &&
             music_library_requestable?(item)
         request_options.push({:service => RECALL,
-                              :location => item[:location]},
-                             {:service => HOLD,
-                              :location => item[:location]})
+                              :location => item[:location]}) unless ENV['DISABLE_RECALL'].present?
+        request_options.push({:service => HOLD,
+                              :location => item[:location]}) unless ENV['DISABLE_HOLD'].present?
       elsif ['regular','day'].include?(item_loan_type) &&
             [MISSING, LOST].include?(item[:status])
         request_options.push({:service => PURCHASE,
@@ -799,7 +800,7 @@ module BlacklightCornellRequests
         if music_library_requestable?(item)
           request_options.push({:service => HOLD,
                                 :location => item[:location],
-                                :status => item[:status]   })
+                                :status => item[:status]   }) unless ENV['DISABLE_HOLD'].present?
         end
       elsif item_loan_type == 'day' &&
             item[:status] == NOT_CHARGED
@@ -808,7 +809,7 @@ module BlacklightCornellRequests
         elsif music_library_requestable?(item) &&
               !unbound_type?(item)
           request_options.push( {:service => L2L,
-                                 :location => item[:location] } )
+                                 :location => item[:location] } ) unless ENV['DISABLE_L2L'].present?
         end
       elsif item_loan_type == 'minute'
         return request_options.push( {:service => ASK_CIRCULATION,
@@ -830,9 +831,9 @@ module BlacklightCornellRequests
       if noncirculating? item
         []
       elsif item[:status] == NOT_CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day')
-        [ { :service => L2L, :location => item[:location] } ] unless (no_l2l_day_loan_types?(item_loan_type) || !music_library_requestable?(item) || unbound_type?(typeCode))
+        [ { :service => L2L, :location => item[:location] } ] unless (no_l2l_day_loan_types?(item_loan_type) || !music_library_requestable?(item) || unbound_type?(typeCode) || ENV['DISABLE_L2L'].present?)
       elsif item[:status] == CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day') && music_library_requestable?(item)
-        [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
+        [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ] unless ENV['DISABLE_HOLD'].present?
       elsif item_loan_type == 'minute' && (item[:status] == NOT_CHARGED || item[:status] == CHARGED)
         [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
       else
