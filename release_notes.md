@@ -1,6 +1,6 @@
 # Release Notes - blacklight-cornell-requests
 
-## NEW VERSION TBD - 1.3.1?
+## v1.3.1
 
 ### Enhancements
 - "Document Delivery" labels changed to "ScanIt" (DISCOVERYACCESS-2705)
