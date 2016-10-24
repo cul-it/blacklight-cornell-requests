@@ -761,45 +761,46 @@ module BlacklightCornellRequests
       if item_loan_type == 'nocirc' ||
          noncirculating?(item)
         request_options.push({:service => ILL,
-                              :location => item[:location]})
+                              :location => item[:location]}) unless ENV['DISABLE_ILL'].present?
       elsif item_loan_type == 'regular' &&
             item[:status] == NOT_CHARGED &&
             music_library_requestable?(item) &&
-            !unbound_type?(typeCode)
+            !unbound_type?(typeCode) &&
+            !ENV['DISABLE_L2L'].present?
         request_options.push({:service => L2L,
                               :location => item[:location] } )
       elsif item_loan_type == 'regular' &&
             item[:status] ==  CHARGED
         request_options.push({:service => ILL,
-                              :location => item[:location]})
+                              :location => item[:location]}) unless ENV['DISABLE_ILL'].present?
         if music_library_requestable?(item)
           request_options.push({:service => RECALL,
-                                :location => item[:location]},
-                               {:service => HOLD,
+                                :location => item[:location]}) unless ENV['DISABLE_RECALL'].present?
+          request_options.push({:service => HOLD,
                                 :location => item[:location],
-                                :status => item[:status]})
+                                :status => item[:status]}) unless ENV['DISABLE_HOLD'].present?
         end
       elsif item_loan_type == 'regular' &&
             [IN_TRANSIT_DISCHARGED, IN_TRANSIT_ON_HOLD].include?(item[:status]) &&
             music_library_requestable?(item)
         request_options.push({:service => RECALL,
-                              :location => item[:location]},
-                             {:service => HOLD,
-                              :location => item[:location]})
+                              :location => item[:location]}) unless ENV['DISABLE_RECALL'].present?
+        request_options.push({:service => HOLD,
+                              :location => item[:location]}) unless ENV['DISABLE_HOLD'].present?
       elsif ['regular','day'].include?(item_loan_type) &&
             [MISSING, LOST].include?(item[:status])
         request_options.push({:service => PURCHASE,
-                              :location => item[:location]},
-                             {:service => ILL,
                               :location => item[:location]})
+        request_options.push({:service => ILL,
+                              :location => item[:location]}) unless ENV['DISABLE_ILL'].present?
       elsif item_loan_type == 'day' &&
             item[:status] == CHARGED
         request_options.push({:service => ILL,
-                              :location => item[:location] })
+                              :location => item[:location] }) unless ENV['DISABLE_ILL'].present?
         if music_library_requestable?(item)
           request_options.push({:service => HOLD,
                                 :location => item[:location],
-                                :status => item[:status]   })
+                                :status => item[:status]   }) unless ENV['DISABLE_HOLD'].present?
         end
       elsif item_loan_type == 'day' &&
             item[:status] == NOT_CHARGED
@@ -808,14 +809,14 @@ module BlacklightCornellRequests
         elsif music_library_requestable?(item) &&
               !unbound_type?(item)
           request_options.push( {:service => L2L,
-                                 :location => item[:location] } )
+                                 :location => item[:location] } ) unless ENV['DISABLE_L2L'].present?
         end
       elsif item_loan_type == 'minute'
         return request_options.push( {:service => ASK_CIRCULATION,
                                       :location => item[:location] } )
       elsif item[:status] == AT_BINDERY
         return request_options.push( {:service => ILL,
-                                      :location => item[:location] } )
+                                      :location => item[:location] } ) unless ENV['DISABLE_ILL'].present?
       end
 
       request_options
@@ -830,9 +831,9 @@ module BlacklightCornellRequests
       if noncirculating? item
         []
       elsif item[:status] == NOT_CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day')
-        [ { :service => L2L, :location => item[:location] } ] unless (no_l2l_day_loan_types?(item_loan_type) || !music_library_requestable?(item) || unbound_type?(typeCode))
+        [ { :service => L2L, :location => item[:location] } ] unless (no_l2l_day_loan_types?(item_loan_type) || !music_library_requestable?(item) || unbound_type?(typeCode) || ENV['DISABLE_L2L'].present?)
       elsif item[:status] == CHARGED && (item_loan_type == 'regular' || item_loan_type == 'day') && music_library_requestable?(item)
-        [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ]
+        [ { :service => HOLD, :location => item[:location], :status => item[:itemStatus] } ] unless ENV['DISABLE_HOLD'].present?
       elsif item_loan_type == 'minute' && (item[:status] == NOT_CHARGED || item[:status] == CHARGED)
         [ { :service => ASK_CIRCULATION, :location => item[:location] } ]
       else
@@ -853,6 +854,8 @@ module BlacklightCornellRequests
     # Determine whether document delivery should be available for a given item
     # This is based on library location and item format
     def docdel_eligible? item
+      
+      return false if ENV['DISABLE_DOCUMENT_DELIVERY'].present?
 
       # Pretty much everything at the Annex should be requestable through DD
       # (DISCOVERYACCESS-1257)
@@ -1082,27 +1085,13 @@ module BlacklightCornellRequests
 
     end
 
-
-    # def xxborrowDirect_available? params
-    #
-    #   if !@bd.nil?
-    #     return @bd
-    #   else
-    #     begin
-    #       @bd = available_in_bd?(self.netid, params)
-    #       return  @bd
-    #     rescue => e
-    #       Rails.logger.info "Error checking borrow direct availability: exception #{e.class.name} : #{e.message}"
-    #       @bd = false
-    #       return @bd
-    #     end
-    #   end
-    # end
-
     # Determine Borrow Direct availability for an ISBN or title
     # params = { :isbn, :title }
     # ISBN is best, but title will work if ISBN isn't available.
     def available_in_bd? netid, params
+      
+      # Don't bother if BD has been disabled in .env
+      return false if ENV['DISABLE_BORROW_DIRECT'].present?
 
       # Set up params for BorrowDirect gem
       BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_TEST_API_KEY']
