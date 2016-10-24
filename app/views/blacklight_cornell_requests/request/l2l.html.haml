@@ -1,15 +1,15 @@
 -title = the_vernaculator('title_display', 'title_vern_display')
 -subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
--responsibility = render_document_show_field_value :document => @document, :field => 'title_responsibility_display'
 - @selected_volume = params[:volume]
 = render :partial => 'shared/back_to_item'
 %h1.request-type
-  = "Request Cornell library to library delivery for user: " + request.env['REMOTE_USER'].inspect
+  = "Request Cornell library to library delivery for user: #{@netid}"
 %div.row
   %div.well
     %h2.blacklight-title_display.item-title-request
       =title
-    %div.request-author=responsibility
+    %div.request-author 
+      =show_presenter(@document).field_value 'title_responsibility_display'
     %form#req.l2l-request.form-horizontal{:method => 'post', :action => make_voyager_request_path({:bibid =>@id})}
       -if @volumes.present? && @volumes.count > 1
         .form-group
@@ -25,7 +25,7 @@
         %label.control-label.col-sm-2{:for => 'reqcomments'} Notes to library staff:
         .col-sm-10
           %textarea(name="reqcomments" id="reqcomments" class="form-control")
-      - if !@estimate.blank?
+      - if @estimate.present?
         .form-group
           %label.control-label.col-sm-2 Delivery time:
           .delivery-estimate.col-sm-10
