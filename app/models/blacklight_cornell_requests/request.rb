@@ -62,7 +62,7 @@ module BlacklightCornellRequests
     attr_accessor :LOST_LIBRARY_APPLIED, :LOST_SYSTEM_APPLIED, :LOST, :CLAIMS_RETURNED, :DAMAGED
     attr_accessor :WITHDRAWN, :AT_BINDERY, :CATALOG_REVIEW, :CIRCULATION_REVIEW, :SCHEDULED, :IN_PROCESS
     attr_accessor :CALL_SLIP_REQUEST, :SHORT_LOAN_REQUEST, :REMOTE_STORAGE_REQUEST, :REQUESTED
-    attr_reader :holdings_status_short
+    attr_reader :holdings_status_short, :fod_data
 
     validates_presence_of :bibid
     def save(validate = true)
@@ -138,6 +138,8 @@ module BlacklightCornellRequests
 
       self.items = working_items
       self.document = document
+      @fod_data = get_fod_data @netid
+      Rails.logger.debug "mjc12test: fod_data: #{@fod_data}"
 
       #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} working items processed. number of items: #{self.items.size} at"+ Time.new.inspect
 
@@ -592,7 +594,7 @@ module BlacklightCornellRequests
         return false
       end
     end
-    
+
     def on_reserve?(item)
       item['temp_location']     &&
       item['temp_location']['name'] &&
@@ -854,7 +856,7 @@ module BlacklightCornellRequests
     # Determine whether document delivery should be available for a given item
     # This is based on library location and item format
     def docdel_eligible? item
-      
+
       return false if ENV['DISABLE_DOCUMENT_DELIVERY'].present?
 
       # Pretty much everything at the Annex should be requestable through DD
@@ -1089,7 +1091,7 @@ module BlacklightCornellRequests
     # params = { :isbn, :title }
     # ISBN is best, but title will work if ISBN isn't available.
     def available_in_bd? netid, params
-      
+
       # Don't bother if BD has been disabled in .env
       return false if ENV['DISABLE_BORROW_DIRECT'].present?
 
@@ -1161,6 +1163,13 @@ module BlacklightCornellRequests
       # Return the barcode
       JSON.parse(response.body)['bc']
 
+    end
+
+    # Get information about FOD/remote prgram delivery eligibility
+    def get_fod_data(netid)
+      uri = URI.parse(ENV['FOD_DB_URL'] + "?netid=#{netid}")
+      response = Net::HTTP.get_response(uri)
+      JSON.parse(response.body)
     end
 
   end
