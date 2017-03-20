@@ -6,6 +6,8 @@
       %option(value='') -- Select a location --
       %option(value="149") Africana Circulation
       %option(value="151") Annex Circulation
+      -# - if special_d[:fod]
+      %option(value='224') Faculty Department Office
       %option(value="160") Fine Arts Circulation
       %option(value="162") Geneva Circulation
       %option(value="167") ILR Circulation
@@ -14,8 +16,6 @@
       %option(value="172") Mann Circulation
       %option(value="176") Math Circulation
       %option(value="179") Music Circulation
-      - if special_d[:fod]
-        %option(value='#{special_d[:code]}') #{special_d[:value]}
       %option(value="181") Olin Circulation
       %option(value="219") Ornithology Circulation
       - if special_d && special_d[:fod] == false
@@ -23,4 +23,4 @@
       %option(value="188") Uris Circulation
       %option(value="189") Vet Circulation
 - if special_d[:code].present?
-  %p NOTE: You are eligible for #{@fod_data['program']['name']} delivery. Select "#{special_d[:fod] ? 'Office Delivery' : 'Special Program Delivery'}" from the list above.
+  %p NOTE: You are eligible for #{@fod_data['program']['name']} delivery. Select "#{special_d[:fod] ? 'Faculty Department Office' : 'Special Program Delivery'}" from the list above.
