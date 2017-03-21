@@ -1,7 +1,14 @@
 # Release Notes - blacklight-cornell-requests
 
 ## v1.4.0
+
+### New features
 - Adds support for faculty office delivery and special program delivery options using data from the external CUL "Special Delivery" web service
+
+### Enhancements
+- Adds "loading" spinners to volume selection controls to indicate progress during long page load times
+
+### Bug fixes
 
 ## v1.3.2
 - Fixed a bug that caused a recall request to loop back to the volume selection screen (DISCOVERYACCESS-2471)
