@@ -30,9 +30,29 @@ requests =
 
     # Listener for volume selection
     $('#volume-selection').change ->
+      $.fn.spin.presets.requesting =
+        lines: 9,
+        length: 3,
+        width: 2,
+        radius: 6,
+      $('#request-loading-spinner').spin('requesting')
       requestPath = $(this).data('request-path')
       requests.redirectVolume($(this).val(), requestPath)
       return false
+      
+    # Set up 'loading' spinner for when volume is selected
+    # $('#id_request').click (e) ->
+    #   e.preventDefault()
+    #   e.stopPropagation()     
+    #   $.fn.spin.presets.requesting =
+    #     lines: 9,
+    #     length: 3,
+    #     width: 2,
+    #     radius: 6,
+    #   $('#request-loading-spinner').spin('requesting')
+    #   # Next line is necessary to get spinner to appear. If there is no
+    #   # delay before the redirect, it simply does not happen.
+    #   setTimeout (-> window.location.href=$('#id_request').attr('href')), 100
 
   # Event listeners for library to library (l2l) location suppression
   bindPickupEventListeners: () ->
