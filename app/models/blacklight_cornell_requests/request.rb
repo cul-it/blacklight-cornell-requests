@@ -289,7 +289,7 @@ module BlacklightCornellRequests
       ## record number of occurances for each of the
       items.each do |item|
 
-      #  Rails.logger.warn "mjc12test: item: #{item}"
+      Rails.logger.warn "mjc12test: item: #{item}"
 
         # item[:numeric_enumeration] = item[:item_enum][/\d+/]
         enums = item[:item_enum].scan(/\d+/)
@@ -1167,6 +1167,9 @@ module BlacklightCornellRequests
 
     # Get information about FOD/remote prgram delivery eligibility
     def get_fod_data(netid)
+      
+      return {} unless ENV['FOD_DB_URL'].present?
+      
       begin
         uri = URI.parse(ENV['FOD_DB_URL'] + "?netid=#{netid}")
         # response = Net::HTTP.get_response(uri)
