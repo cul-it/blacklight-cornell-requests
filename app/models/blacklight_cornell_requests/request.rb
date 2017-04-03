@@ -139,7 +139,7 @@ module BlacklightCornellRequests
       self.items = working_items
       self.document = document
       @fod_data = get_fod_data @netid
-      Rails.logger.debug "mjc12test: fod_data: #{@fod_data}"
+      #Rails.logger.debug "mjc12test: fod_data: #{@fod_data}"
 
       #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} working items processed. number of items: #{self.items.size} at"+ Time.new.inspect
 
@@ -289,7 +289,7 @@ module BlacklightCornellRequests
       ## record number of occurances for each of the
       items.each do |item|
 
-      Rails.logger.warn "mjc12test: item: #{item}"
+      #Rails.logger.warn "mjc12test: item: #{item}"
 
         # item[:numeric_enumeration] = item[:item_enum][/\d+/]
         enums = item[:item_enum].scan(/\d+/)
@@ -370,24 +370,7 @@ module BlacklightCornellRequests
         c = item[:chron]
         y = item[:year]
 
-        next if e.blank? and c.blank? and y.blank?
-
-        # if e.present? and c.blank? and y.blank?
-          # volumes[e] = "|#{e}|||"
-        # elsif c.present? and e.blank? and y.blank?
-          # volumes[c] = "||#{c}||"
-        # elsif y.present? and e.blank? and c.blank?
-          # volumes[y] = "|||#{y}|"
-        # else
-          # label = ''
-          # [e, c, y].each do |element|
-            # if element.present?
-              # label += ' - ' unless label == ''
-              # label += element
-            # end
-          # end
-          # volumes[label] = "|#{e}|#{c}|#{y}|"
-        # end
+        next if e.blank? && c.blank? && y.blank?
 
         label = ''
         [e, c, y].each do |element|
@@ -396,6 +379,15 @@ module BlacklightCornellRequests
             label += element
           end
         end
+        
+        # Affix an indicator to the label in the select list for
+        # items that are on reserve or otherwise noncirculating
+        if on_reserve?(item)
+          label += ' (on reserve)'
+        elsif noncirculating?(item)
+          label += ' (non-circulating)'
+        end
+        
         volumes[label] = "|#{e}|#{c}|#{y}|"
 
       end
@@ -580,11 +572,16 @@ module BlacklightCornellRequests
     # a note in the holdings record that the item doesn't circulate (even
     # with a different typecode)
     def noncirculating?(item)
+      #Rails.logger.debug "mjc12test: checking noncirculating - #{item}"
+
       # If item is in a temp location, concentrate on that
       if item.key?('temp_location_id') and item['temp_location_id'] > 0
         return (item.key?('temp_location_display_name') and
                (item['temp_location_display_name'].include? 'Reserve' or
                 item['temp_location_display_name'].include? 'reserve'))
+      elsif item['temp_location'].is_a? Hash
+        return (item['temp_location'].key?('name') && 
+                item['temp_location']['name'].include?('Non-Circulating'))
       elsif item['perm_location'].is_a? Hash
         return (item.key?('perm_location') and
                 item['perm_location'].key?('name') and
@@ -596,13 +593,7 @@ module BlacklightCornellRequests
     end
 
     def on_reserve?(item)
-      item['temp_location']     &&
-      item['temp_location']['name'] &&
-      (item['temp_location']['name'].include?('Reserve') ||
-       item['temp_location']['name'].include?('reserve') )
-    end
-
-    def on_reserve?(item)
+      #Rails.logger.debug "mjc12test: checking on_reserve - #{item}"
       item['temp_location']     &&
       item['temp_location']['name'] &&
       (item['temp_location']['name'].include?('Reserve') ||
@@ -758,7 +749,7 @@ module BlacklightCornellRequests
         request_options.push( {:service => DOCUMENT_DELIVERY })
       end
 
-      Rails.logger.debug "mjc12test: loantype: #{item_loan_type}, status: #{item[:status ]}"
+      #Rails.logger.debug "mjc12test: loantype: #{item_loan_type}, status: #{item[:status ]}"
       # Check the rest of the cases
       if item_loan_type == 'nocirc' ||
          noncirculating?(item)
