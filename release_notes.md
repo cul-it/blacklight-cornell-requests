@@ -1,4 +1,4 @@
-# Release Notes - blacklight-cornell-requests
+# Release Notes - blacklight-cornell-requests 
 
 ## v1.4.0
 
