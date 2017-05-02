@@ -1163,7 +1163,7 @@ module BlacklightCornellRequests
       begin
         uri = URI.parse(ENV['FOD_DB_URL'] + "?netid=#{netid}")
         # response = Net::HTTP.get_response(uri)
-        JSON.parse(open(uri, :read_timeout => 5))
+        JSON.parse(open(uri, :read_timeout => 5).read)
       rescue OpenURI::HTTPError, Net::ReadTimeout
         Rails.logger.warn("Warning: Unable to retrieve FOD/remote program eligibility data (from #{uri})")
         return {}
