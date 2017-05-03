@@ -1,4 +1,12 @@
-# Release Notes - blacklight-cornell-requests
+# Release Notes - blacklight-cornell-requests 
+
+## v1.4.1
+
+### Enhancements
+- Made patron barcode lookup more efficient and speedy
+
+### Bug fixes
+- Fixed a bug preventing proper parsing of FOD/remote program query responses
 
 ## v1.4.0
 

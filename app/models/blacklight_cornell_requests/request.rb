@@ -143,6 +143,7 @@ module BlacklightCornellRequests
 
       #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} working items processed. number of items: #{self.items.size} at"+ Time.new.inspect
 
+      patron_type = get_patron_type self.netid
       unless document.nil?
         # Iterate through all items and get list of delivery methods
       #  bd_params = { :isbn => document[:isbn_display], :title => document[:title_display], :env_http_host => env_http_host }
@@ -151,7 +152,7 @@ module BlacklightCornellRequests
           n = n + 1
           #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} prepare for deliv options for each item. (#{n})"+ Time.new.inspect
 
-          services = get_delivery_options item
+          services = get_delivery_options item,patron_type
           #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} delivoptions for each item. (#{n}) (#{service.inspect})"+ Time.new.inspect
           item[:services] = services
         end
@@ -646,11 +647,9 @@ module BlacklightCornellRequests
     # { :service => SERVICE NAME, :estimate => ESTIMATED DELIVERY TIME }
     # The array is sorted by delivery time estimate, so the first array item should be
     # the fastest (i.e., the "best") delivery option.
-    def get_delivery_options item
+    def get_delivery_options item,patron_t
 
-      #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} start of deliv options (#{item.inspect})"+ Time.new.inspect
-      patron_type = get_patron_type self.netid
-      Rails.logger.info "es287_debug: " + "#{__FILE__}:#{__LINE__} netid=#{self.netid}, patron_type=#{patron_type}"
+      patron_type = patron_t 
       if patron_type == 'cornell'
         #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} get_cornell_delivery_options."+ Time.new.inspect
         options = get_cornell_delivery_options item
@@ -1164,7 +1163,7 @@ module BlacklightCornellRequests
       begin
         uri = URI.parse(ENV['FOD_DB_URL'] + "?netid=#{netid}")
         # response = Net::HTTP.get_response(uri)
-        JSON.parse(open(uri, :read_timeout => 5))
+        JSON.parse(open(uri, :read_timeout => 5).read)
       rescue OpenURI::HTTPError, Net::ReadTimeout
         Rails.logger.warn("Warning: Unable to retrieve FOD/remote program eligibility data (from #{uri})")
         return {}
