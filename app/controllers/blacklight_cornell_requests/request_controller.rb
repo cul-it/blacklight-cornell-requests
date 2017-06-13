@@ -23,6 +23,12 @@ module BlacklightCornellRequests
       document
     end
 
+    def auth_magic_request target=''
+    session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
+    Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
+    redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+    end
+
     def magic_request target=''
 
       @id = params[:bibid]
@@ -52,8 +58,9 @@ module BlacklightCornellRequests
       session_holdings = session[:holdings_status_short]
       session[:holdings_status_short] = nil
       req = BlacklightCornellRequests::Request.new(@id, session_holdings)
-      req.netid = request.env['REMOTE_USER']
+      req.netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user] 
       req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
+      req.netid.sub!('@cornell.edu', '') unless req.netid.nil?
 
       # When we're entering the request system from a /catalog path, then we're starting
       # fresh — no volume should be pre-selected (or kept in the session). However,
