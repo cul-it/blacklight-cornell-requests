@@ -1126,25 +1126,17 @@ module BlacklightCornellRequests
         return response.requestable?
 
       rescue Errno::ECONNREFUSED => e
-        if ENV['ROUTE_EXCEPTIONS_TO_HIPCHAT'] == 'true'
-          ExceptionNotifier.notify_exception(e)
-        end
+        #  ExceptionNotifier.notify_exception(e)
         Rails.logger.warn 'Requests: Borrow Direct connection was refused'
         Rails.logger.warn e.message
         Rails.logger.warn e.backtrace.inspect
         return false
       rescue BorrowDirect::HttpTimeoutError => e
-        if ENV['ROUTE_EXCEPTIONS_TO_HIPCHAT'] == 'true'
-          ExceptionNotifier.notify_exception(e)
-        end
         Rails.logger.warn 'Requests: Borrow Direct check timed out'
         Rails.logger.warn e.message
         Rails.logger.warn e.backtrace.inspect
         return false
       rescue BorrowDirect::Error => e
-        if ENV['ROUTE_EXCEPTIONS_TO_HIPCHAT'] == 'true'
-          ExceptionNotifier.notify_exception(e)
-        end
         Rails.logger.warn 'Requests: Borrow Direct gave error.'
         Rails.logger.warn e.message
         Rails.logger.warn e.backtrace.inspect
