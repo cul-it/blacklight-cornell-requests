@@ -1086,16 +1086,30 @@ module BlacklightCornellRequests
       return false if ENV['DISABLE_BORROW_DIRECT'].present?
 
       # Set up params for BorrowDirect gem
+      
       BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_TEST_API_KEY']
-      BorrowDirect::Defaults.api_base = 'https://bdtest.relais-host.com/'
+      
+      # Set api_base to the value specified in the .env file. possible values:
+      # TEST - use default test URL
+      # PRODUCTION - use default production URL
+      # any other URL beginning with http - use that 
+      api_base = ''
+      case ENV['BORROW_DIRECT_URL']
+      when 'TEST'
+        api_base = BorrowDirect::Defaults::TEST_API_BASE
+      when 'PRODUCTION'  
+        api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
+        BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
+      when /^http/
+        api_base = ENV['BORROW_DIRECT_URL']
+      else
+        api_base = BorrowDirect::Defaults::TEST_API_BASE
+      end
+      BorrowDirect::Defaults.api_base = api_base
+      
       BorrowDirect::Defaults.library_symbol = 'CORNELL'
       BorrowDirect::Defaults.find_item_patron_barcode = patron_barcode(netid)
-      BorrowDirect::Defaults.timeout = 30 # (seconds)
-      # if api_base isn't specified, it defaults to BD test database
-      if Rails.env.production?
-        BorrowDirect::Defaults.api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
-        BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
-      end
+      BorrowDirect::Defaults.timeout = ENV['BORROW_DIRECT_TIMEOUT'].to_i || 30 # (seconds)
 
       response = nil
       # This block can throw timeout errors if BD takes to long to respond
@@ -1108,7 +1122,7 @@ module BlacklightCornellRequests
           response = BorrowDirect::FindItem.new.find(:phrase => params[:title])
         end
 
-        Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} response from bd ."+ response.inspect
+        #Rails.logger.debug "mjc12test :#{__FILE__}:#{__LINE__} response from bd ."+ response.inspect
         return response.requestable?
 
       rescue Errno::ECONNREFUSED => e
