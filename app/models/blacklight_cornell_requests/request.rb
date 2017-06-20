@@ -923,22 +923,27 @@ module BlacklightCornellRequests
         when PURCHASE
           range = [10, 10]
         when DOCUMENT_DELIVERY
+          
+          # ScanIt/DD estimate changed to a simple 1-4 at request of 
+          # Caitlin Finlay.
+          range = [1, 4]
+          
           # for others, item_data is a single item
           # for DD, it is the entire holdings data since it matters whether the item is available as a whole or not
-          available = false
-          self.all_items.each do |item|
-            if item[:status] == NOT_CHARGED
-              available = true
-              break
-            end
-          end
-          if available == true
-            range = [2, 2]
-          else
-            base_time = get_delivery_time ILL, nil
-            base_estimate = 2 + base_time[0]
-            range = [base_estimate, base_estimate]
-          end
+          # available = false
+          # self.all_items.each do |item|
+          #   if item[:status] == NOT_CHARGED
+          #     available = true
+          #     break
+          #   end
+          # end
+          # if available == true
+          #   range = [2, 2]
+          # else
+          #   base_time = get_delivery_time ILL, nil
+          #   base_estimate = 2 + base_time[0]
+          #   range = [base_estimate, base_estimate]
+          # end
         when ASK_LIBRARIAN
           range = [9999, 9999]
         when ASK_CIRCULATION
