@@ -1,5 +1,11 @@
 # Release Notes - blacklight-cornell-requests 
 
+## v1.4.2
+
+### Improvements
+- Moved Borrow Direct API parameters (URL, timeout) to .env file for easy adjustment
+- Changed ScanIt/Document Delivery delivery estimate to 1-4 days
+
 ## v1.4.1
 
 ### Enhancements

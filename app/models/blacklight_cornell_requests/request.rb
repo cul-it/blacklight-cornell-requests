@@ -923,22 +923,27 @@ module BlacklightCornellRequests
         when PURCHASE
           range = [10, 10]
         when DOCUMENT_DELIVERY
+          
+          # ScanIt/DD estimate changed to a simple 1-4 at request of 
+          # Caitlin Finlay.
+          range = [1, 4]
+          
           # for others, item_data is a single item
           # for DD, it is the entire holdings data since it matters whether the item is available as a whole or not
-          available = false
-          self.all_items.each do |item|
-            if item[:status] == NOT_CHARGED
-              available = true
-              break
-            end
-          end
-          if available == true
-            range = [2, 2]
-          else
-            base_time = get_delivery_time ILL, nil
-            base_estimate = 2 + base_time[0]
-            range = [base_estimate, base_estimate]
-          end
+          # available = false
+          # self.all_items.each do |item|
+          #   if item[:status] == NOT_CHARGED
+          #     available = true
+          #     break
+          #   end
+          # end
+          # if available == true
+          #   range = [2, 2]
+          # else
+          #   base_time = get_delivery_time ILL, nil
+          #   base_estimate = 2 + base_time[0]
+          #   range = [base_estimate, base_estimate]
+          # end
         when ASK_LIBRARIAN
           range = [9999, 9999]
         when ASK_CIRCULATION
@@ -1086,16 +1091,30 @@ module BlacklightCornellRequests
       return false if ENV['DISABLE_BORROW_DIRECT'].present?
 
       # Set up params for BorrowDirect gem
+      
       BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_TEST_API_KEY']
-      BorrowDirect::Defaults.api_base = 'https://bdtest.relais-host.com/'
+      
+      # Set api_base to the value specified in the .env file. possible values:
+      # TEST - use default test URL
+      # PRODUCTION - use default production URL
+      # any other URL beginning with http - use that 
+      api_base = ''
+      case ENV['BORROW_DIRECT_URL']
+      when 'TEST'
+        api_base = BorrowDirect::Defaults::TEST_API_BASE
+      when 'PRODUCTION'  
+        api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
+        BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
+      when /^http/
+        api_base = ENV['BORROW_DIRECT_URL']
+      else
+        api_base = BorrowDirect::Defaults::TEST_API_BASE
+      end
+      BorrowDirect::Defaults.api_base = api_base
+      
       BorrowDirect::Defaults.library_symbol = 'CORNELL'
       BorrowDirect::Defaults.find_item_patron_barcode = patron_barcode(netid)
-      BorrowDirect::Defaults.timeout = 30 # (seconds)
-      # if api_base isn't specified, it defaults to BD test database
-      if Rails.env.production?
-        BorrowDirect::Defaults.api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
-        BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
-      end
+      BorrowDirect::Defaults.timeout = ENV['BORROW_DIRECT_TIMEOUT'].to_i || 30 # (seconds)
 
       response = nil
       # This block can throw timeout errors if BD takes to long to respond
@@ -1108,29 +1127,21 @@ module BlacklightCornellRequests
           response = BorrowDirect::FindItem.new.find(:phrase => params[:title])
         end
 
-        Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} response from bd ."+ response.inspect
+        #Rails.logger.debug "mjc12test :#{__FILE__}:#{__LINE__} response from bd ."+ response.inspect
         return response.requestable?
 
       rescue Errno::ECONNREFUSED => e
-        if ENV['ROUTE_EXCEPTIONS_TO_HIPCHAT'] == 'true'
-          ExceptionNotifier.notify_exception(e)
-        end
+        #  ExceptionNotifier.notify_exception(e)
         Rails.logger.warn 'Requests: Borrow Direct connection was refused'
         Rails.logger.warn e.message
         Rails.logger.warn e.backtrace.inspect
         return false
       rescue BorrowDirect::HttpTimeoutError => e
-        if ENV['ROUTE_EXCEPTIONS_TO_HIPCHAT'] == 'true'
-          ExceptionNotifier.notify_exception(e)
-        end
         Rails.logger.warn 'Requests: Borrow Direct check timed out'
         Rails.logger.warn e.message
         Rails.logger.warn e.backtrace.inspect
         return false
       rescue BorrowDirect::Error => e
-        if ENV['ROUTE_EXCEPTIONS_TO_HIPCHAT'] == 'true'
-          ExceptionNotifier.notify_exception(e)
-        end
         Rails.logger.warn 'Requests: Borrow Direct gave error.'
         Rails.logger.warn e.message
         Rails.logger.warn e.backtrace.inspect
