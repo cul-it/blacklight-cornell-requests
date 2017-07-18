@@ -58,6 +58,7 @@ module BlacklightCornellRequests
       session_holdings = session[:holdings_status_short]
       session[:holdings_status_short] = nil
       req = BlacklightCornellRequests::Request.new(@id, session_holdings)
+      binding.pry
       req.netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user] 
       req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
       req.netid.sub!('@cornell.edu', '') unless req.netid.nil?
