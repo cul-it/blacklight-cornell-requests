@@ -20,7 +20,7 @@
     %p
       Delivery time: 
       = delivery_estimate_display @estimate
-  - @isbn = nil
+
   - if @isbn.present?
     %form#req.form-horizontal{:method => 'post', :controller => 'request', :action => 'make_bd_request'}
       .form-group
