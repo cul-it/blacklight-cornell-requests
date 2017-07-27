@@ -16,16 +16,25 @@
   %div.request-author
     =show_presenter(@document).field_value 'title_responsibility_display'
 
-  %p
-    To request this item, search Borrow Direct  and place a request.
   - if !@estimate.blank?
     %p
       Delivery time: 
       = delivery_estimate_display @estimate
-  .form-group
-    - if @isbn.present?
-      = link_to 'Search Borrow Direct', borrowdirect_url_from_isbn(@isbn), :class => 'btn btn-danger pull-left'
-    - else
+      
+  - if @isbn.present?
+    %form#req.form-horizontal{:method => 'post', :controller => 'request', :action => 'make_bd_request'}
+      .form-group
+        = render :partial => 'shared/reqpu'
+        .form-group
+          %label.control-label.col-sm-2{:for => 'reqcomments'} Notes to staff:
+          .col-sm-10
+            %textarea(name="reqcomments" id="reqcomments" class="form-control")
+      %div.clearfix
+        %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit Borrow Direct request")
+        
+  - else 
+    %p
+      To request this item, search Borrow Direct  and place a request.
       = link_to 'Search Borrow Direct', borrowdirect_url_from_title(@ti), :class => 'btn btn-danger pull-left'
       
   -if @alternate_request_options and @alternate_request_options.count >= 2
