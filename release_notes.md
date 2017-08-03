@@ -1,5 +1,10 @@
 # Release Notes - blacklight-cornell-requests 
 
+## IN PROGRESS
+
+### New features
+- Borrow Direct requests can now be placed directly from the requests page (DISCOVERYACCESS-3528)
+
 ## v1.4.2
 
 ### Improvements
