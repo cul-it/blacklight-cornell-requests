@@ -7,8 +7,8 @@ BlacklightCornellRequests::Engine.routes.draw do
   #get 'callslip/:netid/:bibid' =>'request#callslip', :as =>'request_callslip'
   get 'l2l/:bibid' =>'request#l2l', :as =>'request_l2l'
   get 'l2l/:bibid/:volume' =>'request#l2l', :as =>'request_l2l_vol', :constraints => { :volume => /.*/ }
+  post 'bd_request/:bibid' => 'request#make_bd_request', :as => 'make_bd_request'
   get 'bd/:bibid' =>'request#bd', :as =>'request_bd'
-  match 'bd/make_bd_request' => 'request#make_bd_request', via: [:post]
   get 'ill/:bibid' =>'request#ill', :as =>'request_ill'
   get 'purchase/:bibid' =>'request#purchase', :as =>'request_purchase'
   post 'purchase_request/:bibid' =>'request#make_purchase_request', :as =>'make_purchase_request'
