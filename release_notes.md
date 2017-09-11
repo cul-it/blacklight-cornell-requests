@@ -1,5 +1,9 @@
 # Release Notes - blacklight-cornell-requests 
 
+## v1.4.3
+### Improvements
+- Allow operation with SAML 
+
 ## v1.4.2
 
 ### Improvements
