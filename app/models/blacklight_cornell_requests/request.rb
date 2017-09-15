@@ -12,6 +12,7 @@ module BlacklightCornellRequests
     PURCHASE = 'purchase' # Note: this is a *purchase request*, which is different from a patron-driven acquisition
     PDA = 'pda'
     ILL = 'ill'
+    SCANIT = 'scanit'
     ASK_CIRCULATION = 'circ'
     ASK_LIBRARIAN = 'ask'
     LIBRARY_ANNEX = 'Library Annex'
@@ -56,7 +57,7 @@ module BlacklightCornellRequests
 
     attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :alternate_options
     attr_accessor :au, :ti, :isbn, :document, :ill_link, :scanit_link, :pub_info, :netid, :estimate, :items, :volumes, :all_items, :in_borrow_direct
-    attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN, :DOCUMENT_DELIVERY
+    attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :SCANIT, :ASK_CIRCULATION, :ASK_LIBRARIAN, :DOCUMENT_DELIVERY
     attr_accessor :NOT_CHARGED, :CHARGED, :RENEWED, :OVERDUE, :RECALL_REQUEST, :HOLD_REQUEST, :ON_HOLD
     attr_accessor :IN_TRANSIT, :IN_TRANSIT_DISCHARGED, :IN_TRANSIT_ON_HOLD, :DISCHARGED, :MISSING
     attr_accessor :LOST_LIBRARY_APPLIED, :LOST_SYSTEM_APPLIED, :LOST, :CLAIMS_RETURNED, :DAMAGED
@@ -639,7 +640,7 @@ module BlacklightCornellRequests
 
     ############  Return eligible delivery services for request #################
     def delivery_services
-      [L2L, BD, HOLD, RECALL, PURCHASE, PDA, ILL, ASK_LIBRARIAN, ASK_CIRCULATION, DOCUMENT_DELIVERY]
+      [L2L, BD, HOLD, RECALL, PURCHASE, PDA, ILL, SCANIT, ASK_LIBRARIAN, ASK_CIRCULATION, DOCUMENT_DELIVERY]
     end
 
     # Main entry point for determining which delivery services are available for a given item
