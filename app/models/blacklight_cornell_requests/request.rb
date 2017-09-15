@@ -1039,7 +1039,7 @@ module BlacklightCornellRequests
         scanit_link.concat("&rft_id=urn%3AISBN%3A#{isbns}")
       end
       self.scanit_link = scanit_link
-   end
+    end
 
     def deep_copy(o)
       Marshal.load(Marshal.dump(o)).with_indifferent_access
