@@ -380,7 +380,7 @@ module BlacklightCornellRequests
             label += element
           end
         end
-        
+
         # Affix an indicator to the label in the select list for
         # items that are on reserve or otherwise noncirculating
         if on_reserve?(item)
@@ -388,7 +388,7 @@ module BlacklightCornellRequests
         elsif noncirculating?(item)
           label += ' (non-circulating)'
         end
-        
+
         volumes[label] = "|#{e}|#{c}|#{y}|"
 
       end
@@ -581,7 +581,7 @@ module BlacklightCornellRequests
                (item['temp_location_display_name'].include? 'Reserve' or
                 item['temp_location_display_name'].include? 'reserve'))
       elsif item['temp_location'].is_a? Hash
-        return (item['temp_location'].key?('name') && 
+        return (item['temp_location'].key?('name') &&
                 item['temp_location']['name'].include?('Non-Circulating'))
       elsif item['perm_location'].is_a? Hash
         return (item.key?('perm_location') and
@@ -649,7 +649,7 @@ module BlacklightCornellRequests
     # the fastest (i.e., the "best") delivery option.
     def get_delivery_options item,patron_t
 
-      patron_type = patron_t 
+      patron_type = patron_t
       if patron_type == 'cornell'
         #Rails.logger.debug "es287_log :#{__FILE__}:#{__LINE__} get_cornell_delivery_options."+ Time.new.inspect
         options = get_cornell_delivery_options item
@@ -923,11 +923,11 @@ module BlacklightCornellRequests
         when PURCHASE
           range = [10, 10]
         when DOCUMENT_DELIVERY
-          
-          # ScanIt/DD estimate changed to a simple 1-4 at request of 
+
+          # ScanIt/DD estimate changed to a simple 1-4 at request of
           # Caitlin Finlay.
           range = [1, 4]
-          
+
           # for others, item_data is a single item
           # for DD, it is the entire holdings data since it matters whether the item is available as a whole or not
           # available = false
@@ -1091,18 +1091,18 @@ module BlacklightCornellRequests
       return false if ENV['DISABLE_BORROW_DIRECT'].present?
 
       # Set up params for BorrowDirect gem
-      
+
       BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_TEST_API_KEY']
-      
+
       # Set api_base to the value specified in the .env file. possible values:
       # TEST - use default test URL
       # PRODUCTION - use default production URL
-      # any other URL beginning with http - use that 
+      # any other URL beginning with http - use that
       api_base = ''
       case ENV['BORROW_DIRECT_URL']
       when 'TEST'
         api_base = BorrowDirect::Defaults::TEST_API_BASE
-      when 'PRODUCTION'  
+      when 'PRODUCTION'
         api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
         BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
       when /^http/
@@ -1111,7 +1111,7 @@ module BlacklightCornellRequests
         api_base = BorrowDirect::Defaults::TEST_API_BASE
       end
       BorrowDirect::Defaults.api_base = api_base
-      
+
       BorrowDirect::Defaults.library_symbol = 'CORNELL'
       BorrowDirect::Defaults.find_item_patron_barcode = patron_barcode(netid)
       BorrowDirect::Defaults.timeout = ENV['BORROW_DIRECT_TIMEOUT'].to_i || 30 # (seconds)
@@ -1168,9 +1168,9 @@ module BlacklightCornellRequests
 
     # Get information about FOD/remote prgram delivery eligibility
     def get_fod_data(netid)
-      
+
       return {} unless ENV['FOD_DB_URL'].present?
-      
+
       begin
         uri = URI.parse(ENV['FOD_DB_URL'] + "?netid=#{netid}")
         # response = Net::HTTP.get_response(uri)
