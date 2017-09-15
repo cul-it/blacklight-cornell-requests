@@ -972,6 +972,7 @@ module BlacklightCornellRequests
           self.au = ''
         end
         create_ill_link
+        create_scanit_link
       end
     end
 
