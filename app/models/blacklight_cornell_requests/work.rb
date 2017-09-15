@@ -1,9 +1,9 @@
 module BlacklightCornellRequests
-  
+
   class Work
-    
-    attr_reader :title, :author, :isbn, :pub_info, :ill_link, :volumes
-    
+
+    attr_reader :title, :author, :isbn, :pub_info, :ill_link, :scanit_link, :volumes
+
     # items = array of item records (usually from request2.items)
     def initialize(solrdoc, items = [])
       @title = solrdoc['title_display']
