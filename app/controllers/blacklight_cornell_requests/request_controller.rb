@@ -98,7 +98,7 @@ module BlacklightCornellRequests
       @ti = req.ti
       @au = req.au
       @isbn = req.isbn
-      @ill_link = req.ill_link
+      #@ill_link = req.ill_link
       @scanit_link = req.scanit_link
       @pub_info = req.pub_info
       @volume = params[:volume]
