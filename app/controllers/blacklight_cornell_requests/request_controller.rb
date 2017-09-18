@@ -53,6 +53,9 @@ module BlacklightCornellRequests
       session[:holdings_status_short] = nil
       req = BlacklightCornellRequests::Request.new(@id, session_holdings)
       req.netid = request.env['REMOTE_USER']
+      ##################
+      req.netid = 'mjc12'
+      ##################
       req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
 
       # When we're entering the request system from a /catalog path, then we're starting
@@ -291,17 +294,23 @@ module BlacklightCornellRequests
         isbn = document[:isbn_display]
         req = BlacklightCornellRequests::Request.new(params[:bibid])
         netid = request.env['REMOTE_USER']
+        ##############
+        netid = 'mjc12'
+        ##############
         netid.sub! '@CORNELL.EDU', ''  
         
         resp = req.request_from_bd({ :isbn => isbn, :netid => netid, :pickup_location => params[:library_id] })
-        Rails.logger.debug "mjc12test: making request - resp is - #{resp}"
         if resp
-          flash[:success] = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
+          flash.now[:success] = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
         else
           flash[:error] = "There was an error when submitting this request to Borrow Direct. Your request could not be completed."
         end
       end
 
+    #  flash[:alert]= "TEST ALERT"
+    #  flash[:success] = "TEST SUCCESS"
+      #flash[:notice] = "TEST NOTICE"
+    #  flash.now[:error] = "TEST ERROR"
       Rails.logger.debug "mjc12test: flash - #{flash.inspect}"
 
       render :partial => '/flash_msg', :layout => false

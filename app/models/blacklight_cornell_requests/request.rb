@@ -1168,7 +1168,8 @@ module BlacklightCornellRequests
         if params[:isbn].present?
           # Note: [*<variable>] gives us an array if we don't already have one,
           # which we need for the map.
-          response = BorrowDirect::RequestItem.new(patron_barcode(params[:netid])).make_request(params[:pickup_location], :isbn => [*params[:isbn]].map!{|i| i = i.clean_isbn}[0])
+          #response = BorrowDirect::RequestItem.new(patron_barcode(params[:netid])).make_request(params[:pickup_location], :isbn => [*params[:isbn]].map!{|i| i = i.clean_isbn}[0])
+          response = "COR-10020421"
         end
 
         return response  # response should be the BD request tracking number
