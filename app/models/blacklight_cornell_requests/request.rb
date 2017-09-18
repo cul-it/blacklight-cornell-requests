@@ -1041,6 +1041,7 @@ module BlacklightCornellRequests
         scanit_link << "&rft_id=urn%3AISBN%3A#{isbns}"
       end
       self.scanit_link = scanit_link
+      Rails.logger.debug "jgr25_log #{__FILE__} #{__LINE__}: scanit_link #{scanit_link}"
     end
 
     def deep_copy(o)
