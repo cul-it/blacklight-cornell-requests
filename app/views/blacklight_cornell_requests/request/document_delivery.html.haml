@@ -10,8 +10,8 @@
   %p
     Click the button below to go to the ScanIt form and place your request.
   .clearfix
-  %a{:href => @scanit_link, :title =>'Submit ScanIt Request',:class => 'btn btn-danger pull-left', :target => '_blank'}
-  Go to ScanIt
+    %a{:href => @scanit_link, :title =>'Submit ScanIt Request',:class => 'btn btn-danger pull-left', :target => '_blank'}
+      Go to ScanIt
   -if @alternate_request_options and @alternate_request_options.count >= 2
     = render :partial => 'shared/request_options'
   -else
