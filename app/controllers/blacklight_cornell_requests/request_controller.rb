@@ -99,6 +99,7 @@ module BlacklightCornellRequests
       @au = req.au
       @isbn = req.isbn
       @ill_link = req.ill_link
+      Rails.logger.debug "jgr25_log #{__FILE__} #{__LINE__}: in magic"
       @scanit_link = req.scanit_link
       @pub_info = req.pub_info
       @volume = params[:volume]

@@ -81,6 +81,7 @@ module BlacklightCornellRequests
     def parse_scanit(solrdoc)
       scanit_link = "Where to scanit"
       Rails.logger.debug "jgr25_log #{__FILE__} #{__LINE__}: in parse_scanit"
+      binding.pry
       scanit_link
     end
 
