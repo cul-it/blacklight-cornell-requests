@@ -1033,12 +1033,12 @@ module BlacklightCornellRequests
       Rails.logger.debug "jgr25_log #{__FILE__} #{__LINE__}: in create_scanit_link"
       scanit_link = ENV['ILLIAD_URL'] + '?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Fnewcatalog.library.cornell.edu'
       if !self.ti.blank?
-        scanit_link.concat("&rft.title=#{CGI.escape(self.ti)}")
+        scanit_link << "&rft.title=#{CGI.escape(self.ti)}"
       end
       if self.isbn.present?
         isbns = self.isbn.join(',')
-        scanit_link.concat("&rft.isbn=#{isbns}")
-        scanit_link.concat("&rft_id=urn%3AISBN%3A#{isbns}")
+        scanit_link << "&rft.isbn=#{isbns}"
+        scanit_link << "&rft_id=urn%3AISBN%3A#{isbns}"
       end
       self.scanit_link = scanit_link
     end
