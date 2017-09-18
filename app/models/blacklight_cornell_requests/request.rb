@@ -1036,8 +1036,7 @@ module BlacklightCornellRequests
         scanit_link << "&rft.title=#{CGI.escape(self.ti)}"
       end
       if self.isbn.present?
-        isbns = self.isbn
-        @isbns.join(',')
+        isbns = self.isbn.join(',')
         scanit_link << "&rft.isbn=#{isbns}"
         scanit_link << "&rft_id=urn%3AISBN%3A#{isbns}"
       end
