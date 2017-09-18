@@ -11,6 +11,7 @@ module BlacklightCornellRequests
       @isbn = solrdoc['isbn_display']
       @pub_info = parse_pub_info(solrdoc)
       @ill_link = parse_ill(solrdoc)
+      @scanit_link = parse_scanit(solrdoc)
       @volumes = parse_volumes(items)
     end
 
@@ -75,6 +76,12 @@ module BlacklightCornellRequests
 
       ill_link
 
+    end
+
+    def parse_scanit(solrdoc)
+      scanit_link = "Where to scanit"
+      Rails.logger.debug "jgr25_log #{__FILE__} #{__LINE__}: in parse_scanit"
+      scanit_link
     end
 
     # set the class volumes from a list of item records
