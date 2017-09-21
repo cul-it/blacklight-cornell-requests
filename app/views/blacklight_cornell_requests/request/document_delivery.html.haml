@@ -10,16 +10,14 @@
   %p
     Click the button below to go to the ScanIt form and place your request.
   .clearfix
-    -if @alternate_request_options and @alternate_request_options.count >= 2
-      %a{:href => BlacklightCornellRequests::Request::DOCUMENT_DELIVERY_URL, :title =>'Submit ScanIt Request',:class => 'btn btn-danger pull-left', :target => '_blank'}
-        Go to ScanIt
-      = render :partial => 'shared/request_options'           
-    -else
-      %a{:href => BlacklightCornellRequests::Request::DOCUMENT_DELIVERY_URL, :title =>'Submit ScanIt Request',:class => 'btn btn-danger pull-left', :target => '_blank'}
-        Go to ScanIt
-      %div.accordion-heading.request-options.pull-left.form-alternative-action
-        or
-        =link_to 'Ask a Librarian','http://ask.library.cornell.edu'
-        for help.
+    %a{:href => @scanit_link, :title =>'Submit ScanIt Request',:class => 'btn btn-danger pull-left', :target => '_blank'}
+      Go to ScanIt
+  -if @alternate_request_options and @alternate_request_options.count >= 2
+    = render :partial => 'shared/request_options'
+  -else
+    %div.accordion-heading.request-options.pull-left.form-alternative-action
+    or
+    =link_to 'Ask a Librarian','http://ask.library.cornell.edu'
+    for help.
 
 

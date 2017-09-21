@@ -58,7 +58,8 @@ module BlacklightCornellRequests
       session_holdings = session[:holdings_status_short]
       session[:holdings_status_short] = nil
       req = BlacklightCornellRequests::Request.new(@id, session_holdings)
-      req.netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user] 
+      # req.netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
+      req.netid = "jgr25";
       req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
       req.netid.sub!('@cornell.edu', '') unless req.netid.nil?
 
@@ -98,6 +99,7 @@ module BlacklightCornellRequests
       @au = req.au
       @isbn = req.isbn
       @ill_link = req.ill_link
+      @scanit_link = req.scanit_link
       @pub_info = req.pub_info
       @volume = params[:volume]
       @netid = req.netid
@@ -177,6 +179,10 @@ module BlacklightCornellRequests
 
     def ill
       return magic_request Request::ILL
+    end
+
+    def scanit
+      return magic_request Request::SCANIT
     end
 
     def purchase
