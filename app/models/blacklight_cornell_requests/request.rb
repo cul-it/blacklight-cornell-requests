@@ -96,9 +96,6 @@ module BlacklightCornellRequests
       alternate_options = []
       service = ASK_LIBRARIAN
 
-      # jgr25
-      Rails.logger.level = :debug
-
       if self.bibid.nil?
         self.request_options = request_options
         self.service = { :service => service }
