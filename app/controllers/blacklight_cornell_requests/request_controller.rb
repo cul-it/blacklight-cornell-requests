@@ -180,10 +180,6 @@ module BlacklightCornellRequests
       return magic_request Request::ILL
     end
 
-    def scanit
-      return magic_request Request::SCANIT
-    end
-
     def purchase
       return magic_request Request::PURCHASE
     end
