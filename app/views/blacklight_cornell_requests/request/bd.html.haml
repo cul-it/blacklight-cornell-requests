@@ -3,8 +3,7 @@
 - @selected_volume = params[:volume]
 = render :partial => 'shared/back_to_item'
 %h2
-  - user = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user] 
-  = "Borrow Direct Request for " + user
+  = "Borrow Direct Request for #{@netid}"
 %div.well
   %h3.item-title-request.blacklight-title_display
     =title
