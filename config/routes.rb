@@ -21,6 +21,7 @@ BlacklightCornellRequests::Engine.routes.draw do
 
   put '/:bibid' => 'request#magic_request', :as => 'magic_request_bibid'
   get '/:bibid' => 'request#magic_request', :as => 'magic_request'
+  get 'auth/:bibid' => 'request#auth_magic_request', :as => 'auth_magic_request'
   #get '/:bibid/:volume' => 'request#magic_request', :as => 'volume_request', :constraints => { :volume => /.*/ } 
   get 'volume/set' => 'request#set_volume'#, :as => 'set_volume'
 
