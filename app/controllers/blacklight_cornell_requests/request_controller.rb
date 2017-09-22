@@ -59,8 +59,9 @@ module BlacklightCornellRequests
       session[:holdings_status_short] = nil
       req = BlacklightCornellRequests::Request.new(@id, session_holdings)
       # req.netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
-      req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
-      req.netid.sub!('@cornell.edu', '') unless req.netid.nil?
+      # req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
+      # req.netid.sub!('@cornell.edu', '') unless req.netid.nil?
+      req.netid = user
 
       # When we're entering the request system from a /catalog path, then we're starting
       # fresh — no volume should be pre-selected (or kept in the session). However,
@@ -230,8 +231,9 @@ module BlacklightCornellRequests
       if errors.blank?
         # Hand off the data to the request model for sending
         req = BlacklightCornellRequests::Request.new(params[:bibid])
-        req.netid = request.env['REMOTE_USER']
-        req.netid.sub! '@CORNELL.EDU', ''
+        # req.netid = request.env['REMOTE_USER']
+        # req.netid.sub! '@CORNELL.EDU', ''
+        req.netid = user
         # If the holding_id = 'any', then set to blank. Voyager expects an empty value for 'any copy',
         # but validation above expects a non-blank value!
         if params[:holding_id] == 'any'
@@ -278,7 +280,7 @@ module BlacklightCornellRequests
       if params[:email].present? and errors.empty?
         if params[:email].match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/)
           # Email the form contents to the purchase request staff
-          RequestMailer.email_request(request.env['REMOTE_USER'], params)
+          RequestMailer.email_request(user, params)
           # TODO: check for mail errors, don't assume that things are working!
           flash[:success] = I18n.t('requests.success')
         else
@@ -302,10 +304,11 @@ module BlacklightCornellRequests
         resp, document = fetch params[:bibid]
         isbn = document[:isbn_display]
         req = BlacklightCornellRequests::Request.new(params[:bibid])
-        netid = request.env['REMOTE_USER']
-        netid.sub! '@CORNELL.EDU', ''  
+        # netid = request.env['REMOTE_USER']
+        # netid.sub! '@CORNELL.EDU', ''  
+        #Rails.logger.debug "mjc12test: netid - #{@netid}"
         
-        resp = req.request_from_bd({ :isbn => isbn, :netid => netid, :pickup_location => params[:library_id] })
+        resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id] })
         Rails.logger.debug "mjc12test: making request - resp is - #{resp}"
         if resp
           flash[:success] = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
@@ -313,8 +316,6 @@ module BlacklightCornellRequests
           flash[:error] = "There was an error when submitting this request to Borrow Direct. Your request could not be completed."
         end
       end
-
-      Rails.logger.debug "mjc12test: flash - #{flash.inspect}"
 
       render :partial => '/flash_msg', :layout => false
       
@@ -329,6 +330,18 @@ module BlacklightCornellRequests
       respond_to do |format|
         format.js {render nothing: true}
       end
+    end
+    
+    
+    def user
+      netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
+      ###
+      netid = 'mjc12'
+      ###
+      netid.sub!('@CORNELL.EDU', '') unless netid.nil?
+      netid.sub!('@cornell.edu', '') unless netid.nil? 
+      
+      netid     
     end
 
   end
