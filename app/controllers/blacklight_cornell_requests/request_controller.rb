@@ -293,7 +293,33 @@ module BlacklightCornellRequests
       render :partial => '/flash_msg', :layout => false
 
     end
+    
+    def make_bd_request
+      
+      if params[:library_id].blank?
+        flash[:error] = "Please select a library pickup location"
+      else
+        resp, document = fetch params[:bibid]
+        isbn = document[:isbn_display]
+        req = BlacklightCornellRequests::Request.new(params[:bibid])
+        netid = request.env['REMOTE_USER']
+        netid.sub! '@CORNELL.EDU', ''  
+        
+        resp = req.request_from_bd({ :isbn => isbn, :netid => netid, :pickup_location => params[:library_id] })
+        Rails.logger.debug "mjc12test: making request - resp is - #{resp}"
+        if resp
+          flash[:success] = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
+        else
+          flash[:error] = "There was an error when submitting this request to Borrow Direct. Your request could not be completed."
+        end
+      end
 
+      Rails.logger.debug "mjc12test: flash - #{flash.inspect}"
+
+      render :partial => '/flash_msg', :layout => false
+      
+    end    
+    
     # AJAX responder used with requests.js.coffee to set the volume
     # when the user selects one in the volume drop-down list
     def set_volume

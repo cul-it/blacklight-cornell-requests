@@ -74,7 +74,6 @@ requests =
         bdCode = $(element).data('bd-code')
         # Some options (e.g., faculty office delivery) don't have a corresponding
         # BD code. In those cases, we want to use the original CUL numeric code
-        # for the value ()
         if bdCode
           $(element).val(bdCode)
          
