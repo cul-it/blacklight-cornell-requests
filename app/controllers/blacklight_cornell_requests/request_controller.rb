@@ -291,9 +291,9 @@ module BlacklightCornellRequests
       render :partial => '/flash_msg', :layout => false
 
     end
-    
+
     def make_bd_request
-      
+
       if params[:library_id].blank?
         flash[:error] = "Please select a library pickup location"
       else
@@ -301,9 +301,9 @@ module BlacklightCornellRequests
         isbn = document[:isbn_display]
         req = BlacklightCornellRequests::Request.new(params[:bibid])
         # netid = request.env['REMOTE_USER']
-        # netid.sub! '@CORNELL.EDU', ''  
+        # netid.sub! '@CORNELL.EDU', ''
         #Rails.logger.debug "mjc12test: netid - #{@netid}"
-        
+
         resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id] })
         Rails.logger.debug "mjc12test: making request - resp is - #{resp}"
         if resp
@@ -314,9 +314,9 @@ module BlacklightCornellRequests
       end
 
       render :partial => '/flash_msg', :layout => false
-      
-    end    
-    
+
+    end
+
     # AJAX responder used with requests.js.coffee to set the volume
     # when the user selects one in the volume drop-down list
     def set_volume
@@ -327,17 +327,14 @@ module BlacklightCornellRequests
         format.js {render nothing: true}
       end
     end
-    
-    
+
+
     def user
       netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
-      ###
-      netid = 'mjc12'
-      ###
       netid.sub!('@CORNELL.EDU', '') unless netid.nil?
-      netid.sub!('@cornell.edu', '') unless netid.nil? 
-      
-      netid     
+      netid.sub!('@cornell.edu', '') unless netid.nil?
+
+      netid
     end
 
   end

@@ -11,7 +11,7 @@
 
 ## v1.4.3
 ### Improvements
-- Allow operation with SAML 
+- Allow operation with SAML
 
 ## v1.4.2
 
