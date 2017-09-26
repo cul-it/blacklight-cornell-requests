@@ -23,6 +23,12 @@ module BlacklightCornellRequests
       document
     end
 
+    def auth_magic_request target=''
+    session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
+    Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
+    redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+    end
+
     def magic_request target=''
 
       @id = params[:bibid]
@@ -52,8 +58,10 @@ module BlacklightCornellRequests
       session_holdings = session[:holdings_status_short]
       session[:holdings_status_short] = nil
       req = BlacklightCornellRequests::Request.new(@id, session_holdings)
-      req.netid = request.env['REMOTE_USER']
-      req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
+      # req.netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
+      # req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
+      # req.netid.sub!('@cornell.edu', '') unless req.netid.nil?
+      req.netid = user
 
       # When we're entering the request system from a /catalog path, then we're starting
       # fresh — no volume should be pre-selected (or kept in the session). However,
@@ -91,6 +99,7 @@ module BlacklightCornellRequests
       @au = req.au
       @isbn = req.isbn
       @ill_link = req.ill_link
+      @scanit_link = req.scanit_link
       @pub_info = req.pub_info
       @volume = params[:volume]
       @netid = req.netid
@@ -218,8 +227,9 @@ module BlacklightCornellRequests
       if errors.blank?
         # Hand off the data to the request model for sending
         req = BlacklightCornellRequests::Request.new(params[:bibid])
-        req.netid = request.env['REMOTE_USER']
-        req.netid.sub! '@CORNELL.EDU', ''
+        # req.netid = request.env['REMOTE_USER']
+        # req.netid.sub! '@CORNELL.EDU', ''
+        req.netid = user
         # If the holding_id = 'any', then set to blank. Voyager expects an empty value for 'any copy',
         # but validation above expects a non-blank value!
         if params[:holding_id] == 'any'
@@ -266,7 +276,7 @@ module BlacklightCornellRequests
       if params[:email].present? and errors.empty?
         if params[:email].match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/)
           # Email the form contents to the purchase request staff
-          RequestMailer.email_request(request.env['REMOTE_USER'], params)
+          RequestMailer.email_request(user, params)
           # TODO: check for mail errors, don't assume that things are working!
           flash[:success] = I18n.t('requests.success')
         else
@@ -282,6 +292,31 @@ module BlacklightCornellRequests
 
     end
 
+    def make_bd_request
+
+      if params[:library_id].blank?
+        flash[:error] = "Please select a library pickup location"
+      else
+        resp, document = fetch params[:bibid]
+        isbn = document[:isbn_display]
+        req = BlacklightCornellRequests::Request.new(params[:bibid])
+        # netid = request.env['REMOTE_USER']
+        # netid.sub! '@CORNELL.EDU', ''
+        #Rails.logger.debug "mjc12test: netid - #{@netid}"
+
+        resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id] })
+        Rails.logger.debug "mjc12test: making request - resp is - #{resp}"
+        if resp
+          flash[:success] = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
+        else
+          flash[:error] = "There was an error when submitting this request to Borrow Direct. Your request could not be completed."
+        end
+      end
+
+      render :partial => '/flash_msg', :layout => false
+
+    end
+
     # AJAX responder used with requests.js.coffee to set the volume
     # when the user selects one in the volume drop-down list
     def set_volume
@@ -291,6 +326,15 @@ module BlacklightCornellRequests
       respond_to do |format|
         format.js {render nothing: true}
       end
+    end
+
+
+    def user
+      netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
+      netid.sub!('@CORNELL.EDU', '') unless netid.nil?
+      netid.sub!('@cornell.edu', '') unless netid.nil?
+
+      netid
     end
 
   end

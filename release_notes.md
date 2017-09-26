@@ -1,5 +1,18 @@
 # Release Notes - blacklight-cornell-requests 
 
+## v1.5.0
+
+### New features
+- Borrow Direct requests can now be placed directly from the requests page (DISCOVERYACCESS-3528)
+
+### Improvements
+- ScanIt link now prepopulates data in the request form (DISCOVERYACCESS-3552)
+- Policy groups updated for new olin,av location (DISCOVERYACCESS-3447)
+
+## v1.4.3
+### Improvements
+- Allow operation with SAML
+
 ## v1.4.2
 
 ### Improvements

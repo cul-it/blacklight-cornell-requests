@@ -3,8 +3,7 @@
 - @selected_volume = params[:volume]
 = render :partial => 'shared/back_to_item'
 %h1.request-type
-  - user =  request.env['REMOTE_USER'].inspect
-  = "Request a hold for " + user
+  = "Request a hold for #{@netid}"
 %div.row
   %div.well
     %h2.item-title-request.blacklight-title_display=title

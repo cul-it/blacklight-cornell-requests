@@ -3,7 +3,7 @@
 - @selected_volume = params[:volume]
 = render :partial => 'shared/back_to_item'
 %h1.request-type
-  = "Request a recall for user:" + request.env['REMOTE_USER'].inspect
+  = "Request a recall for user: #{@netid}"
 %div.row
   %div.well
     %h2.item-title-request.blacklight-title_display=title

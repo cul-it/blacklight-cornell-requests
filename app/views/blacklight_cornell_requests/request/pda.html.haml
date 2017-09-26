@@ -2,7 +2,7 @@
 -subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
 = render :partial => 'shared/back_to_item'
 %h2
-  = "Purchase request for user: " + request.env["REMOTE_USER"].inspect
+  = "Purchase request for user: #{@netid}"
 %div.well
   %h3.blacklight-title_display.item-title-request
     =title

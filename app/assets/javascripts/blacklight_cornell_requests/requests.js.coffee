@@ -4,6 +4,7 @@ requests =
     this.originalPickupList
     this.bindEventListeners()
     this.checkForL2L()
+    this.checkForBD()
 
   # Store original list of pickup locations for use later
   originalPickupList:  $('#pickup-locations').html()
@@ -63,6 +64,19 @@ requests =
     if $('form#req.l2l-request').length == 1
       this.bindPickupEventListeners()
       this.checkForSingleCopy()
+      
+  # If this is a borrow direct request, modify the values in the location select
+  # list to use the Borrow Direct location codes instead of CUL codes
+  checkForBD: () ->
+    if $('form#req.bd-request').length == 1
+      options = $('#pickup-locations option')
+      options.each (i, element) =>
+        bdCode = $(element).data('bd-code')
+        # Some options (e.g., faculty office delivery) don't have a corresponding
+        # BD code. In those cases, we want to use the original CUL numeric code
+        if bdCode
+          $(element).val(bdCode)
+         
 
   # When there's only a single copy of an item suppress the pickup location immediately
   # -- don't wait for a change event on .copy-select because it will never happen
@@ -119,8 +133,8 @@ requests =
       success: (data) ->
         requests.scrollToTop()
         # Flash validation error if present
-        if data.indexOf('alert-danger') != -1
-          $('.flash_messages').replaceWith(data)
+      #  if data.indexOf('alert-danger') != -1
+        $('.flash_messages').replaceWith(data)
 
   # Submit purchase form via AJAX
   # -- nac26 2013-04-10: I see no reason why we need both of these submit functions

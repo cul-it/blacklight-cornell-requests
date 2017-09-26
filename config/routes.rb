@@ -7,6 +7,7 @@ BlacklightCornellRequests::Engine.routes.draw do
   #get 'callslip/:netid/:bibid' =>'request#callslip', :as =>'request_callslip'
   get 'l2l/:bibid' =>'request#l2l', :as =>'request_l2l'
   get 'l2l/:bibid/:volume' =>'request#l2l', :as =>'request_l2l_vol', :constraints => { :volume => /.*/ }
+  post 'bd_request/:bibid' => 'request#make_bd_request', :as => 'make_bd_request'
   get 'bd/:bibid' =>'request#bd', :as =>'request_bd'
   get 'ill/:bibid' =>'request#ill', :as =>'request_ill'
   get 'purchase/:bibid' =>'request#purchase', :as =>'request_purchase'
@@ -21,6 +22,7 @@ BlacklightCornellRequests::Engine.routes.draw do
 
   put '/:bibid' => 'request#magic_request', :as => 'magic_request_bibid'
   get '/:bibid' => 'request#magic_request', :as => 'magic_request'
+  get 'auth/:bibid' => 'request#auth_magic_request', :as => 'auth_magic_request'
   #get '/:bibid/:volume' => 'request#magic_request', :as => 'volume_request', :constraints => { :volume => /.*/ } 
   get 'volume/set' => 'request#set_volume'#, :as => 'set_volume'
 
