@@ -13,25 +13,22 @@ module BlacklightCornellRequests
 
   	end
 
+    # Return an array of select list option parameters corresponding to the
+    # special programs specified in params. Example:
+    # "programs"=>[{"location_id"=>250, "name"=>"NYC-CFEM"}]
     def parsed_special_delivery(params)
 
-      unless params['program'].present? && params['program']['location_id'] > 0
-        Rails.logger.warn("Special Delivery: unable to find delivery location code in #{params.inspect}")
-        return {}
+      return [] unless params['programs'] && params['programs'].length > 0
+
+      # The reject operator is used here to filter out the faculty office delivery
+      # option, which has its own entry in the select list and shouldn't be repeated here.
+      params['programs'].reject{|p| p['location_id'] == 224}.sort_by{|p| p['name']}.map do |p|
+        formatted_label = "Special Program Delivery: #{p['name']}"
+        { :label => formatted_label, :value => p['location_id'] }
       end
 
-      program = params['program']
-      office_delivery = program['location_id'] == 224
-      formatted_label = office_delivery ? "Office Delivery" : "Special Program Delivery"
-      formatted_label += " (#{params['delivery_location']})"
-
-      {
-        fod:   office_delivery,
-        code:  params['program']['location_id'],
-        value: formatted_label
-      }
     end
-    
+
     def borrowdirect_url_from_isbn(isbns)
 
       # For now, just take the first isbn if there are more than one. BD seems to do fine with any.
