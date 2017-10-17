@@ -1,4 +1,8 @@
-# Release Notes - blacklight-cornell-requests 
+# Release Notes - blacklight-cornell-requests
+
+## v1.5.1
+
+- FOD program display updated to accommodate enrollment in multiple programs
 
 ## v1.5.0
 
