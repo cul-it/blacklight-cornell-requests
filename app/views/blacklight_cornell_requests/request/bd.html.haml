@@ -17,24 +17,24 @@
 
   - if !@estimate.blank?
     %p
-      Delivery time: 
+      Delivery time:
       = delivery_estimate_display @estimate
 
   - if @isbn.present?
     %form#req.bd-request.form-horizontal{:method => 'post', :action => make_bd_request_path}
       .form-group
-        = render :partial => 'shared/reqpu'
+        = render :partial => 'shared/reqpu_bd'
         .form-group
           %label.control-label.col-sm-2{:for => 'reqcomments'} Notes to staff:
           .col-sm-10
             %textarea(name="reqcomments" id="reqcomments" class="form-control")
       %div.clearfix
         %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit Borrow Direct request")
-        
-  - else 
+
+  - else
     %p To request this item, search Borrow Direct  and place a request.
     = link_to 'Search Borrow Direct', borrowdirect_url_from_title(@ti), :class => 'btn btn-danger pull-left'
-      
+
   -if @alternate_request_options and @alternate_request_options.count >= 2
     = render :partial => 'shared/request_options'
   -else
@@ -42,4 +42,3 @@
       = succeed "." do
         If you need further help, please
         =link_to 'Ask a Librarian','http://ask.library.cornell.edu'
-
