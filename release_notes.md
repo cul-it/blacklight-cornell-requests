@@ -1,5 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
+## v1.5.2
+
+- Borrow Direct pickup location list reworked to remove non-Borrow Direct locations (DISCOVERYACCESS-3830)
+
 ## v1.5.1
 
 - FOD program display updated to accommodate enrollment in multiple programs
