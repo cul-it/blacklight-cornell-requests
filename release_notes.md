@@ -3,6 +3,7 @@
 ## IN PROGRESS
 
 ### Improvements
+- Support for notes added in Borrow Direct requests (DISCOVERYACCESS-3826)
 - When a Borrow Direct request is submitted, a progress spinner appears next to the submit button until the AJAX call is complete (DISCOVERYACCESS-3827)
 
 ## v1.5.2

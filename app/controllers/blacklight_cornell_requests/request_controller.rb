@@ -24,9 +24,9 @@ module BlacklightCornellRequests
     end
 
     def auth_magic_request target=''
-    session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
-    Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
-    redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+      session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
+      Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
+      redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
     end
 
     def magic_request target=''
@@ -304,7 +304,7 @@ module BlacklightCornellRequests
         # netid.sub! '@CORNELL.EDU', ''
         #Rails.logger.debug "mjc12test: netid - #{@netid}"
 
-        resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id] })
+        resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id], :notes => params[:reqcomments] })
         Rails.logger.debug "mjc12test: making request - resp is - #{resp}"
         if resp
           flash[:success] = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
