@@ -1,5 +1,10 @@
 # Release Notes - blacklight-cornell-requests
 
+## IN PROGRESS
+
+### Improvements
+- When a Borrow Direct request is submitted, a progress spinner appears next to the submit button until the AJAX call is complete (DISCOVERYACCESS-3827)
+
 ## v1.5.2
 
 - Borrow Direct pickup location list reworked to remove non-Borrow Direct locations (DISCOVERYACCESS-3830)
