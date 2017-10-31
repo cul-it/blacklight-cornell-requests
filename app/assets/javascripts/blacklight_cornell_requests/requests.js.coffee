@@ -29,6 +29,17 @@ requests =
       requests.submitPurchaseForm()
       return false
 
+    # ... and for Borrow Direct requests
+    $('#bd-request-submit').click ->
+      $.fn.spin.presets.requesting =
+        lines: 9,
+        length: 3,
+        width: 2,
+        radius: 6,
+      $('#request-loading-spinner').spin('requesting')
+      requests.submitForm()
+      return false
+
     # Listener for volume selection
     $('#volume-selection').change ->
       $.fn.spin.presets.requesting =
@@ -64,7 +75,7 @@ requests =
     if $('form#req.l2l-request').length == 1
       this.bindPickupEventListeners()
       this.checkForSingleCopy()
-      
+
   # If this is a borrow direct request, modify the values in the location select
   # list to use the Borrow Direct location codes instead of CUL codes
   checkForBD: () ->
@@ -76,7 +87,7 @@ requests =
         # BD code. In those cases, we want to use the original CUL numeric code
         if bdCode
           $(element).val(bdCode)
-         
+
 
   # When there's only a single copy of an item suppress the pickup location immediately
   # -- don't wait for a change event on .copy-select because it will never happen
@@ -135,6 +146,7 @@ requests =
         # Flash validation error if present
       #  if data.indexOf('alert-danger') != -1
         $('.flash_messages').replaceWith(data)
+        $('#request-loading-spinner').spin(false)
 
   # Submit purchase form via AJAX
   # -- nac26 2013-04-10: I see no reason why we need both of these submit functions
@@ -167,7 +179,7 @@ requests =
   redirectVolume: (selectedVolume, requestPath) ->
     $.ajax
       url: '/request/volume/set',
-      data: { volume: selectedVolume }                 
+      data: { volume: selectedVolume }
       success: (data, textStatus, jqXHR) ->
         redirectPath = requestPath# + '/' + selectedVolume
         window.location = redirectPath
