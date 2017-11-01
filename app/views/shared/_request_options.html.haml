@@ -11,6 +11,7 @@
           %th
             Delivery time
       - if @alternate_request_options
+        - Rails.logger.debug "mjc12test: alts: #{@alternate_request_options}"
         - session[:volume] = @volume
         - @alternate_request_options.each do |option|
           - if option[:option] == 'l2l'
@@ -54,9 +55,10 @@
               %td
                 = delivery_estimate_display option[:estimate]
           - elsif option[:option] == 'ill'
+            - link = option[:ill_link] || request_ill_path(:bibid => @id, :volume => @volume)
             %tr
               %td
-                = link_to request_ill_path(:bibid => @id, :volume => @volume), {:title => @ti} do
+                = link_to link, {:title => @ti} do
                   %i.fa.fa-arrow-circle-right
                   Interlibrary Loan
               %td
@@ -70,9 +72,10 @@
               %td
                 This item is a short-term loan. Please check at the circulation desk.
           - elsif option[:option] == 'document_delivery'
+            - link = option[:scanit_link] || request_document_delivery_path(@id)
             %tr
               %td
-                = link_to request_document_delivery_path(@id), {:title => @ti} do
+                = link_to link, {:title => @ti} do
                   %i.fa.fa-arrow-circle-right
                   ScanIt
               %td

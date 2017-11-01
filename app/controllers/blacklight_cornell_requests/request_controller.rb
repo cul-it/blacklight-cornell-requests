@@ -146,7 +146,14 @@ module BlacklightCornellRequests
       @alternate_request_options = []
       if !req.alternate_options.nil?
         req.alternate_options.each do |option|
-          @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
+          option_hash = {:option => option[:service], :estimate => option[:estimate]}
+          if option[:service] == 'ill'
+            option_hash[:ill_link] = req.ill_link
+          elsif option[:service] == 'document_delivery'
+            option_hash[:scanit_link] = req.scanit_link
+          end
+          @alternate_request_options.push(option_hash)
+
         end
       end
 
