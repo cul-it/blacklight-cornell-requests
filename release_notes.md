@@ -5,6 +5,8 @@
 ### Improvements
 - Support for notes added in Borrow Direct requests (DISCOVERYACCESS-3826)
 - When a Borrow Direct request is submitted, a progress spinner appears next to the submit button until the AJAX call is complete (DISCOVERYACCESS-3827)
+- When offered as secondary request options, ILL and ScanIt now link directly to the
+third-party forms (no intermediary request page) (DISCOVERYACCESS-3541)
 
 ## v1.5.2
 
