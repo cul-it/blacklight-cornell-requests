@@ -22,12 +22,11 @@
 
   - if @isbn.present?
     %form#req.bd-request.form-horizontal{:method => 'post', :action => make_bd_request_path}
+      = render :partial => 'shared/reqpu_bd'
       .form-group
-        = render :partial => 'shared/reqpu_bd'
-        .form-group
-          %label.control-label.col-sm-2{:for => 'reqcomments'} Notes to staff:
-          .col-sm-10
-            %textarea(name="reqcomments" id="reqcomments" class="form-control")
+        %label.control-label.col-sm-2{:for => 'reqcomments'} Notes to staff:
+        .col-sm-10
+          %textarea(name="reqcomments" id="reqcomments" class="form-control")
       %div.clearfix
         %input#bd-request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit Borrow Direct request")
         %span{:id => 'request-loading-spinner'}

@@ -7,6 +7,7 @@
 - When a Borrow Direct request is submitted, a progress spinner appears next to the submit button until the AJAX call is complete (DISCOVERYACCESS-3827)
 - When offered as secondary request options, ILL and ScanIt now link directly to the
 third-party forms (no intermediary request page) (DISCOVERYACCESS-3541)
+- Fixed form element alignment of Borrow Direct form on mobile devices (DISCOVERYACCESS-3820)
 
 ## v1.5.2
 
