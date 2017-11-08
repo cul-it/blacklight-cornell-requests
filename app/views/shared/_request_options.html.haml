@@ -11,7 +11,6 @@
           %th
             Delivery time
       - if @alternate_request_options
-        - Rails.logger.debug "mjc12test: alts: #{@alternate_request_options}"
         - session[:volume] = @volume
         - @alternate_request_options.each do |option|
           - if option[:option] == 'l2l'

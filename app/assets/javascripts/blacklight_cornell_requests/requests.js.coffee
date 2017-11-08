@@ -37,7 +37,7 @@ requests =
         width: 2,
         radius: 6,
       $('#request-loading-spinner').spin('requesting')
-      requests.submitForm()
+      requests.submitForm('bd')
       return false
 
     # Listener for volume selection
@@ -131,7 +131,7 @@ requests =
       $("#delivery_option").html(data)
 
   # Submit form via AJAX
-  submitForm: () ->
+  submitForm: (source = '') ->
     hu = $('#req').attr('action')
     reqnna = ''
     reqnna = $('form [name="latest-date"]:radio:checked').val()
@@ -142,11 +142,16 @@ requests =
       data: $('#req').serialize(),
       url:hu,
       success: (data) ->
-        requests.scrollToTop()
-        # Flash validation error if present
-      #  if data.indexOf('alert-danger') != -1
-        $('.flash_messages').replaceWith(data)
         $('#request-loading-spinner').spin(false)
+
+        # Ugly special condition wrangling for Borrow Direct messages,
+        # which are _mostly_ not treated as ordinary flash messages!
+        match = /Borrow Direct/g.test(data)
+        if (source == 'bd' && match)
+          $('#request-message-well').html(data)
+        else
+          requests.scrollToTop()
+          $('.flash_messages').replaceWith(data)
 
   # Submit purchase form via AJAX
   # -- nac26 2013-04-10: I see no reason why we need both of these submit functions
