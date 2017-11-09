@@ -87,7 +87,8 @@ requests =
         # BD code. In those cases, we want to use the original CUL numeric code
         if bdCode
           $(element).val(bdCode)
-
+      $('#pickup-locations').change ->
+        $('#bd-request-submit').removeAttr('disabled')
 
   # When there's only a single copy of an item suppress the pickup location immediately
   # -- don't wait for a change event on .copy-select because it will never happen
@@ -137,6 +138,7 @@ requests =
     reqnna = $('form [name="latest-date"]:radio:checked').val()
     if reqnna  == 'undefined-undefined-undefined'
       reqnna = ''
+    $('#bd-request-submit').attr('disabled', 'disabled')
     $.ajax
       type: 'POST',
       data: $('#req').serialize(),
@@ -146,9 +148,12 @@ requests =
 
         # Ugly special condition wrangling for Borrow Direct messages,
         # which are _mostly_ not treated as ordinary flash messages!
-        match = /Borrow Direct/g.test(data)
+        match = data.match(/Borrow Direct/gi)
+        error = data.match(/error/gi)
         if (source == 'bd' && match)
           $('#request-message-well').html(data)
+          if (error)
+            $('#bd-request-submit').removeAttr('disabled')
         else
           requests.scrollToTop()
           $('.flash_messages').replaceWith(data)
