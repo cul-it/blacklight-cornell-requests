@@ -37,7 +37,7 @@ requests =
         width: 2,
         radius: 6,
       $('#request-loading-spinner').spin('requesting')
-      requests.submitForm()
+      requests.submitForm('bd')
       return false
 
     # Listener for volume selection
@@ -87,7 +87,8 @@ requests =
         # BD code. In those cases, we want to use the original CUL numeric code
         if bdCode
           $(element).val(bdCode)
-
+      $('#pickup-locations').change ->
+        $('#bd-request-submit').removeAttr('disabled')
 
   # When there's only a single copy of an item suppress the pickup location immediately
   # -- don't wait for a change event on .copy-select because it will never happen
@@ -131,22 +132,31 @@ requests =
       $("#delivery_option").html(data)
 
   # Submit form via AJAX
-  submitForm: () ->
+  submitForm: (source = '') ->
     hu = $('#req').attr('action')
     reqnna = ''
     reqnna = $('form [name="latest-date"]:radio:checked').val()
     if reqnna  == 'undefined-undefined-undefined'
       reqnna = ''
+    $('#bd-request-submit').attr('disabled', 'disabled')
     $.ajax
       type: 'POST',
       data: $('#req').serialize(),
       url:hu,
       success: (data) ->
-        requests.scrollToTop()
-        # Flash validation error if present
-      #  if data.indexOf('alert-danger') != -1
-        $('.flash_messages').replaceWith(data)
         $('#request-loading-spinner').spin(false)
+
+        # Ugly special condition wrangling for Borrow Direct messages,
+        # which are _mostly_ not treated as ordinary flash messages!
+        match = data.match(/Borrow Direct/gi)
+        error = data.match(/error/gi)
+        if (source == 'bd' && match)
+          $('#request-message-well').html(data)
+          if (error)
+            $('#bd-request-submit').removeAttr('disabled')
+        else
+          requests.scrollToTop()
+          $('.flash_messages').replaceWith(data)
 
   # Submit purchase form via AJAX
   # -- nac26 2013-04-10: I see no reason why we need both of these submit functions

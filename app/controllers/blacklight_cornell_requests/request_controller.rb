@@ -314,13 +314,19 @@ module BlacklightCornellRequests
         resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id], :notes => params[:reqcomments] })
         Rails.logger.debug "mjc12test: making request - resp is - #{resp}"
         if resp
-          flash[:success] = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
+          status = 'success'
+          status_msg = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
         else
-          flash[:error] = "There was an error when submitting this request to Borrow Direct. Your request could not be completed."
+          status = 'failure'
+          status_msg = "There was an error when submitting this request to Borrow Direct. Your request could not be completed."
         end
       end
 
-      render :partial => '/flash_msg', :layout => false
+      if status
+        render :partial => 'bd_notification', :layout => false, locals: {:message => status_msg, :status => status}
+      else
+        render :partial => '/flash_msg', :layout => false
+      end
 
     end
 
