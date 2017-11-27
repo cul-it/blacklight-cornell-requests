@@ -1,6 +1,6 @@
 # Release Notes - blacklight-cornell-requests
 
-## IN PROGRESS
+## v1.5.3
 
 ### Improvements
 - Support for notes added in Borrow Direct requests (DISCOVERYACCESS-3826)
