@@ -1096,21 +1096,21 @@ module BlacklightCornellRequests
 
 
     end
-    
+
     # Set parameters for the Borrow Direct API
     def configure_bd
       unless ENV['DISABLE_BORROW_DIRECT'].present?
         BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_TEST_API_KEY']
-        
+
         # Set api_base to the value specified in the .env file. possible values:
         # TEST - use default test URL
         # PRODUCTION - use default production URL
-        # any other URL beginning with http - use that 
+        # any other URL beginning with http - use that
         api_base = ''
         case ENV['BORROW_DIRECT_URL']
         when 'TEST'
           api_base = BorrowDirect::Defaults::TEST_API_BASE
-        when 'PRODUCTION'  
+        when 'PRODUCTION'
           api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
           BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
         when /^http/
@@ -1119,7 +1119,7 @@ module BlacklightCornellRequests
           api_base = BorrowDirect::Defaults::TEST_API_BASE
         end
         BorrowDirect::Defaults.api_base = api_base
-        
+
         BorrowDirect::Defaults.library_symbol = 'CORNELL'
         BorrowDirect::Defaults.find_item_patron_barcode = patron_barcode(netid)
         BorrowDirect::Defaults.timeout = ENV['BORROW_DIRECT_TIMEOUT'].to_i || 30 # (seconds)
@@ -1169,9 +1169,9 @@ module BlacklightCornellRequests
         return false
       end
     end
-    
+
     # Place an item request through the Borrow Direct API
-    # 
+    #
     # params should contain the following:
     #   :netid
     #   :pickup_location (code)
@@ -1183,7 +1183,7 @@ module BlacklightCornellRequests
         if params[:isbn].present?
           # Note: [*<variable>] gives us an array if we don't already have one,
           # which we need for the map.
-          response = BorrowDirect::RequestItem.new(patron_barcode(params[:netid])).make_request(params[:pickup_location], :isbn => [*params[:isbn]].map!{|i| i = i.clean_isbn}[0])
+          response = BorrowDirect::RequestItem.new(patron_barcode(params[:netid])).make_request(params[:pickup_location], {:isbn => [*params[:isbn]].map!{|i| i = i.clean_isbn}[0]}, params[:notes])
         end
 
         return response  # response should be the BD request tracking number
@@ -1206,7 +1206,7 @@ module BlacklightCornellRequests
         Rails.logger.warn response.inspect
         return false
       end
-      
+
     end
 
     # Use the external netid lookup script to figure out the patron's barcode

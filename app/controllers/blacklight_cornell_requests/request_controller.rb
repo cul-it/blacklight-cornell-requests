@@ -24,9 +24,9 @@ module BlacklightCornellRequests
     end
 
     def auth_magic_request target=''
-    session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
-    Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
-    redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+      session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
+      Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
+      redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
     end
 
     def magic_request target=''
@@ -146,7 +146,14 @@ module BlacklightCornellRequests
       @alternate_request_options = []
       if !req.alternate_options.nil?
         req.alternate_options.each do |option|
-          @alternate_request_options.push({:option => option[:service], :estimate => option[:estimate]})
+          option_hash = {:option => option[:service], :estimate => option[:estimate]}
+          if option[:service] == 'ill'
+            option_hash[:ill_link] = req.ill_link
+          elsif option[:service] == 'document_delivery'
+            option_hash[:scanit_link] = req.scanit_link
+          end
+          @alternate_request_options.push(option_hash)
+
         end
       end
 
@@ -304,16 +311,22 @@ module BlacklightCornellRequests
         # netid.sub! '@CORNELL.EDU', ''
         #Rails.logger.debug "mjc12test: netid - #{@netid}"
 
-        resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id] })
+        resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id], :notes => params[:reqcomments] })
         Rails.logger.debug "mjc12test: making request - resp is - #{resp}"
         if resp
-          flash[:success] = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
+          status = 'success'
+          status_msg = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
         else
-          flash[:error] = "There was an error when submitting this request to Borrow Direct. Your request could not be completed."
+          status = 'failure'
+          status_msg = "There was an error when submitting this request to Borrow Direct. Your request could not be completed."
         end
       end
 
-      render :partial => '/flash_msg', :layout => false
+      if status
+        render :partial => 'bd_notification', :layout => false, locals: {:message => status_msg, :status => status}
+      else
+        render :partial => '/flash_msg', :layout => false
+      end
 
     end
 

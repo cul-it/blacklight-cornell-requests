@@ -1,5 +1,16 @@
 # Release Notes - blacklight-cornell-requests
 
+## v1.5.3
+
+### Improvements
+- Support for notes added in Borrow Direct requests (DISCOVERYACCESS-3826)
+- When a Borrow Direct request is submitted, a progress spinner appears next to the submit button until the AJAX call is complete (DISCOVERYACCESS-3827)
+- ... and the success/failure message now appears below the request button for BD only ...
+- ... and the submit button is disabled unless the request fails (DISCOVERYACCESS-3829)
+- When offered as secondary request options, ILL and ScanIt now link directly to the
+third-party forms (no intermediary request page) (DISCOVERYACCESS-3541)
+- Fixed form element alignment of Borrow Direct form on mobile devices (DISCOVERYACCESS-3820)
+
 ## v1.5.2
 
 - Borrow Direct pickup location list reworked to remove non-Borrow Direct locations (DISCOVERYACCESS-3830)
