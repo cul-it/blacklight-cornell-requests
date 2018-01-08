@@ -1,5 +1,10 @@
 # Release Notes - blacklight-cornell-requests
 
+## IN PROGRESS
+
+### Bug fixes
+- Volume selection loop bug was reintroduced by the addition of SAML. Should be fixed now (DISCOVERYACCESS-4006).
+
 ## v1.5.3
 
 ### Improvements

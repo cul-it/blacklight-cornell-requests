@@ -27,6 +27,7 @@ module BlacklightCornellRequests
       session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
       redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+      #magic_request
     end
 
     def magic_request target=''
@@ -68,7 +69,9 @@ module BlacklightCornellRequests
       # if the referer is a different path — i.e., /request/*, then we *do* want to
       # preserve the volume selection; this would be the case if the page is reloaded
       # or the user selects an alternate delivery method for the same item.
-      if session[:setvol].nil? && (request.referer && request.referer.include?('/catalog/'))
+      Rails.logger.debug "mjc12test: going into Requests with referrer - #{request.referer}"
+      Rails.logger.debug "mjc12test: with setvol - #{session[:setvol]}"
+      if session[:setvol].nil? && (request.referer && request.referer.exclude?('/request/'))
         session[:volume] = nil
       end
       session[:setvol] = nil
