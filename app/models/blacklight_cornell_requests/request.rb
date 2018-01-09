@@ -495,6 +495,7 @@ module BlacklightCornellRequests
             ## Olin or Uris can't deliver to itselves and each other
             ## Annex group can deliver to itself
             ## Law group can deliver to itself
+            ## Baily Hortorium CAN be delivered to Mann despite being in same group (16)
             ## Others can't deliver to itself
             # logger.debug "sk274_log: " + circ_group_id.inspect
 
@@ -520,6 +521,7 @@ module BlacklightCornellRequests
               # logger.debug "sk274_log: circ group id: " + circ_group_id.inspect
               locs = Circ_policy_locs.select('LOCATION_ID').where( :circ_group_id =>  circ_group_id, :pickup_location => 'Y' )
               locs.each do |loc|
+                next if location.to_i == 77 && loc['LOCATION_ID'].to_i == 172 # EXCEPTION: skip Bailey Hortorium (77) - Mann (172) exclusion
                 exclude_location_list.push loc['LOCATION_ID']
               end
               location_seen[location] = exclude_location_list

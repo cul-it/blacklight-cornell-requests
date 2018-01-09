@@ -4,6 +4,7 @@
 
 ### Bug fixes
 - Volume selection loop bug was reintroduced by the addition of SAML. Should be fixed now (DISCOVERYACCESS-4006).
+- Mann Circulation now appears as a delivery location for Baily Hortorium circulating items (DISCOVERYACCESS-3631).
 
 ## v1.5.3
 
