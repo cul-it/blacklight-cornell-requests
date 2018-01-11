@@ -819,6 +819,9 @@ module BlacklightCornellRequests
     end
 
     # Determine delivery options for a single item if the patron is a guest (non-Cornell)
+    # In future refactoring, take a look at https://culibrary.atlassian.net/browse/DISCOVERYACCESS-1486
+    # It has a patron group that can only request books ... something that the current code doesn't support
+    # with its binary division between Cornell users and guests
     def get_guest_delivery_options item
       typeCode = (item[:temp_item_type_id].blank? || item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
