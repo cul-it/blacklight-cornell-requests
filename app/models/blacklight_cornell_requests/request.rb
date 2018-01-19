@@ -495,6 +495,7 @@ module BlacklightCornellRequests
             ## Olin or Uris can't deliver to itselves and each other
             ## Annex group can deliver to itself
             ## Law group can deliver to itself
+            ## Baily Hortorium CAN be delivered to Mann despite being in same group (16)
             ## Others can't deliver to itself
             # logger.debug "sk274_log: " + circ_group_id.inspect
 
@@ -520,6 +521,7 @@ module BlacklightCornellRequests
               # logger.debug "sk274_log: circ group id: " + circ_group_id.inspect
               locs = Circ_policy_locs.select('LOCATION_ID').where( :circ_group_id =>  circ_group_id, :pickup_location => 'Y' )
               locs.each do |loc|
+                next if location.to_i == 77 && loc['LOCATION_ID'].to_i == 172 # EXCEPTION: skip Bailey Hortorium (77) - Mann (172) exclusion
                 exclude_location_list.push loc['LOCATION_ID']
               end
               location_seen[location] = exclude_location_list
@@ -817,6 +819,9 @@ module BlacklightCornellRequests
     end
 
     # Determine delivery options for a single item if the patron is a guest (non-Cornell)
+    # In future refactoring, take a look at https://culibrary.atlassian.net/browse/DISCOVERYACCESS-1486
+    # It has a patron group that can only request books ... something that the current code doesn't support
+    # with its binary division between Cornell users and guests
     def get_guest_delivery_options item
       typeCode = (item[:temp_item_type_id].blank? || item[:temp_item_type_id] == '0') ? item[:item_type_id] : item[:temp_item_type_id]
       item_loan_type = loan_type typeCode
