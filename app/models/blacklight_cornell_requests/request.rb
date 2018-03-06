@@ -987,7 +987,11 @@ module BlacklightCornellRequests
       document = self.document
       ill_link = ENV['ILLIAD_URL'] + '?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
       if self.isbn.present?
-        isbns = self.isbn.join(',')
+        # Caitlin says that the ILLiad form has a field limit once it's submitted,
+        # so there isn't much point in passing in more than the first ISBN (though
+        # some records could have a dozen or more)
+        isbns = self.isbn.map!{|i| i = i.clean_isbn}[0]
+
         ill_link = ill_link + "&rft.isbn=#{isbns}"
         ill_link = ill_link + "&rft_id=urn%3AISBN%3A#{isbns}"
       end
