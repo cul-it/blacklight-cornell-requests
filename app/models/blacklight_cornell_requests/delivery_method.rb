@@ -4,6 +4,23 @@ module BlacklightCornellRequests
   # Delivery method superclass
   class DeliveryMethod
 
+    # TODO: some of these class methods should not be inherited by
+    # subclasses ...
+
+    # Return an array of all the methods that are currently ENABLED
+    # (i.e., not disabled in the ENV file)
+    def self.enabled_methods
+      available_request_methods = []
+      BlacklightCornellRequests::DELIVERY_METHODS.each do |m|
+        # Turn string name into actual class
+        # TODO: is this necessary? Could we maybe just store the actual
+        # classes in the constants array?
+        method_class = "BlacklightCornellRequests::#{m}".constantize
+        available_request_methods << method_class if method_class.enabled?
+      end
+      available_request_methods
+    end
+
     def self.description
       'An item delivery method'
     end
