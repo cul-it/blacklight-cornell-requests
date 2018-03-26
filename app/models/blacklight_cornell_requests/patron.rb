@@ -32,7 +32,6 @@ module BlacklightCornellRequests
       connection = nil
       begin
         connection = OCI8.new(ENV['ORACLE_RDONLY_PASSWORD'], ENV['ORACLE_RDONLY_PASSWORD'], "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=" + ENV['ORACLE_HOST'] + ")(PORT=1521))(CONNECT_DATA=(SID=" + ENV['ORACLE_SID'] + ")))")
-        Rails.logger.debug "mjc12test: OracleConnection - #{connection}"
         connection.exec('select patron_group_id from patron_barcode where patron_barcode.patron_barcode=' + @barcode) do |record|
           return record[0]
         end
