@@ -3,7 +3,7 @@ module BlacklightCornellRequests
 
   class Item
 
-    attr_reader :id, :holding_id, :enumeration, :location, :status
+    attr_reader :id, :holding_id, :enumeration, :location, :status, :circ_group
 
     # Basic initializer
     #
@@ -20,6 +20,7 @@ module BlacklightCornellRequests
       @location = item_data['location']
       @enumeration = item_data['enum']
       @status = item_data['status']
+      @circ_group = item_data['circGrp'].keys[0]
     end
 
     def inspect
@@ -27,6 +28,7 @@ module BlacklightCornellRequests
       puts "Status: #{@status.inspect}"
       puts "Location: #{@location.inspect}"
       puts "Enumeration: #{@enumeration.inspect}"
+      puts "Circ group: #{@circ_group}"
     end
 
     def available?
