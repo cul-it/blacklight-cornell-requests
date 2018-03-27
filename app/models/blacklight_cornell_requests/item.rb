@@ -3,7 +3,7 @@ module BlacklightCornellRequests
 
   class Item
 
-    attr_reader :id, :holding_id, :enumeration, :location, :status, :circ_group
+    attr_reader :id, :holding_id, :enumeration, :location, :type, :status, :circ_group
 
     # Basic initializer
     #
@@ -18,6 +18,7 @@ module BlacklightCornellRequests
       # combines the permanent location and temporary location fields so we
       # don't have to worry about it
       @location = item_data['location']
+      @type = item_data['type']
       @enumeration = item_data['enum']
       @status = item_data['status']
       @circ_group = item_data['circGrp'].keys[0]
@@ -25,6 +26,7 @@ module BlacklightCornellRequests
 
     def inspect
       puts "Item record #{@id} (linked to holding record #{@holding_id}):"
+      puts "Type: #{@type.inspect}"
       puts "Status: #{@status.inspect}"
       puts "Location: #{@location.inspect}"
       puts "Enumeration: #{@enumeration.inspect}"
