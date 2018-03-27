@@ -5,11 +5,12 @@ module BlacklightCornellRequests
 
   class Patron
 
-    attr_reader :netid, :barcode
+    attr_reader :netid, :barcode, :group
 
     def initialize(netid)
       @netid = netid
       @barcode = get_barcode(netid)
+      @group = patron_group
     end
 
     def get_barcode(netid)

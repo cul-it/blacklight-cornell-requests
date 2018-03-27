@@ -25,6 +25,8 @@ module BlacklightCornellRequests
       items
     end
 
+    # If an item_id is specified, only results for that item will be returned
+    # Otherwise, report includes all items in the record
     def report(item_id = '')
       linebreak
       puts "Reporting on bib #{@bibid} for #{@requester.netid}\n\n"
@@ -35,7 +37,7 @@ module BlacklightCornellRequests
         puts "Focus on item #{item_id}"
       end
       linebreak
-      puts "Requester: #{@requester.netid} (barcode: #{@requester.barcode})\n"
+      puts "Requester: #{@requester.netid} (barcode: #{@requester.barcode}, group: #{@requester.group})\n"
       puts "\n\n\n"
       linebreak
       puts "Delivery methods available (i.e., not disabled in ENV file):"
@@ -48,12 +50,20 @@ module BlacklightCornellRequests
       puts @items[0].inspect
       linebreak
       puts "Voyager delivery methods valid for this item:"
-      puts RequestPolicy.policy(@items[0].circ_group, @requester.patron_group, @items[0].type['id'])
+      puts RequestPolicy.policy(@items[0].circ_group, @requester.group, @items[0].type['id'])
       linebreak
       puts "Individual item report:"
       puts "ID\t\tStatus\tAvailable\tL2L\tHold\tRecall\n"
+      policy_hash = {}
       @items.each do |i|
-        rp = RequestPolicy.policy(i.circ_group, @requester.patron_group, i.type['id'])
+        rp = { }
+        policy_key = "#{i.circ_group}-#{@requester.group}-#{i.type['id']}"
+        if policy_hash[policy_key]
+          rp = policy_hash[policy_key]
+        else
+          rp = RequestPolicy.policy(i.circ_group, @requester.group, i.type['id'])
+          policy_hash[policy_key] = rp
+        end
         puts "#{i.id}\t#{i.status['code'].keys[0]}\t#{i.status['available']}\t\t#{l2l_available?(i, rp)}\t#{hold_available?(i, rp)}\t#{recall_available?(i, rp)}"
       end
       linebreak
