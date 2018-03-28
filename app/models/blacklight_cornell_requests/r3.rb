@@ -31,10 +31,12 @@ module BlacklightCornellRequests
       linebreak
       puts "Reporting on bib #{@bibid} for #{@requester.netid}\n\n"
       if item_id.present?
-        @items = @items.select do |i|
+        items = @items.select do |i|
           i.id == item_id
         end
         puts "Focus on item #{item_id}"
+      else
+        items = @items
       end
       linebreak
       puts "Requester: #{@requester.netid} (barcode: #{@requester.barcode}, group: #{@requester.group})\n"
@@ -47,15 +49,15 @@ module BlacklightCornellRequests
       linebreak
       puts "Holdings contains #{@items.length} item records"
       puts "First item:"
-      puts @items[0].inspect
+      puts items[0].inspect
       linebreak
       puts "Voyager delivery methods valid for this item:"
-      puts RequestPolicy.policy(@items[0].circ_group, @requester.group, @items[0].type['id'])
+      puts RequestPolicy.policy(items[0].circ_group, @requester.group, items[0].type['id'])
       linebreak
       puts "Individual item report:"
       puts "ID\t\tStatus\tAvailable\tL2L\tHold\tRecall\n"
       policy_hash = {}
-      @items.each do |i|
+      items.each do |i|
         rp = { }
         policy_key = "#{i.circ_group}-#{@requester.group}-#{i.type['id']}"
         if policy_hash[policy_key]
