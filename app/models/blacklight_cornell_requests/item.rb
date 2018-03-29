@@ -34,6 +34,10 @@ module BlacklightCornellRequests
       puts "Circ group: #{@circ_group}"
     end
 
+    def statusCode
+      @status['code'].keys[0].to_i
+    end
+
     def available?
       @status['available']
     end
