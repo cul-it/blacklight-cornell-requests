@@ -76,15 +76,15 @@ module BlacklightCornellRequests
     end
 
     def l2l_available?(item, policy)
-      (L2L.enabled? && policy[:l2l] && item.status['available']) ? 'Y' : 'N'
+      (L2L.enabled? && policy[:l2l] && item.available?) ? 'Y' : 'N'
     end
 
     def hold_available?(item, policy)
-      (Hold.enabled? && policy[:hold] && !item.status['available']) ? 'Y' : 'N'
+      (Hold.enabled? && policy[:hold] && !item.available?) ? 'Y' : 'N'
     end
 
     def recall_available?(item, policy)
-      (Recall.enabled? && policy[:recall] && !item.status['available']) ? 'Y' : 'N'
+      (Recall.enabled? && policy[:recall] && !item.available?) ? 'Y' : 'N'
     end
 
 
