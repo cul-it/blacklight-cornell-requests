@@ -5,6 +5,8 @@ module BlacklightCornellRequests
   # a particular request might be failing.
   class R3
 
+    attr_reader :bibid, :requester, :document, :items
+
     def initialize(bibid, netid, document)
       @bibid = bibid
       @requester = Patron.new(netid)
