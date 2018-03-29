@@ -36,7 +36,7 @@ module BlacklightCornellRequests
     end
 
     # Whether this method can be used for the specified item and requestor
-    def self.available?(status, loan_type, patron_type)
+    def self.available?(item, patron)
 
     end
 
@@ -89,7 +89,7 @@ module BlacklightCornellRequests
       options[:annex] ? [1, 2] : [2, 2]
     end
 
-    def self.available?(status, loan_type, patron_type)
+    def self.available?(item, patron)
       # L2L is available for both Cornell and Guest patrons when:
       # (1) the status is NOT_CHARGED, and
       # (2) loan type is regular or (day AND not in the list of no L2L day loan types)
@@ -118,7 +118,7 @@ module BlacklightCornellRequests
       [3,5]
     end
 
-    def self.available?(status, loan_type, patron_type, bd_available = false)
+    def self.available?(item, patron, bd_available = false)
       # Since BD availability is done at the request level,
       # it's already been established when the request was instantiated. But it
       # could be moved here ... this may be a more logical place to put that code.
@@ -143,7 +143,7 @@ module BlacklightCornellRequests
       [7,14]
     end
 
-    def self.available?(status, loan_type, patron_type, noncirculating = false)
+    def self.available?(item,patron, noncirculating = false)
       # ILL is available for CORNELL only under the following conditions:
       # (1) Loan type is regular or day AND
       # (2) Status is charged or missing or lost
@@ -181,7 +181,7 @@ module BlacklightCornellRequests
       [180,180]
     end
 
-    def self.available?(status, loan_type, patron_type)
+    def self.available?(item, patron)
       # Items are available for hold under the following conditions:
       # (1) status is charged and loan type is regular or day, OR
       # (2) type is regular, patron type is cornell, and status is in transit
@@ -215,7 +215,7 @@ module BlacklightCornellRequests
       [15,15]
     end
 
-    def self.available?(status, loan_type, patron_type)
+    def self.available?(item, patron)
       # Items are available for recall under the following conditions:
       # (1) patron is cornell-affililated, loan type is regular, and
       #     status is charged or in-transit-discharged or in-transit-on-hold
@@ -241,7 +241,7 @@ module BlacklightCornellRequests
       [5, 5]
     end
 
-    def self.available?(status, loan_type, patron_type)
+    def self.available?(item, patron)
 
     end
 
@@ -267,7 +267,7 @@ module BlacklightCornellRequests
       [10,10]
     end
 
-    def self.available?(status, loan_type, patron_type)
+    def self.available?(item, patron)
 
     end
   end
@@ -284,7 +284,7 @@ module BlacklightCornellRequests
       [9999, 9999]
     end
 
-    def self.available?(status, loan_type, patron_type)
+    def self.available?(item, patron)
       return true
     end
   end
@@ -301,7 +301,7 @@ module BlacklightCornellRequests
       [9998, 9998]
     end
 
-    def self.available?(status, loan_type, patron_type)
+    def self.available?(item, patron)
       # Items are available for 'ask at circulation' under the following conditions:
       # (1) Loan type is minute, and status is charged or not charged
       return minute_loan?(loan_type) && (status == STATUSES[:charged] ||
@@ -326,7 +326,7 @@ module BlacklightCornellRequests
       return nil
     end
 
-    def self.available?(status, loan_type, patron_type)
+    def self.available?(item, patron)
 
     end
   end
