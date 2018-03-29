@@ -21,7 +21,7 @@ module BlacklightCornellRequests
       @type = item_data['type']
       @enumeration = item_data['enum']
       @status = item_data['status']
-      @circ_group = item_data['circGrp'].keys[0]
+      @circ_group = item_data['circGrp'].keys[0].to_i
       @onReserve = item_data['onReserve']
     end
 

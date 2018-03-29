@@ -268,7 +268,8 @@ module BlacklightCornellRequests
     end
 
     def self.available?(item, patron)
-
+      # RULE: Cornell patron, missing/lost status
+      [12,13,14].include? item.status['code'].keys[0]
     end
   end
 
@@ -327,7 +328,26 @@ module BlacklightCornellRequests
     end
 
     def self.available?(item, patron)
+      # Document delivery (ScanIt) is available if the following criteria are met:
+      # 1. Cornell patron
+      # 2. Item is at the Annex (this is assumed to be
+      #    anything with the Annex circ group of 5)
+      # 3. Item is one of the valid scannable formats
+      # eligible_formats = ['Book', (3)
+      #                     'Image', (7)
+      #                     'Journal', (2)
+      #                     'Manuscript/Archive', (8)
+      #                     'Musical Recording', (18)
+      #                     'Musical Score', (5)
+      #                     'Non-musical Recording',
+      #                     'Journal/Periodical', (15)
+      #                     'Research Guide',
+      #                     'Thesis',
+      #                     'Newspaper' (20)
+      #                     'Microform'] (19)
+      eligible_formats = [2, 3, 5, 7, 8, 15, 18, 19, 20]
 
+      return self.enabled? && item.circ_group == 5 && eligible_formats.include?(item.type['id'])
     end
   end
 
