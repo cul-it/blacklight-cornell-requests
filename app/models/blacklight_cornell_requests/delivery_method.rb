@@ -11,7 +11,7 @@ module BlacklightCornellRequests
     # (i.e., not disabled in the ENV file)
     def self.enabled_methods
       available_request_methods = []
-      BlacklightCornellRequests::DELIVERY_METHODS.each do |m|
+      DELIVERY_METHODS.each do |m|
         # Turn string name into actual class
         # TODO: is this necessary? Could we maybe just store the actual
         # classes in the constants array?
@@ -40,34 +40,34 @@ module BlacklightCornellRequests
 
     end
 
-    def self.loan_type(type_code)
-      return LOAN_TYPES[:nocirc] if nocirc_loan? type_code
-      return LOAN_TYPES[:day]    if day_loan? type_code
-      return LOAN_TYPES[:minute] if minute_loan? type_code
-      return LOAN_TYPES[:regular]
-    end
-
-    # Check whether a loan type is non-circulating
-    def self.nocirc_loan?(loan_code)
-      [9].include? loan_code.to_i
-    end
-
-    def self.day_loan?(loan_code)
-      [1, 5, 6, 7, 8, 10, 11, 13, 14, 15, 17, 18, 19, 20, 21, 23, 24, 25, 28, 33].include? loan_code.to_i
-    end
-
-    def self.no_l2l_day_loan_types?(loan_code)
-      [10, 17, 23, 24].include? loan_code.to_i
-    end
-
-    # Check whether a loan type is a "minute" loan
-    def self.minute_loan?(loan_code)
-      [12, 16, 22, 26, 27, 29, 30, 31, 32, 34, 35, 36, 37].include? loan_code.to_i
-    end
-
-    def self.regular_loan?(loan_code)
-      !nocirc_loan?(loan_code) && !minute_loan?(loan_code) && !day_loan?(loan_code)
-    end
+    # def self.loan_type(type_code)
+    #   return LOAN_TYPES[:nocirc] if nocirc_loan? type_code
+    #   return LOAN_TYPES[:day]    if day_loan? type_code
+    #   return LOAN_TYPES[:minute] if minute_loan? type_code
+    #   return LOAN_TYPES[:regular]
+    # end
+    #
+    # # Check whether a loan type is non-circulating
+    # def self.nocirc_loan?(loan_code)
+    #   [9].include? loan_code.to_i
+    # end
+    #
+    # def self.day_loan?(loan_code)
+    #   [1, 5, 6, 7, 8, 10, 11, 13, 14, 15, 17, 18, 19, 20, 21, 23, 24, 25, 28, 33].include? loan_code.to_i
+    # end
+    #
+    # def self.no_l2l_day_loan_types?(loan_code)
+    #   [10, 17, 23, 24].include? loan_code.to_i
+    # end
+    #
+    # # Check whether a loan type is a "minute" loan
+    # def self.minute_loan?(loan_code)
+    #   [12, 16, 22, 26, 27, 29, 30, 31, 32, 34, 35, 36, 37].include? loan_code.to_i
+    # end
+    #
+    # def self.regular_loan?(loan_code)
+    #   !nocirc_loan?(loan_code) && !minute_loan?(loan_code) && !day_loan?(loan_code)
+    # end
 
   end
 
@@ -269,7 +269,7 @@ module BlacklightCornellRequests
 
     def self.available?(item, patron)
       # RULE: Cornell patron, missing/lost status
-      [12,13,14].include? item.status['code'].keys[0]
+      [12,13,14].include? item.statusCode
     end
   end
 
@@ -305,8 +305,8 @@ module BlacklightCornellRequests
     def self.available?(item, patron)
       # Items are available for 'ask at circulation' under the following conditions:
       # (1) Loan type is minute, and status is charged or not charged
-      return minute_loan?(loan_type) && (status == STATUSES[:charged] ||
-                                         status == STATUSES[:not_charged])
+      # (2) Loan type is nocirc
+      item.noncirculating? || (Item.minute_loan?(item) && (item.statusCode == 1 || item.statusCode == 2 ))
     end
   end
 
@@ -324,7 +324,7 @@ module BlacklightCornellRequests
 
     def self.time(options = {})
       # TODO: add the logic for this
-      return nil
+      return [1,4]
     end
 
     def self.available?(item, patron)
