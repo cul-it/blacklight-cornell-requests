@@ -2,16 +2,16 @@ module BlacklightCornellRequests
 
   class Work
 
-    attr_reader :title, :author, :isbn, :pub_info, :ill_link, :volumes
+    attr_reader :title, :author, :isbn, :pub_info, :ill_link, :scanit_link
 
-    # items = array of item records (usually from request2.items)
-    def initialize(solrdoc, items = [])
-      @title = solrdoc['title_display']
-      @author = parse_author(solrdoc)
-      @isbn = solrdoc['isbn_display']
-      @pub_info = parse_pub_info(solrdoc)
-      @ill_link = parse_ill(solrdoc)
-      @volumes = parse_volumes(items)
+    def initialize(solr_document)
+      @doc = solr_document
+      @title = @doc['title_display']
+      @author = parse_author(@doc)
+      @isbn = @doc['isbn_display']
+      @pub_info = parse_pub_info(@doc)
+      @ill_link = parse_ill(@doc)
+      @scanit_link = create_scanit_link(@doc)
     end
 
     def parse_author(solrdoc)
@@ -77,137 +77,16 @@ module BlacklightCornellRequests
 
     end
 
-    # set the class volumes from a list of item records
-    def parse_volumes(items)
-
-      # The map creates an array of hashes with key = :enum and value being the volume hash itself
-      # VERY NAIVE - key (which serves as the text in a select list) shouldn't just be enum
-      items.select {|i| i.enumeration.present? }.map { |i| {i.enumeration[:enum] => i.enumeration} }
-
-    #
-    #   enum_count  = count_param(items, :enum)
-    #   chron_count = count_param(items, :chron)
-    #   year_count  = count_param(items, :year)
-    #
-    #   # ## take first integer from each of enum, chron and year
-    #   # ## if not populated, use big number to rank low
-    #   # ## if the field is blank, use 'z' to rank low
-    #   # ## record number of occurances for each of the
-    #
-    #   items = items.select { |i| i.enumeration.present? }
-    #
-    #   items.each do |item|
-    #   #
-    #     e = item.enumeration # looks like {:chron => '...', :enum => '...', :year => '...' }
-    #
-    #     if e[:enum].present?
-    #       enums = e[:enum].scan(/\d+/)
-    #       e[:numeric_enumeration] = ''
-    #       enums.each do |enum|
-    #         e[:numeric_enumeration] += enum.rjust(9,'0')
-    #       end
-    #     else
-    #       e[:numeric_enumeration] = '999999999'
-    #     end
-    #
-    #     if e[:chron].present?
-    #       e[:numeric_chron]   = e[:chron][/\d+/]
-    #       e[:numeric_chron]   = e[:numeric_chron].nil? ? 999999999 : e[:numeric_chron].to_i
-    #     end
-    #
-    #     if e[:year].present?
-    #       e[:numeric_year]    = e[:year][/\d+/]
-    #       e[:numeric_year]    = e[:numeric_year].nil? ? 999999999 : e[:numeric_year].to_i
-    #     end
-    #
-    #     e[:item_enum_compare] = e[:enum] || 'z'
-    #     e[:chron_compare]     = e[:chron] ? e[:chron].delete(' ') : 'z'
-    #     e[:chron_month]       = e[:chron] ? Date::ABBR_MONTHNAMES.index(e[:chron]).to_i : 13
-    #     e[:year_compare]      = e[:year] || 'z'
-    #
-    #   #end
-    #
-    #   ## sort based on number of occurances of each of three fields
-    #   ## when tied, year has highest weight followed by enum
-    #   sorted_items = {}
-    #   if year_count >= enum_count && year_count >= chron_count
-    #     if enum_count >= chron_count
-    #       sorted_items = items.sort_by {|h| [ h.enumeration[:numeric_year],
-    #                            h.enumeration[:year_compare],
-    #                            h.enumeration[:numeric_enumeration],
-    #                            h.enumeration[:item_enum_compare],
-    #                            h.enumeration[:numeric_chron],
-    #                            h.enumeration[:chron_month],
-    #                            h.enumeration[:chron_compare] ]
-    #                     }
-    #     else
-    #       sorted_items = items.sort_by {|h| [ h.enumeration[:numeric_year],
-    #                            h.enumeration[:year_compare],
-    #                            h.enumeration[:numeric_chron],
-    #                            h.enumeration[:chron_month],
-    #                            h.enumeration[:chron_compare],
-    #                            h.enumeration[:numeric_enumeration],
-    #                            h.enumeration[:item_enum_compare] ]
-    #                     }
-    #     end
-    #   elsif enum_count >= chron_count and enum_count >= year_count
-    #     if year_count >= chron_count
-    #       sorted_items = items.sort_by {|h| [ h.enumeration[:numeric_enumeration],
-    #                            h.enumeration[:item_enum_compare],
-    #                            h.enumeration[:numeric_year],
-    #                            h.enumeration[:year_compare],
-    #                            h.enumeration[:numeric_chron],
-    #                            h.enumeration[:chron_month],
-    #                            h.enumeration[:chron_compare] ]
-    #                     }
-    #
-    #     else
-    #       sorted_items = items.sort_by {|h| [ h.enumeration[:numeric_enumeration],
-    #                            h.enumeration[:item_enum_compare],
-    #                            h.enumeration[:numeric_chron],
-    #                            h.enumeration[:chron_month],
-    #                            h.enumeration[:chron_compare],
-    #                            h.enumeration[:numeric_year],
-    #                            h.enumeration[:year_compare] ]
-    #                     }
-    #     end
-    #   else
-    #     if year_count >= enum_count
-    #       sorted_items = items.sort_by {|h| [ h.enumeration[:numeric_chron],
-    #                            h.enumeration[:chron_month],
-    #                            h.enumeration[:chron_compare],
-    #                            h.enumeration[:numeric_year],
-    #                            h.enumeration[:year_compare],
-    #                            h.enumeration[:numeric_enumeration],
-    #                            h.enumeration[:item_enum_compare] ]
-    #                     }
-    #     else
-    #       sorted_items = items.sort_by {|h| [ h.enumeration[:numeric_chron],
-    #                            h.enumeration[:chron_month],
-    #                            h.enumeration[:chron_compare],
-    #                            h.enumeration[:numeric_enumeration],
-    #                            h.enumeration[:item_enum_compare],
-    #                            h.enumeration[:numeric_year],
-    #                            h.enumeration[:year_compare] ]
-    #                     }
-    #     end
-    #
-    #   end
-    #
-    #   sorted_items.map { |i| i.enumeration } # return the enumeration hash as the volume designation
-    #
-    # end
-    end
-
-    # pass in the items array and an enumeration param (:chron, :year, or :enum) to get a count
-    def count_param(items, param)
-      items.select { |i| i.enumeration[param] if i.enumeration.present? }.count
-    end
-
-    def sort_by_param(items, param)
-      items.sort_by do |a|
-        [a ? 1 : 0, a]
+    def create_scanit_link(solrdoc)
+      scanit_link = ENV['ILLIAD_URL'] + '?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Fnewcatalog.library.cornell.edu'
+      if @title.present?
+        scanit_link << "&rft.title=#{CGI.escape(@title)}"
       end
+      if @isbn.present?
+        isbns = @isbn.join(',')
+        scanit_link += "&rft.isbn=#{isbns}" + "&rft_id=urn%3AISBN%3A#{isbns}"
+      end
+      @scanit_link = scanit_link
     end
 
   end
