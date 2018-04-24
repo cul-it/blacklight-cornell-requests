@@ -18,10 +18,11 @@ module BlacklightCornellRequests
     def get_items
       items = []
       holdings = JSON.parse(@document['items_json'])
+      holding_json = JSON.parse(@document['holdings_json'])
       # Items are keyed by the associated holding record
       holdings.each do |h, item_array|
         item_array.each do |i|
-          items << Item.new(h, i)
+          items << Item.new(h, i, holding_json)
         end
       end
       items

@@ -4,12 +4,14 @@ module BlacklightCornellRequests
   class Item
 
     attr_reader :id, :holding_id, :enumeration, :location, :type, :status, :circ_group
+    attr_reader :copy_number, :call_number
 
     # Basic initializer
     #
     # @param holding_id [int] The ID of the holding record this item is linked to
     # @param item_data [hash] A JSON object containing data for a single item record
-    def initialize(holding_id, item_data)
+    # @param holdings_data [hash] A JSON object containing data for a single holdings record
+    def initialize(holding_id, item_data, holdings_data = nil)
       return nil if (holding_id.nil? || item_data.nil?)
 
       @holding_id = holding_id
@@ -23,6 +25,10 @@ module BlacklightCornellRequests
       @status = item_data['status']
       @circ_group = item_data['circGrp'].keys[0].to_i
       @onReserve = item_data['onReserve']
+      @copy_number = item_data['copy']
+      if holdings_data.present?
+        @call_number = holdings_data[holding_id]['call']
+      end
     end
 
     def inspect
@@ -31,7 +37,9 @@ module BlacklightCornellRequests
       puts "Status: #{@status.inspect}"
       puts "Location: #{@location.inspect}"
       puts "Enumeration: #{@enumeration.inspect}"
+      puts "Copy: #{@copy_number}"
       puts "Circ group: #{@circ_group}"
+      puts "Call number: #{@call_number}"
     end
 
     def statusCode
