@@ -27,7 +27,6 @@ module BlacklightCornellRequests
       session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
       redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
-      #magic_request
     end
 
     def magic_request target=''
@@ -35,6 +34,68 @@ module BlacklightCornellRequests
       @id = params[:bibid]
       resp, @document = fetch @id
       @document = @document
+
+####### NEW #########
+      work_metadata = Work.new(@document)
+      # Create an array of all the item records associated with the bibid
+      items = []
+      holdings = JSON.parse(@document['items_json'])
+      # Items are keyed by the associated holding record
+      holdings.each do |h, item_array|
+        item_array.each do |i|
+          items << Item.new(h, i)
+        end
+      end
+      Rails.logger.debug "mjc12test: item array - #{items}"
+
+      available_request_methods = DeliveryMethod.enabled_methods
+      Rails.logger.debug "mjc12test: deliverymethods: - #{available_request_methods}"
+
+      requester = Patron.new(user)
+
+
+      # We have the following delivery methods to evaluate (at most) for each item:
+      # L2L, BD, ILL, Hold, Recall, Patron-driven acquisition, Purchase request
+      # ScanIt, Ask a librarian, ask at circ desk
+      #
+      # For the voyager methods (L2L, Hold, Recall), we do the following for each item:
+      # 1. Get the circ group, patron group, and item type
+      # 2. Use those values to look up the request policy
+      # 3. Combine (2) with item availability to determine which methods are available
+      #
+      # For BD, do a single call to the BD API for the bib-level ISBN (NOT for each item)
+      #
+      # For PDA?
+
+      # The options hash has the following structure:
+      # options = { DeliveryMethod => [items] }
+      # i.e., each key in the hash is the class, e.g. L2L, and that points to
+      # an array of items available via that method
+      options = {}
+      available_request_methods.each do |rm|
+        options[rm] = []
+      end
+      # First get the Voyager methods. Policy hash is used to cache policies for
+      # particular parameter combinations so that we minimize DB queries
+      policy_hash = {}
+      items.each do |i|
+        rp = {}
+        # TODO: use a symbol instead of a string for the keys?
+        policy_key = "#{i.circ_group}-#{requester.group}-#{i.type['id']}"
+        if policy_hash[policy_key]
+          rp = policy_hash[policy_key]
+        else
+          rp = RequestPolicy.policy(i.circ_group, requester.group, i.type['id'])
+          policy_hash[policy_key] = rp
+        end
+        options = update_options(i, rp, options, requester)
+      end
+      Rails.logger.debug "mjc12test: options hash - #{options}"
+      Rails.logger.debug "mjc12test: policy hash - #{policy_hash}"
+      # At this point, options is a hash with keys being available delivery methods
+      # and values being arrays of items deliverable using the keyed method
+###### END NEW #########
+
 
       Rails.logger.debug "Viewing item #{@id} (within request controller) - session: #{session}"
 
@@ -88,6 +149,7 @@ module BlacklightCornellRequests
         params[:volume] = "|#{params[:enum]}|#{params[:chron]}|#{params[:year]}|"
       end
 
+
       req.magic_request @document, request.env['HTTP_HOST'], {:target => target, :volume => params[:volume]}
 
       if ! req.service.nil?
@@ -96,6 +158,30 @@ module BlacklightCornellRequests
         # This is the default option when nothing else can be done. A cry for help!
         @service = { :service => BlacklightCornellRequests::Request::ASK_LIBRARIAN }
       end
+
+
+###### NEW ########
+      # Remove option keys (delivery methods) that don't include any items
+      options = options.keep_if { |key, value| value.length > 0 }
+      Rails.logger.debug "mjc12test: modified options hash - #{options}"
+
+      # Get fastest delivery method
+      fastest_method = options.keys.sort { |x, y| x.time.min <=> y.time.min }[0]
+      Rails.logger.debug "mjc12test: FASTEST METHOD - #{fastest_method}"
+
+      @estimate = fastest_method.time.min
+      @ti = work_metadata.title
+      @au = work_metadata.author
+      @isbn = work_metadata.isbn
+      @pub_info = work_metadata.pub_info
+      @ill_link = work_metadata.ill_link
+      @scanit_link = work_metadata.scanit_link
+      @netid = user
+      @name = get_patron_name user
+      @volume # TODO
+      @fod_data = get_fod_data user
+      @items = options[fastest_method]
+###### END NEW #######
 
       @estimate = req.estimate
       @ti = req.ti
@@ -118,13 +204,14 @@ module BlacklightCornellRequests
       end
 
       # @volumes = req.set_volumes(req.all_items)
-      @volumes = req.volumes
+     @volumes = req.volumes
       # Note: the if statement here only shows the volume select screen
       # if a doc del request has *not* been specified. This is because
       # (a) without that statement, the user just loops endlessly through
       # volume selection and doc del requesting; and (b) since we can't
       # pre-populate the doc del request form with bibliographic data, there's
       # no point in forcing the user to select a volume before showing the form.
+
       if req.volumes.present? and params[:volume].blank? and target != Request::DOCUMENT_DELIVERY
         if req.volumes.count != 1
           render 'shared/_volume_select'
@@ -166,7 +253,52 @@ module BlacklightCornellRequests
       end
 
       render @service
+      Rails.logger.debug "mjc12test: fastest method - #{fastest_method}"
+      Rails.logger.debug "mjc12test: classname - #{fastest_method.class}"
+    #  render 'l2l'
 
+    end
+
+    def l2l_available?(item, policy)
+      L2L.enabled? && policy[:l2l] && item.available?
+    end
+
+    def hold_available?(item, policy)
+      Hold.enabled? && policy[:hold] && !item.available?
+    end
+
+    def recall_available?(item, policy)
+      Recall.enabled? && policy[:recall] && !item.available?
+    end
+
+    # Update the options hash with methods for a particular item
+    # TODO: there's probably a better way to do this!
+    def update_options(item, policy, options, patron)
+
+      options[L2L] << item if l2l_available?(item, policy)
+      options[Hold].push(item) if hold_available?(item, policy)
+      options[Recall] << item if recall_available?(item, policy)
+      options[PurchaseRequest] << item if PurchaseRequest.available?(item, patron)
+      options[DocumentDelivery] << item if DocumentDelivery.available?(item, patron)
+      options[AskLibrarian] << item if AskLibrarian.available?(item, patron)
+      options[AskCirculation] if AskCirculation.available?(item, patron)
+
+      return options
+    end
+
+    # Get information about FOD/remote prgram delivery eligibility
+    def get_fod_data(netid)
+
+      return {} unless ENV['FOD_DB_URL'].present?
+
+      begin
+        uri = URI.parse(ENV['FOD_DB_URL'] + "?netid=#{netid}")
+        # response = Net::HTTP.get_response(uri)
+        JSON.parse(open(uri, :read_timeout => 5).read)
+      rescue OpenURI::HTTPError, Net::ReadTimeout
+        Rails.logger.warn("Warning: Unable to retrieve FOD/remote program eligibility data (from #{uri})")
+        return {}
+      end
     end
 
     # These one-line service functions simply return the name of the view
