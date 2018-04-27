@@ -40,6 +40,28 @@ module BlacklightCornellRequests
 
     end
 
+    # Receive a hash of valid delivery methods (e.g.,
+    # { Hold => [item1, item2, item3...], Recall => [item1, item3, ...]})
+    # Sort them by delivery time, then return an object in the form
+    # { :fastest => {:method => Hold, :items => []}, :alternate => [{methods, items]}
+    def self.sorted_methods(options_hash)
+      options_hash = options_hash.keep_if { |key, value| value.length > 0 }
+
+      # Get fastest delivery method
+      sorted_keys = options_hash.keys.sort { |x, y| x.time.min <=> y.time.min }
+      Rails.logger.debug "mjc12test: Sorted keys - #{sorted_keys.inspect}"
+      fastest_method = sorted_keys.shift
+      alternate_methods = []
+      sorted_keys.each do |k|
+        alternate_methods << { :method => k, :items => options_hash[k] }
+      end
+
+      {
+        :fastest => {:method => fastest_method, :items => options_hash[fastest_method] },
+        :alternate => alternate_methods
+      }
+    end
+
     # def self.loan_type(type_code)
     #   return LOAN_TYPES[:nocirc] if nocirc_loan? type_code
     #   return LOAN_TYPES[:day]    if day_loan? type_code
