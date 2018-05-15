@@ -27,7 +27,7 @@ module BlacklightCornellRequests
       session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
       redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
-      #magic_request
+      #magic_request target
     end
 
     def magic_request target=''
@@ -35,8 +35,6 @@ module BlacklightCornellRequests
       @id = params[:bibid]
       resp, @document = fetch @id
       @document = @document
-
-
 ####### NEW #########
       work_metadata = Work.new(@document)
       # Create an array of all the item records associated with the bibid
@@ -174,6 +172,22 @@ module BlacklightCornellRequests
         Rails.logger.debug "mjc12test: AVAILABLE IN BD - #{}"
       else
         Rails.logger.debug "mjc12test: NOT AVAILABLE IN BD - #{}"
+      end
+
+      # If target (i.e., a particular delivery method) is specified in the URL, then we
+      # have to prefer that method above others (even if others are faster in theory).
+      # This code is a bit ugly, but it swaps the fastest method with the appropriate entry
+      # in the alternate_methods array.
+      if target
+        available_request_methods.each do |rm|
+          if rm::TemplateName == target
+            @alternate_methods.unshift(fastest_method)
+            alt_array_index = @alternate_methods.index{ |am| am[:method] == rm }
+            fastest_method = {:method => rm, :items => @alternate_methods[alt_array_index]}
+            @alternate_methods.delete_if{ |am| am[:method] == fastest_method[:method] }
+            break
+          end
+        end
       end
 
       @estimate = fastest_method[:method].time
