@@ -61,35 +61,38 @@ module BlacklightCornellRequests
       @type['id'] == 9 || onReserve? || @location['name'].include?('Non-Circulating')
     end
 
-    ######## Class methods for loan types ##########
     # TODO: is there a better way of determining these straight from the Voyager DB?
-    def self.loan_type(item)
+    def loan_type
 
-      return 'nocirc' if nocirc_loan? item
-      return 'day'    if day_loan? item
-      return 'minute' if minute_loan? item
+      return 'nocirc' if nocirc_loan?
+      return 'day'    if day_loan?
+      return 'minute' if minute_loan?
       return 'regular'
 
     end
 
     # Check whether a loan type is a "day" loan
-    def self.day_loan?(item)
-      [1, 5, 6, 7, 8, 10, 11, 13, 14, 15, 17, 18, 19, 20, 21, 23, 24, 25, 28, 33].include? item.type['id']
+    def day_loan?
+      [1, 5, 6, 7, 8, 10, 11, 13, 14, 15, 17, 18, 19, 20, 21, 23, 24, 25, 28, 33].include? @type['id']
     end
 
     # Check whether a loan type is a "minute" loan
-    def self.minute_loan?(item)
-      [12, 16, 22, 26, 27, 29, 30, 31, 32, 34, 35, 36, 37].include? item.type['id']
+    def minute_loan?
+      [12, 16, 22, 26, 27, 29, 30, 31, 32, 34, 35, 36, 37].include? @type['id']
     end
 
     # day loan types with a loan period of 1-2 days (that cannot use L2L)
-    def self.no_l2l_day_loan?(item)
-      [10, 17, 23, 24].include? item.type['id']
+    def no_l2l_day_loan?
+      [10, 17, 23, 24].include? @type['id']
+    end
+
+    def regular_loan?
+      !nocirc_loan? && !minute_loan? && !day_loan?
     end
 
     # Check whether a loan type is non-circulating
-    def self.nocirc_loan?(item)
-      item.type['id'] == 9
+    def nocirc_loan?
+      @type['id'] == 9
     end
 
   end
