@@ -27,6 +27,7 @@ module BlacklightCornellRequests
       session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
       redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+      #magic_request
     end
 
     def magic_request target=''
@@ -34,6 +35,7 @@ module BlacklightCornellRequests
       @id = params[:bibid]
       resp, @document = fetch @id
       @document = @document
+
 
 ####### NEW #########
       work_metadata = Work.new(@document)
@@ -52,7 +54,8 @@ module BlacklightCornellRequests
       Rails.logger.debug "mjc12test: deliverymethods: - #{available_request_methods}"
 
       requester = Patron.new(user)
-
+      borrow_direct = CULBorrowDirect.new(requester, work_metadata)
+      Rails.logger.debug "mjc12test: borrow direct test - #{borrow_direct.available}"
 
       # We have the following delivery methods to evaluate (at most) for each item:
       # L2L, BD, ILL, Hold, Recall, Patron-driven acquisition, Purchase request
@@ -90,6 +93,8 @@ module BlacklightCornellRequests
         end
         options = update_options(i, rp, options, requester)
       end
+      options[BD] = [1] if borrow_direct.available
+
       Rails.logger.debug "mjc12test: options hash - #{options}"
       Rails.logger.debug "mjc12test: policy hash - #{policy_hash}"
       # At this point, options is a hash with keys being available delivery methods
@@ -161,15 +166,17 @@ module BlacklightCornellRequests
 
 
 ###### NEW ########
-      # Remove option keys (delivery methods) that don't include any items
-      options = options.keep_if { |key, value| value.length > 0 }
-      Rails.logger.debug "mjc12test: modified options hash - #{options}"
 
-      # Get fastest delivery method
-      fastest_method = options.keys.sort { |x, y| x.time.min <=> y.time.min }[0]
-      Rails.logger.debug "mjc12test: FASTEST METHOD - #{fastest_method}"
+      sorted_methods = DeliveryMethod.sorted_methods(options)
+      fastest_method = sorted_methods[:fastest]
+      @alternate_methods = sorted_methods[:alternate]
+      if borrow_direct.available
+        Rails.logger.debug "mjc12test: AVAILABLE IN BD - #{}"
+      else
+        Rails.logger.debug "mjc12test: NOT AVAILABLE IN BD - #{}"
+      end
 
-      @estimate = fastest_method.time.min
+      @estimate = fastest_method[:method].time
       @ti = work_metadata.title
       @au = work_metadata.author
       @isbn = work_metadata.isbn
@@ -180,20 +187,20 @@ module BlacklightCornellRequests
       @name = get_patron_name user
       @volume # TODO
       @fod_data = get_fod_data user
-      @items = options[fastest_method]
+      @items = fastest_method[:items]
 ###### END NEW #######
 
-      @estimate = req.estimate
-      @ti = req.ti
-      @au = req.au
-      @isbn = req.isbn
-      @ill_link = req.ill_link
-      @scanit_link = req.scanit_link
-      @pub_info = req.pub_info
-      @volume = params[:volume]
-      @netid = req.netid
-      @name = get_patron_name req.netid
-      @fod_data = req.fod_data
+      # @estimate = req.estimate
+      # @ti = req.ti
+      # @au = req.au
+      # @isbn = req.isbn
+      # @ill_link = req.ill_link
+      # @scanit_link = req.scanit_link
+      # @pub_info = req.pub_info
+      # @volume = params[:volume]
+      # @netid = req.netid
+      # @name = get_patron_name req.netid
+      # @fod_data = req.fod_data
 
       @iis = ActiveSupport::HashWithIndifferentAccess.new
       if !@document[:url_pda_display].blank? && !@document[:url_pda_display][0].blank?
@@ -233,29 +240,31 @@ module BlacklightCornellRequests
         #@volumes = req.volumes
       end
 
-      @alternate_request_options = []
-      if !req.alternate_options.nil?
-        req.alternate_options.each do |option|
-          option_hash = {:option => option[:service], :estimate => option[:estimate]}
-          if option[:service] == 'ill'
-            option_hash[:ill_link] = req.ill_link
-          elsif option[:service] == 'document_delivery'
-            option_hash[:scanit_link] = req.scanit_link
-          end
-          @alternate_request_options.push(option_hash)
+      # @alternate_request_options = []
+      # if !req.alternate_options.nil?
+      #   req.alternate_options.each do |option|
+      #     option_hash = {:option => option[:service], :estimate => option[:estimate]}
+      #     if option[:service] == 'ill'
+      #       option_hash[:ill_link] = req.ill_link
+      #     elsif option[:service] == 'document_delivery'
+      #       option_hash[:scanit_link] = req.scanit_link
+      #     end
+      #     @alternate_request_options.push(option_hash)
+      #
+      #   end
+      # end
+      #
 
-        end
-      end
 
       @counter = params[:counter]
       if @counter.blank? and session[:search].present?
         @counter = session[:search][:counter]
       end
 
-      render @service
-      Rails.logger.debug "mjc12test: fastest method - #{fastest_method}"
-      Rails.logger.debug "mjc12test: classname - #{fastest_method.class}"
-    #  render 'l2l'
+      #render @service
+      Rails.logger.debug "mjc12test: fastest method - #{fastest_method[:method]::TemplateName}"
+      Rails.logger.debug "mjc12test: delivery time - #{fastest_method[:method].time.min}"
+      render fastest_method[:method]::TemplateName
 
     end
 
@@ -275,6 +284,7 @@ module BlacklightCornellRequests
     # TODO: there's probably a better way to do this!
     def update_options(item, policy, options, patron)
 
+      options[ILL] << item if ILL.available?(item, patron)
       options[L2L] << item if l2l_available?(item, policy)
       options[Hold].push(item) if hold_available?(item, policy)
       options[Recall] << item if recall_available?(item, policy)
