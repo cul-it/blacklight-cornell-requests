@@ -165,21 +165,29 @@ module BlacklightCornellRequests
       [7,14]
     end
 
-    def self.available?(item,patron, noncirculating = false)
+    def self.available?(item, patron, noncirculating = false)
       # ILL is available for CORNELL only under the following conditions:
       # (1) Loan type is regular or day AND
       # (2) Status is charged or missing or lost
-      # OR
+      # OR 
       # (1) Item is nocirc or noncirculating
       # OR
       # (1) Item is at bindery
-      return false unless patron_type == 'cornell'
-      return true if status == STATUSES[:at_bindery]
-      return true if nocirc_loan?(loan_type) || noncirculating
-      if regular_loan?(loan_type) || day_loan?(loan_type)
-        return status == STATUSES[:charged] ||
-               status == STATUSES[:missing] ||
-               status == STATUSES[:lost]
+
+      return false unless self.enabled?
+
+      # Unfortunately, the rules governing which patron groups are eligible to use ILL
+      # are not programmatically accessible. Thus, they are hard-coded here for your
+      # enjoyment (based on a table provided by Joanne Leary as of 3/30/18).
+      ill_patron_group_ids = [1,2,3,4,5,6,7,8,10,17]
+      return false unless ill_patron_group_ids.include? patron.group
+
+      return true if item.statusCode == STATUSES[:at_bindery]
+      return true if item.nocirc_loan? || noncirculating
+      if item.regular_loan? || item.day_loan?
+        return item.statusCode == STATUSES[:charged] ||
+               item.statusCode == STATUSES[:missing] ||
+               item.statusCode == STATUSES[:lost]
       else
         return false
       end
@@ -328,7 +336,7 @@ module BlacklightCornellRequests
       # Items are available for 'ask at circulation' under the following conditions:
       # (1) Loan type is minute, and status is charged or not charged
       # (2) Loan type is nocirc
-      item.noncirculating? || (Item.minute_loan?(item) && (item.statusCode == 1 || item.statusCode == 2 ))
+      item.noncirculating? || (item.minute_loan? && (item.statusCode == 1 || item.statusCode == 2 ))
     end
   end
 
