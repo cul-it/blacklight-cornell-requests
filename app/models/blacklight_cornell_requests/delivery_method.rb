@@ -140,12 +140,14 @@ module BlacklightCornellRequests
       [3,5]
     end
 
-    def self.available?(item, patron, bd_available = false)
-      # Since BD availability is done at the request level,
-      # it's already been established when the request was instantiated. But it
-      # could be moved here ... this may be a more logical place to put that code.
-      # For now, we're just parroting back whatever value is passed in
-      return bd_available
+    def self.available?(patron)
+      # Unfortunately, the rules governing which patron groups are eligible to use BD
+      # are not programmatically accessible. Thus, they are hard-coded here for your
+      # enjoyment (based on a table provided by Joanne Leary as of 3/30/18). See also
+      # the logic for ILL below. TODO: unify these two in a separate function. They're the same
+      bd_patron_group_ids = [1,2,3,4,5,6,7,8,10,17]
+
+      bd_patron_group_ids.include? patron.group
     end
   end
 
