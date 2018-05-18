@@ -2,9 +2,10 @@ module BlacklightCornellRequests
 
   class Work
 
-    attr_reader :title, :author, :isbn, :pub_info, :ill_link, :scanit_link
+    attr_reader :bibid, :title, :author, :isbn, :pub_info, :ill_link, :scanit_link
 
-    def initialize(solr_document)
+    def initialize(bibid, solr_document)
+      @bibid = bibid
       @doc = solr_document
       @title = @doc['title_display']
       @author = parse_author(@doc)
