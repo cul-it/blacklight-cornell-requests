@@ -31,7 +31,7 @@
           .col-sm-10.delivery-estimate
             Approximately
             = delivery_estimate_display @estimate
-      -if @alternate_request_options and @alternate_request_options.count >= 2
+      -if @alternate_methods && @alternate_methods.count > 1
         %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit recall request")
         = render :partial => 'shared/request_options'
       -else

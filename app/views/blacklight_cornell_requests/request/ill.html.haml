@@ -17,7 +17,7 @@
   .clearfix
     %a{:href => @ill_link, :class => 'btn btn-danger pull-left'}
       Go to Interlibrary Loan Form
-  -if @alternate_request_options and @alternate_request_options.count >= 2
+  -if @alternate_methods && @alternate_methods.count > 1
     = render :partial => 'shared/request_options'
   -else
     .form-alternative-action

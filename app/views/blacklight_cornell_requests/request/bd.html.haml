@@ -36,7 +36,7 @@
     %p To request this item, search Borrow Direct  and place a request.
     = link_to 'Search Borrow Direct', borrowdirect_url_from_title(@ti), :class => 'btn btn-danger pull-left'
 
-  -if @alternate_methods
+  -if @alternate_methods && @alternate_methods.count > 1
     = render :partial => 'shared/request_options'
   -else
     .form-alternative-action
