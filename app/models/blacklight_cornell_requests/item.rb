@@ -4,7 +4,7 @@ module BlacklightCornellRequests
   class Item
 
     attr_reader :id, :holding_id, :location, :type, :status, :circ_group
-    attr_reader :copy_number, :call_number
+    attr_reader :copy_number, :call_number, :enum_parts
 
     # Basic initializer
     #
@@ -37,6 +37,10 @@ module BlacklightCornellRequests
     # from the item record: chron, enum, and year
     def enumeration
       [@enum, @chron, @year].compact.join(' - ')
+    end
+
+    def enum_parts
+      { :enum => @enum, :chron => @chron, :year => @year }
     end
 
     def inspect
