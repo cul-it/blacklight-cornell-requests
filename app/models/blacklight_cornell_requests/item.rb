@@ -3,7 +3,7 @@ module BlacklightCornellRequests
 
   class Item
 
-    attr_reader :id, :holding_id, :enumeration, :location, :type, :status, :circ_group
+    attr_reader :id, :holding_id, :location, :type, :status, :circ_group
     attr_reader :copy_number, :call_number
 
     # Basic initializer
@@ -21,7 +21,9 @@ module BlacklightCornellRequests
       # don't have to worry about it
       @location = item_data['location']
       @type = item_data['type']
-      @enumeration = item_data['enum']
+      @chron = item_data['chron']
+      @enum = item_data['enum']
+      @year = item_data['year']
       @status = item_data['status']
       @circ_group = item_data['circGrp'].keys[0].to_i
       @onReserve = item_data['onReserve']
@@ -31,12 +33,19 @@ module BlacklightCornellRequests
       end
     end
 
+    # Enumeration is the single-string concatenation of three fields
+    # from the item record: chron, enum, and year
+    def enumeration
+      [@enum, @chron, @year].compact.join(' - ')
+    end
+
     def inspect
       puts "Item record #{@id} (linked to holding record #{@holding_id}):"
       puts "Type: #{@type.inspect}"
       puts "Status: #{@status.inspect}"
       puts "Location: #{@location.inspect}"
-      puts "Enumeration: #{@enumeration.inspect}"
+      puts "Enumeration: " + enumeration
+      puts "enum components: chron: #{@chron}, enum: #{@enum}, year: #{@year}"
       puts "Copy: #{@copy_number}"
       puts "Circ group: #{@circ_group}"
       puts "Call number: #{@call_number}"
