@@ -90,20 +90,6 @@ module BlacklightCornellRequests
       @scanit_link = scanit_link
     end
 
-    # Given an array of Items, return a hash with keys corresponding to each
-    # volume in the item array, and values being arrays of all the item records
-    # associated with that volume. E.g.:
-    #
-    # { "vol. 1" => [14141, 14142, 14145], "vol. 2" => [14143] }
-    def self.volumes(items)
-      volumes = {}
-      items.each do |i|
-        enum = i.enumeration
-        volumes[enum] ? volumes[enum] << i.id : volumes[enum] = [i.id]
-      end
-      volumes
-    end
-
   end
 
 end
