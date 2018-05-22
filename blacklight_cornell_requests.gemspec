@@ -30,6 +30,8 @@ Gem::Specification.new do |s|
   s.add_dependency 'dotenv-deployment'
   s.add_dependency 'borrow_direct'
   s.add_dependency 'exception_notification'
+  s.add_dependency 'activerecord-oracle_enhanced-adapter'
+  s.add_dependency 'ruby-oci8'
 
   s.add_development_dependency "sqlite3"
 
