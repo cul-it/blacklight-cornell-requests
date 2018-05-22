@@ -62,40 +62,45 @@ module BlacklightCornellRequests
 
       # Don't bother if BD has been disabled in .env
       return false if ENV['DISABLE_BORROW_DIRECT'].present?
+      # Or if the user isn't eligible
+      return false unless BD.available?(@patron)
 
       set_mode(ENV['BORROW_DIRECT_URL']) unless @mode.present?
 
-      response = nil
-      # This block can throw timeout errors if BD takes to long to respond
-      begin
-        if @work.isbn.present?
-          # Note: [*<variable>] gives us an array if we don't already have one,
-          # which we need for the map.
-          response = BorrowDirect::FindItem.new.find(:isbn => ([*@work.isbn].map!{|i| i = i.clean_isbn}))
-        elsif params[:title].present?
-          response = BorrowDirect::FindItem.new.find(:phrase => @work.title)
+      Rails.cache.fetch("bd-availability-#{@work.bibid}", :expires_in => 5.minutes) do
+        response = nil
+        Rails.logger.debug "mjc12test: DOING A FRESH BD CALL #{@work.title}, #{@work.isbn}"
+        # This block can throw timeout errors if BD takes to long to respond
+        begin
+          if @work.isbn.present?
+            # Note: [*<variable>] gives us an array if we don't already have one,
+            # which we need for the map.
+            response = BorrowDirect::FindItem.new.find(:isbn => ([*@work.isbn].map!{|i| i = i.clean_isbn}))
+          elsif @work.title.present?
+            response = BorrowDirect::FindItem.new.find(:phrase => @work.title)
+          end
+
+          return response.requestable?
+
+        rescue Errno::ECONNREFUSED => e
+          #  ExceptionNotifier.notify_exception(e)
+          Rails.logger.warn 'Requests: Borrow Direct connection was refused'
+          Rails.logger.warn e.message
+          Rails.logger.warn e.backtrace.inspect
+          return false
+        rescue BorrowDirect::HttpTimeoutError => e
+          Rails.logger.warn 'Requests: Borrow Direct check timed out'
+          Rails.logger.warn e.message
+          Rails.logger.warn e.backtrace.inspect
+          return false
+        rescue BorrowDirect::Error => e
+          Rails.logger.warn 'Requests: Borrow Direct gave error.'
+          Rails.logger.warn e.message
+          Rails.logger.warn e.backtrace.inspect
+          Rails.logger.warn response.inspect
+          return false
         end
 
-        #Rails.logger.debug "mjc12test :#{__FILE__}:#{__LINE__} response from bd ."+ response.inspect
-        return response.requestable?
-
-      rescue Errno::ECONNREFUSED => e
-        #  ExceptionNotifier.notify_exception(e)
-        Rails.logger.warn 'Requests: Borrow Direct connection was refused'
-        Rails.logger.warn e.message
-        Rails.logger.warn e.backtrace.inspect
-        return false
-      rescue BorrowDirect::HttpTimeoutError => e
-        Rails.logger.warn 'Requests: Borrow Direct check timed out'
-        Rails.logger.warn e.message
-        Rails.logger.warn e.backtrace.inspect
-        return false
-      rescue BorrowDirect::Error => e
-        Rails.logger.warn 'Requests: Borrow Direct gave error.'
-        Rails.logger.warn e.message
-        Rails.logger.warn e.backtrace.inspect
-        Rails.logger.warn response.inspect
-        return false
       end
     end
 
