@@ -3,12 +3,14 @@
     %h3
       Other delivery options
   %div.col-sm-6
-    %table.table.table-striped.table-bordered.request-options
+    %table.table.table-striped.table-bordered.request-options{:summary => "Other delivery options for requesting this item, with standard delivery times"}
+      %caption
+        Other delivery options for requesting this item, with standard delivery times
       %thead
         %tr
-          %th
+          %th{:scope => "col"}
             Request type
-          %th
+          %th{:scope => "col"}
             Delivery time
       - if @alternate_methods
         - session[:volume] = @volume
@@ -90,4 +92,4 @@
 %p.form-alternative-action
   = succeed "." do
     If you need further help, please
-    =link_to 'Ask a Librarian','http://ask.library.cornell.edu'
+    =link_to 'Ask a Librarian','http://www.library.cornell.edu/ask'
