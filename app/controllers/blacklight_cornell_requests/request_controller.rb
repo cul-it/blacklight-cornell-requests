@@ -35,8 +35,9 @@ module BlacklightCornellRequests
       @id = params[:bibid]
       resp, @document = fetch @id
       @document = @document
+
 ####### NEW #########
-      work_metadata = Work.new(@document)
+      work_metadata = Work.new(@id, @document)
       # Create an array of all the item records associated with the bibid
       items = []
       holdings = JSON.parse(@document['items_json'])
@@ -46,14 +47,44 @@ module BlacklightCornellRequests
           items << Item.new(h, i)
         end
       end
-      Rails.logger.debug "mjc12test: item array - #{items}"
+      @volumes = Volume.volumes(items)
+
+      # When we're entering the request system from a /catalog path, then we're starting
+      # fresh — no volume should be pre-selected (or kept in the session). However,
+      # if the referer is a different path — i.e., /request/*, then we *do* want to
+      # preserve the volume selection; this would be the case if the page is reloaded
+      # or the user selects an alternate delivery method for the same item.
+      if session[:setvol].nil? && (request.referer && request.referer.exclude?('/request/'))
+        session[:volume] = nil
+      end
+      session[:setvol] = nil
+
+      params[:volume] = session[:volume]
+      # Reset session var after use so that we don't get weird results if
+      # user goes to another catalog item
+      session[:volume] = nil
+
+      # If there's a URL-based volume present, that overrides the session data (this
+      # should only happen now if someone is linking into requests from outside the main
+      # catalog).
+      if params[:enum] || params[:chron] || params[:year]
+        params[:volume] = "|#{params[:enum]}|#{params[:chron]}|#{params[:year]}|"
+      end
+
+      # If a volume is selected, drop the items that don't match that volume -- no need
+      # to waste time calculating delivery methods for them
+      # TODO: This is a horribly inefficient approach. Make it better
+      @volumes.each do |v|
+        if v.select_option == params[:volume]
+          Rails.logger.debug "mjc12test: FOUND VOLUME #{v.inspect}"
+          items = v.items
+          break
+        end
+      end
 
       available_request_methods = DeliveryMethod.enabled_methods
-      Rails.logger.debug "mjc12test: deliverymethods: - #{available_request_methods}"
-
       requester = Patron.new(user)
       borrow_direct = CULBorrowDirect.new(requester, work_metadata)
-      Rails.logger.debug "mjc12test: borrow direct test - #{borrow_direct.available}"
 
       # We have the following delivery methods to evaluate (at most) for each item:
       # L2L, BD, ILL, Hold, Recall, Patron-driven acquisition, Purchase request
@@ -89,96 +120,27 @@ module BlacklightCornellRequests
           rp = RequestPolicy.policy(i.circ_group, requester.group, i.type['id'])
           policy_hash[policy_key] = rp
         end
+        Rails.logger.debug "mjc12test: Item enum #{i.enumeration}"
         options = update_options(i, rp, options, requester)
       end
       options[BD] = [1] if borrow_direct.available
 
       Rails.logger.debug "mjc12test: options hash - #{options}"
-      Rails.logger.debug "mjc12test: policy hash - #{policy_hash}"
       # At this point, options is a hash with keys being available delivery methods
       # and values being arrays of items deliverable using the keyed method
 ###### END NEW #########
-
-
-      Rails.logger.debug "Viewing item #{@id} (within request controller) - session: #{session}"
-
-      # Do a check to see whether the circ_policy_locs table is populated — for some
-      # bizarre reason, it has been turning up empty in production.
-      begin
-        if Circ_policy_locs.count() < 1
-          raise BlacklightCornellRequests::RequestDatabaseException, 'circ_policy_locs table has less than one row'
-        end
-      rescue BlacklightCornellRequests::RequestDatabaseException => e
-        Rails.logger.error "Requests database exception: #{e}"
-        Appsignal.add_exception(e)
-      end
-
-      # If the holdings data has been stored in the session (:holdings_status_short),
-      # we'll pass it in to the request to be reused instead of making
-      # the expensive holdings service call again. As soon as it's used, the session
-      # data gets cleared so that we don't end up passing stale session data for a different
-      # bibid into the request next time (if someone manipulates the URL instead of following
-      # the normal catalog path). A better way of handling this might be to compare the
-      # bibid and the key of the holdings data, which should be the same.
-      session_holdings = session[:holdings_status_short]
-      session[:holdings_status_short] = nil
-      req = BlacklightCornellRequests::Request.new(@id, session_holdings)
-      # req.netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
-      # req.netid.sub!('@CORNELL.EDU', '') unless req.netid.nil?
-      # req.netid.sub!('@cornell.edu', '') unless req.netid.nil?
-      req.netid = user
-
-      # When we're entering the request system from a /catalog path, then we're starting
-      # fresh — no volume should be pre-selected (or kept in the session). However,
-      # if the referer is a different path — i.e., /request/*, then we *do* want to
-      # preserve the volume selection; this would be the case if the page is reloaded
-      # or the user selects an alternate delivery method for the same item.
-      Rails.logger.debug "mjc12test: going into Requests with referrer - #{request.referer}"
-      Rails.logger.debug "mjc12test: with setvol - #{session[:setvol]}"
-      if session[:setvol].nil? && (request.referer && request.referer.exclude?('/request/'))
-        session[:volume] = nil
-      end
-      session[:setvol] = nil
-
-      params[:volume] = session[:volume]
-      # Reset session var after use so that we don't get weird results if
-      # user goes to another catalog item
-      session[:volume] = nil
-
-      # If there's a URL-based volume present, that overrides the session data (this
-      # should only happen now if someone is linking into requests from outside the main
-      # catalog).
-      if params[:enum] || params[:chron] || params[:year]
-        params[:volume] = "|#{params[:enum]}|#{params[:chron]}|#{params[:year]}|"
-      end
-
-
-      req.magic_request @document, request.env['HTTP_HOST'], {:target => target, :volume => params[:volume]}
-
-      if ! req.service.nil?
-        @service = req.service
-      else
-        # This is the default option when nothing else can be done. A cry for help!
-        @service = { :service => BlacklightCornellRequests::Request::ASK_LIBRARIAN }
-      end
-
 
 ###### NEW ########
 
       sorted_methods = DeliveryMethod.sorted_methods(options)
       fastest_method = sorted_methods[:fastest]
       @alternate_methods = sorted_methods[:alternate]
-      if borrow_direct.available
-        Rails.logger.debug "mjc12test: AVAILABLE IN BD - #{}"
-      else
-        Rails.logger.debug "mjc12test: NOT AVAILABLE IN BD - #{}"
-      end
 
       # If target (i.e., a particular delivery method) is specified in the URL, then we
       # have to prefer that method above others (even if others are faster in theory).
       # This code is a bit ugly, but it swaps the fastest method with the appropriate entry
       # in the alternate_methods array.
-      if target
+      if target.present?
         available_request_methods.each do |rm|
           if rm::TemplateName == target
             @alternate_methods.unshift(fastest_method)
@@ -204,18 +166,6 @@ module BlacklightCornellRequests
       @items = fastest_method[:items]
 ###### END NEW #######
 
-      # @estimate = req.estimate
-      # @ti = req.ti
-      # @au = req.au
-      # @isbn = req.isbn
-      # @ill_link = req.ill_link
-      # @scanit_link = req.scanit_link
-      # @pub_info = req.pub_info
-      # @volume = params[:volume]
-      # @netid = req.netid
-      # @name = get_patron_name req.netid
-      # @fod_data = req.fod_data
-
       @iis = ActiveSupport::HashWithIndifferentAccess.new
       if !@document[:url_pda_display].blank? && !@document[:url_pda_display][0].blank?
         pda_url = @document[:url_pda_display][0]
@@ -224,8 +174,10 @@ module BlacklightCornellRequests
         @iis = {:pda => { :itemid => 'pda', :url => pda_url, :note => note }}
       end
 
+      
+
       # @volumes = req.set_volumes(req.all_items)
-     @volumes = req.volumes
+    #  @volumes = req.volumes
       # Note: the if statement here only shows the volume select screen
       # if a doc del request has *not* been specified. This is because
       # (a) without that statement, the user just loops endlessly through
@@ -233,41 +185,36 @@ module BlacklightCornellRequests
       # pre-populate the doc del request form with bibliographic data, there's
       # no point in forcing the user to select a volume before showing the form.
 
-      if req.volumes.present? and params[:volume].blank? and target != Request::DOCUMENT_DELIVERY
-        if req.volumes.count != 1
+      # if req.volumes.present? and params[:volume].blank? and target != Request::DOCUMENT_DELIVERY
+      #   if req.volumes.count != 1
+      #     render 'shared/_volume_select'
+      #     return
+      #   else
+      #     # a bit hacky solution here to get to request path
+      #     # will need more rails compliant solution down the road...
+      #     # modified to use new volume specification schema
+      #     enum, chron, year = req.volumes[req.volumes.keys[0]][1..-1].split /\|/
+      #     redirect_to '/request' + request.env['PATH_INFO'] + "?enum=#{enum}&chron=#{chron}&year=#{year}" #{}"/#{req.volumes[req.volumes.keys[0]]}"
+      #     return
+      #   end
+      # elsif req.request_options.present?
+      #   req.request_options.each do |item|
+      #     iid = item[:iid]
+      #     @iis[iid[:item_id]] = iid unless iid.blank?
+      #   end
+      #   @volumes = req.set_volumes(req.all_items)
+      #   #@volumes = req.volumes
+      # end
+      if @document['multivol_b'] && params[:volume].blank?
+        if @volumes.count > 1
           render 'shared/_volume_select'
           return
         else
-          # a bit hacky solution here to get to request path
-          # will need more rails compliant solution down the road...
-          # modified to use new volume specification schema
-          enum, chron, year = req.volumes[req.volumes.keys[0]][1..-1].split /\|/
-          redirect_to '/request' + request.env['PATH_INFO'] + "?enum=#{enum}&chron=#{chron}&year=#{year}" #{}"/#{req.volumes[req.volumes.keys[0]]}"
+          vol = @volumes[0]
+          redirect_to '/request' + request.env['PATH_INFO'] + "?enum=#{vol.enum}&chron=#{vol.chron}&year=#{vol.year}"
           return
         end
-      elsif req.request_options.present?
-        req.request_options.each do |item|
-          iid = item[:iid]
-          @iis[iid[:item_id]] = iid unless iid.blank?
-        end
-        @volumes = req.set_volumes(req.all_items)
-        #@volumes = req.volumes
       end
-
-      # @alternate_request_options = []
-      # if !req.alternate_options.nil?
-      #   req.alternate_options.each do |option|
-      #     option_hash = {:option => option[:service], :estimate => option[:estimate]}
-      #     if option[:service] == 'ill'
-      #       option_hash[:ill_link] = req.ill_link
-      #     elsif option[:service] == 'document_delivery'
-      #       option_hash[:scanit_link] = req.scanit_link
-      #     end
-      #     @alternate_request_options.push(option_hash)
-      #
-      #   end
-      # end
-      #
 
 
       @counter = params[:counter]
@@ -275,9 +222,6 @@ module BlacklightCornellRequests
         @counter = session[:search][:counter]
       end
 
-      #render @service
-      Rails.logger.debug "mjc12test: fastest method - #{fastest_method[:method]::TemplateName}"
-      Rails.logger.debug "mjc12test: delivery time - #{fastest_method[:method].time.min}"
       render fastest_method[:method]::TemplateName
 
     end
@@ -466,12 +410,8 @@ module BlacklightCornellRequests
         resp, document = fetch params[:bibid]
         isbn = document[:isbn_display]
         req = BlacklightCornellRequests::Request.new(params[:bibid])
-        # netid = request.env['REMOTE_USER']
-        # netid.sub! '@CORNELL.EDU', ''
-        #Rails.logger.debug "mjc12test: netid - #{@netid}"
 
         resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id], :notes => params[:reqcomments] })
-        Rails.logger.debug "mjc12test: making request - resp is - #{resp}"
         if resp
           status = 'success'
           status_msg = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
