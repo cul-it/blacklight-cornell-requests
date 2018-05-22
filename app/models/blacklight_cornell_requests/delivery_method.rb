@@ -49,7 +49,6 @@ module BlacklightCornellRequests
 
       # Get fastest delivery method
       sorted_keys = options_hash.keys.sort { |x, y| x.time.min <=> y.time.min }
-      Rails.logger.debug "mjc12test: Sorted keys - #{sorted_keys.inspect}"
       fastest_method = sorted_keys.shift
       alternate_methods = []
       sorted_keys.each do |k|

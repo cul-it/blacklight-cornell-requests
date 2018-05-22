@@ -44,6 +44,10 @@ module BlacklightCornellRequests
     end
 
     def inspect
+      @id
+    end
+
+    def report
       puts "Item record #{@id} (linked to holding record #{@holding_id}):"
       puts "Type: #{@type.inspect}"
       puts "Status: #{@status.inspect}"
