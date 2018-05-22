@@ -1,30 +1,29 @@
 require 'benchmark'
 require 'borrow_direct'
 include BlacklightCornellRequests::Cornell::LDAP
-include Blacklight::SolrHelper
 
 module BlacklightCornellRequests
   # @author Matt Connolly
 
   class Request2
-    
-    attr_reader :bibid, 
-                :netid, 
+
+    attr_reader :bibid,
+                :netid,
                 :document,
                 :work,
-                # holdings_data is the unprocesssed data returned by a call to the holdings service 
+                # holdings_data is the unprocesssed data returned by a call to the holdings service
                 # @todo Do we really need to keep this around?
                 :holdings_data,
                 # holdings contains an array of Holding class instances for each library holding of
-                # this bibid. 
+                # this bibid.
                 :holdings,
                 # The particular volume requested, if any
                 :bd_available,
                 :multivolume
-                
-                
+
+
     attr_accessor :volume
-    
+
     # Class-level constructor for building a request with test doc and holdings data
     # (to avoid the currently very expensive calls to external services while testing)
     def self.test_request(bibid, netid, bd)
@@ -44,9 +43,9 @@ module BlacklightCornellRequests
       instance.send(:initialize, bibid, 'mjc12', doc, hold, bd)
       instance
     end
-    
+
     # Basic initializer
-    # 
+    #
     # @param bibid [Fixnum] The bibID being requested
     # @param netid [String] The Cornell NetID of the requester
     # @param document [Hash] The Solr documenta associated with the bibID
@@ -72,7 +71,7 @@ module BlacklightCornellRequests
       set_item_docs    # Assign the appropriate chunk of the Solr document to each item record
       @pda_data = nil  # Patron-driven acquisition
     end
-    
+
     def inspect
       puts "BibID #{@bibid} requested for '#{@netid}' (patron type: #{get_patron_type(@netid)})"
       bd_avail = (@bd_available ? 'IS' : 'is NOT')
@@ -80,7 +79,7 @@ module BlacklightCornellRequests
       puts "Requested volume: #{@volume}"
     #  puts "There are #{@holdings.count} holdings records (#{@holdings.each |h| { print h}})"
     end
-    
+
     def times
       Benchmark.bm do |benchmark|
         benchmark.report do
@@ -94,52 +93,61 @@ module BlacklightCornellRequests
         end
       end
     end
-    
+
     # once the holdings (and thus item records) have been parsed, go back and set
     # each item record's solrdoc property to the correct snippet from the main Solr
     # document
     def set_item_docs
       # If this is a PDA item, there won't be item records to work with
       return unless @document['item_record_display'].present?
-      
+
       items().each { |i| i.solrdoc = solr_doc_for_item(i.id) }
     end
-    
-    def solr_doc_for_item(item_id)      
+
+    def solr_doc_for_item(item_id)
       unless @solr_doc_items
         @solr_doc_items = @document['item_record_display'].map { |i| JSON.parse(i) }
       end
-      
+
       @solr_doc_items.find { |i| i['item_id'] == item_id.to_s }
     end
-    
+
     def get_holdings
-      
-      response = HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/status_short/#{@bibid}")
-      response = JSON.parse(response).with_indifferent_access
-      puts "response: #{response.inspect}"
-      response[@bibid.to_s][@bibid.to_s][:records][0][:holdings]
-      
+
+      # response = HTTPClient.get_content(Rails.configuration.voyager_holdings + "/holdings/status_short/#{@bibid}")
+      # response = JSON.parse(response).with_indifferent_access
+      # puts "response: #{response.inspect}"
+      # response[@bibid.to_s][@bibid.to_s][:records][0][:holdings]
+      Rails.logger.debug "mjc12test: get_holdings - #{JSON.parse(@document['holdings_json'])}"
+      JSON.parse(@document['holdings_json'])
+
     end
-    
+
     def parse_holdings
-      
-      holdings = []
-      mfhds = Hash.new {|h, k| h[k] = [] }
-      # Each chunk of holdings_data looks like this: 
-      #{"BIB_ID"=>1419, "MFHD_ID"=>5248430, "ITEM_ID"=>6782463, "ITEM_STATUS"=>1, "DISPLAY_CALL_NO"=>"Oversize HD205 1962 .S52 +", "LOCATION_ID"=>99, "LOCATION_CODE"=>"olin", "LOCATION_DISPLAY_NAME"=>"Olin Library", "OQUANTITY"=>nil, "ODATE"=>nil, "LINE_ITEM_STATUS"=>nil, "LINE_ITEM_ID"=>nil, "TEMP_LOCATION_DISPLAY_NAME"=>nil, "TEMP_LOCATION_CODE"=>nil, "TEMP_LOCATION_ID"=>0, "ITEM_STATUS_DATE"=>"2013-07-11T05:39:16-04:00", "PERM_LOCATION"=>99, "PERM_LOCATION_DISPLAY_NAME"=>"Olin Library", "PERM_LOCATION_CODE"=>"olin", "CURRENT_DUE_DATE"=>nil, "HOLDS_PLACED"=>0, "RECALLS_PLACED"=>0, "PO_TYPE"=>nil, "ITEM_ENUM"=>"v.2", "CHRON"=>nil}
+
+      # holdings = []
+      # mfhds = Hash.new {|h, k| h[k] = [] }
+      #
+      # 
+      # Each chunk of holdings_data looks like this:
+      #{"9850688":{
+      #  "holdings":["no.177-182 (2016)"],
+      #  "location":{"code":"was","number":139,"name":"Kroch Library Asia","library":"Kroch Library Asia"},
+      #  "date":1495138879}}
+      #
+      #
+      # @holdings_data.each do |h|
+      #   mfhds[h['MFHD_ID']] << h
+      # end
+
       @holdings_data.each do |h|
-        mfhds[h['MFHD_ID']] << h
+        holdings << BlacklightCornellRequests::Holding.new(h)
       end
-      
-      mfhds.each do |k, v|
-        holdings << BlacklightCornellRequests::Holding.new(v)
-      end
-    
+
       holdings
-      
+
     end
-    
+
     # Return an array of all associated item records (accessed via @holdings)
     def items
       result = []
@@ -148,10 +156,10 @@ module BlacklightCornellRequests
             result << i
         end
       end
-      
+
       result
     end
-    
+
     # Return an array of associated item records ONLY for the set volume (if any)
     def selected_items
       if @volume.empty? || @volume.all? { |k,v| v.nil? }
@@ -160,9 +168,9 @@ module BlacklightCornellRequests
         items().select { |i| i.enumeration && i.volume_match?(@volume) }
       end
     end
-    
+
     # Return an array of all viable delivery methods. If use_volume is true,
-    # the methods will only be calculated for selected_items. If false, then 
+    # the methods will only be calculated for selected_items. If false, then
     # methods will be calculated for ALL the item records
     def delivery_methods(use_volume = true)
       result = []
@@ -173,30 +181,30 @@ module BlacklightCornellRequests
       end
       # Following line is needed for call to subclasses to not crash ... but why?
       BlacklightCornellRequests::DeliveryMethod
-      
+
       result << BD if @bd_available
       result << PDA if @pda_data = PDA.pda_data(@document) # Yes, this is an assignment
       result << AskLibrarian    # You can always ask a librarian!
-      
+
       # We only need unique delivery methods, sorted by delivery time (minimum time in range)
       result.uniq.sort { |a, b| a.time[0] <=> b.time[0] }
     end
-    
+
     # Determine whether any copy is available
     def available?
       selected_items.any? { |i| i.status.present? && i.status[:code] == 1 }
     end
-    
+
     # Determine Borrow Direct availability for an ISBN or title
     # params = { :isbn, :title }
     # ISBN is best, but title will work if ISBN isn't available.
     def available_in_bd?
-      
+      return false
       return false if @document.nil?
-      
+
       isbn  = document[:isbn_display]
       title = document[:title_display]
-    
+
       # Set up params for BorrowDirect gem
       BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_TEST_API_KEY']
       BorrowDirect::Defaults.api_base = 'https://bdtest.relais-host.com/'
@@ -210,7 +218,7 @@ module BlacklightCornellRequests
       end
 
       response = nil
-      
+
       # This block can throw timeout errors if BD takes to long to respond
       begin
         if isbn.present?
@@ -246,12 +254,12 @@ module BlacklightCornellRequests
         Rails.logger.warn 'Requests: Borrow Direct gave error.'
         Rails.logger.warn e.message
         Rails.logger.warn e.backtrace.inspect
-        Rails.logger.warn response.inspect 
+        Rails.logger.warn response.inspect
         return false
       end
-      
+
     end
-    
+
     # Use the external netid lookup script to figure out the patron's barcode
     # (this might duplicate what's being done in the voyager_request patron method)
     def patron_barcode(netid)
@@ -267,8 +275,8 @@ module BlacklightCornellRequests
       JSON.parse(response.body)['bc']
 
     end
-  
-    
+
+
   end
 end
 

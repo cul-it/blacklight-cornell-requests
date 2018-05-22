@@ -1,6 +1,6 @@
 -if @selected_volume.present?
 	%select#volume-selection.form-control{:name => "volume-selection", :data =>{:request_path =>magic_request_path(@id)}}
-		=options_for_select(@volumes, selected = @selected_volume)
+		=options_for_select(@volumes.map { |v| [v.enumeration, v.select_option]}.to_h, selected = @selected_volume)
 	%span{:id => 'request-loading-spinner'}
 
 -else
@@ -15,7 +15,7 @@
 					%label.sr-only{:for => "volume-selection"}
 						Select volume
 					%select#volume-selection.form-control{@volumes, :name => "volume-selection", :data =>{:request_path =>magic_request_path(@id)}}
-						=options_for_select({'Choose a volume...' => ''}.merge(@volumes), selected = @selected_volume)
+						=options_for_select({'Choose a volume...' => ''}.merge(@volumes.map { |v| [v.enumeration, v.select_option]}.to_h), selected = @selected_volume)
 					%span{:id => 'request-loading-spinner'}
 			%div.col-sm-3.ill-link
 				%p

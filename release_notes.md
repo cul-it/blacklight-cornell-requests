@@ -1,5 +1,11 @@
 # Release Notes - blacklight-cornell-requests
 
+## v2.0
+This is a major release with three primary improvements:
+- Determination of Voyager delivery methods is now aligned with the circ matrix defined in the Voyager DB
+- Holdings-related data and item availability are taken from the Solr record, not the deprecated holdings service
+- Primary request logic has been completely rewritten to be more efficient and streamlined
+
 ## v1.5.5
 - Fixed a bug in formation of ILLiad links with ISBNs with additional text; only pass in the first ISBN (DISCOVERYACCESS-4106).
 
