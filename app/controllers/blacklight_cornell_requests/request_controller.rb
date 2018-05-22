@@ -36,11 +36,10 @@ module BlacklightCornellRequests
       resp, @document = fetch @id
       @document = @document
 
-####### NEW #########
       work_metadata = Work.new(@id, @document)
       # Create an array of all the item records associated with the bibid
       items = []
-      holdings = JSON.parse(@document['items_json'])
+      holdings = JSON.parse(@document['items_json'] || '{}')
       # Items are keyed by the associated holding record
       holdings.each do |h, item_array|
         item_array.each do |i|
@@ -48,6 +47,7 @@ module BlacklightCornellRequests
         end
       end
       @volumes = Volume.volumes(items)
+      @ti = work_metadata.title
 
       # When we're entering the request system from a /catalog path, then we're starting
       # fresh — no volume should be pre-selected (or kept in the session). However,
@@ -71,12 +71,23 @@ module BlacklightCornellRequests
         params[:volume] = "|#{params[:enum]}|#{params[:chron]}|#{params[:year]}|"
       end
 
+      # If this is a multivol item but no volume has been selected, show the appropriate screen
+      if @document['multivol_b'] && params[:volume].blank?
+        if @volumes.count > 1
+          render 'shared/_volume_select'
+          return
+        else
+          vol = @volumes[0]
+          redirect_to '/request' + request.env['PATH_INFO'] + "?enum=#{vol.enum}&chron=#{vol.chron}&year=#{vol.year}"
+          return
+        end
+      end
+
       # If a volume is selected, drop the items that don't match that volume -- no need
       # to waste time calculating delivery methods for them
       # TODO: This is a horribly inefficient approach. Make it better
       @volumes.each do |v|
         if v.select_option == params[:volume]
-          Rails.logger.debug "mjc12test: FOUND VOLUME #{v.inspect}"
           items = v.items
           break
         end
@@ -120,7 +131,6 @@ module BlacklightCornellRequests
           rp = RequestPolicy.policy(i.circ_group, requester.group, i.type['id'])
           policy_hash[policy_key] = rp
         end
-        Rails.logger.debug "mjc12test: Item enum #{i.enumeration}"
         options = update_options(i, rp, options, requester)
       end
       options[BD] = [1] if borrow_direct.available
@@ -128,13 +138,13 @@ module BlacklightCornellRequests
       Rails.logger.debug "mjc12test: options hash - #{options}"
       # At this point, options is a hash with keys being available delivery methods
       # and values being arrays of items deliverable using the keyed method
-###### END NEW #########
-
-###### NEW ########
 
       sorted_methods = DeliveryMethod.sorted_methods(options)
       fastest_method = sorted_methods[:fastest]
       @alternate_methods = sorted_methods[:alternate]
+      # If no other methods are found (i.e., there are no item records to process, such as for
+      # an on-order record), ask a librarian
+      fastest_method[:method] ||= AskLibrarian 
 
       # If target (i.e., a particular delivery method) is specified in the URL, then we
       # have to prefer that method above others (even if others are faster in theory).
@@ -161,7 +171,7 @@ module BlacklightCornellRequests
       @scanit_link = work_metadata.scanit_link
       @netid = user
       @name = get_patron_name user
-      @volume # TODO
+      @volume = params[:volume]
       @fod_data = get_fod_data user
       @items = fastest_method[:items]
 ###### END NEW #######
@@ -173,49 +183,6 @@ module BlacklightCornellRequests
         pda_url, note = pda_url.split('|')
         @iis = {:pda => { :itemid => 'pda', :url => pda_url, :note => note }}
       end
-
-      
-
-      # @volumes = req.set_volumes(req.all_items)
-    #  @volumes = req.volumes
-      # Note: the if statement here only shows the volume select screen
-      # if a doc del request has *not* been specified. This is because
-      # (a) without that statement, the user just loops endlessly through
-      # volume selection and doc del requesting; and (b) since we can't
-      # pre-populate the doc del request form with bibliographic data, there's
-      # no point in forcing the user to select a volume before showing the form.
-
-      # if req.volumes.present? and params[:volume].blank? and target != Request::DOCUMENT_DELIVERY
-      #   if req.volumes.count != 1
-      #     render 'shared/_volume_select'
-      #     return
-      #   else
-      #     # a bit hacky solution here to get to request path
-      #     # will need more rails compliant solution down the road...
-      #     # modified to use new volume specification schema
-      #     enum, chron, year = req.volumes[req.volumes.keys[0]][1..-1].split /\|/
-      #     redirect_to '/request' + request.env['PATH_INFO'] + "?enum=#{enum}&chron=#{chron}&year=#{year}" #{}"/#{req.volumes[req.volumes.keys[0]]}"
-      #     return
-      #   end
-      # elsif req.request_options.present?
-      #   req.request_options.each do |item|
-      #     iid = item[:iid]
-      #     @iis[iid[:item_id]] = iid unless iid.blank?
-      #   end
-      #   @volumes = req.set_volumes(req.all_items)
-      #   #@volumes = req.volumes
-      # end
-      if @document['multivol_b'] && params[:volume].blank?
-        if @volumes.count > 1
-          render 'shared/_volume_select'
-          return
-        else
-          vol = @volumes[0]
-          redirect_to '/request' + request.env['PATH_INFO'] + "?enum=#{vol.enum}&chron=#{vol.chron}&year=#{vol.year}"
-          return
-        end
-      end
-
 
       @counter = params[:counter]
       if @counter.blank? and session[:search].present?
