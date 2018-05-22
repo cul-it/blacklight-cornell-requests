@@ -1,6 +1,7 @@
 -## Testing for @iis presence because callslip needs it
 -## but not sure if callslip is even sticking around (what's
 -## the difference between it and L2L?)
+- Rails.logger.debug "mjc12test: itemstouse - #{@items}"
 -if (@iis.present? && @iis.length > 0)
   .form-group
     %label.control-label.col-sm-2
@@ -9,7 +10,7 @@
       -elsif (@iis.length == 1)
         This copy:
     .col-sm-10
-      -if @iis.length > 1  
+      -if @iis.length > 1
         .radio
           %label{ :for => "copy-any"}
             %input(id="copy-any" class="copy-select" type="radio" name="holding_id" value="any" data-exclude-location="[]")
