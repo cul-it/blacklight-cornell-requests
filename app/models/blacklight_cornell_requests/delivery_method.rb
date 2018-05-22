@@ -55,6 +55,12 @@ module BlacklightCornellRequests
         alternate_methods << { :method => k, :items => options_hash[k] }
       end
 
+      # Document delivery/ScanIt never comes first
+      if fastest_method == DocumentDelivery && alternate_methods.length > 0
+        fastest_method = alternate_methods.shift[:method]
+        alternate_methods.unshift({ :method => DocumentDelivery, :items => options_hash[DocumentDelivery] })
+      end
+
       {
         :fastest => {:method => fastest_method, :items => options_hash[fastest_method] },
         :alternate => alternate_methods
