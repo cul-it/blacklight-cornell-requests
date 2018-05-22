@@ -35,7 +35,7 @@ module BlacklightCornellRequests
 
     def parse_ill(solrdoc)
 
-      ill_link = ENV['ILLIAD_URL'] + '?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
+      ill_link = ENV['ILLIAD_URL'] + '?Action=10&Form=21&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
       if @isbn
         isbns = @isbn.join(',')
         ill_link += "&rft.isbn=#{isbns}" + "&rft_id=urn%3AISBN%3A#{isbns}"
