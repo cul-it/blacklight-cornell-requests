@@ -41,7 +41,7 @@ module BlacklightCornellRequests
         ill_link += "&rft.isbn=#{isbns}" + "&rft_id=urn%3AISBN%3A#{isbns}"
       end
       if @title
-        ill_link += "&rft.btitle=#{CGI.escape(@title)}"
+        ill_link += "&rft.title=#{CGI.escape(@title)}"
       end
       if solrdoc['author_display'].present?
         ill_link += "&rft.aulast=#{solrdoc['author_display']}"
