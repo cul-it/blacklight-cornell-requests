@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v2.0.1
+- Fixed a bug causing the volume select box to appear when it shouldn't (DISCOVERYACCESS-4224)
+
 ## v2.0
 This is a major release with three primary improvements:
 - Determination of Voyager delivery methods is now aligned with the circ matrix defined in the Voyager DB
