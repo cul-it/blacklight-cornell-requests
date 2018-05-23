@@ -46,7 +46,6 @@ module BlacklightCornellRequests
           items << Item.new(h, i)
         end
       end
-      @volumes = Volume.volumes(items)
       @ti = work_metadata.title
 
       # When we're entering the request system from a /catalog path, then we're starting
@@ -72,24 +71,29 @@ module BlacklightCornellRequests
       end
 
       # If this is a multivol item but no volume has been selected, show the appropriate screen
-      if @document['multivol_b'] && params[:volume].blank?
-        if @volumes.count > 1
-          render 'shared/_volume_select'
-          return
-        else
-          vol = @volumes[0]
-          redirect_to '/request' + request.env['PATH_INFO'] + "?enum=#{vol.enum}&chron=#{vol.chron}&year=#{vol.year}"
-          return
+      if @document['multivol_b'] 
+        @volumes = Volume.volumes(items)
+        if params[:volume].blank?
+          if @volumes.count > 1
+            render 'shared/_volume_select'
+            return
+          else
+            vol = @volumes[0]
+            redirect_to '/request' + request.env['PATH_INFO'] + "?enum=#{vol.enum}&chron=#{vol.chron}&year=#{vol.year}"
+            return
+          end
         end
       end
 
       # If a volume is selected, drop the items that don't match that volume -- no need
       # to waste time calculating delivery methods for them
       # TODO: This is a horribly inefficient approach. Make it better
-      @volumes.each do |v|
-        if v.select_option == params[:volume]
-          items = v.items
-          break
+      if @volumes
+        @volumes.each do |v|
+          if v.select_option == params[:volume]
+            items = v.items
+            break
+          end
         end
       end
 
