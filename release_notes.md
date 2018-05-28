@@ -1,5 +1,10 @@
 # Release Notes - blacklight-cornell-requests
 
+## v2.0.2
+
+### Bug fixes
+- Delivery locations are now properly excluded in pickup location list (DISCOVERYACCESS-4241)
+
 ## v2.0.1
 - Fixed a bug causing the volume select box to appear when it shouldn't (DISCOVERYACCESS-4224)
 

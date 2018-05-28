@@ -14,9 +14,9 @@
         .radio
           %label{ :for => "copy-#{i.id}"}
             -if (@items.length == 1)
-              %input(id="copy-#{i.id}" class="copy-select" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="" checked)
+              %input(id="copy-#{i.id}" class="copy-select" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="#{i.excluded_locations}" checked)
             -else
-              %input(id="copy-#{i.id}" class="copy-select" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="")
+              %input(id="copy-#{i.id}" class="copy-select" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="#{i.excluded_locations}")
             = "#{i.location['name']} #{i.enumeration} "
             - if i.copy_number
               = "c. #{i.copy_number} "

@@ -1,3 +1,4 @@
+require 'oci8'
 module BlacklightCornellRequests
   # @author Matt Connolly
 
@@ -69,7 +70,6 @@ module BlacklightCornellRequests
         connection = OCI8.new(ENV['ORACLE_RDONLY_PASSWORD'], ENV['ORACLE_RDONLY_PASSWORD'], "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=" + ENV['ORACLE_HOST'] + ")(PORT=1521))(CONNECT_DATA=(SID=" + ENV['ORACLE_SID'] + ")))")
         cursor = connection.parse('select location_id from circ_policy_locs where circ_group_id=:circgroup')
         cursor.bind_param('circgroup', circ_group)
-  
         cursor.exec
         records = []
         while r = cursor.fetch()
