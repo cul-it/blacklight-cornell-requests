@@ -146,6 +146,16 @@ module BlacklightCornellRequests
       sorted_methods = DeliveryMethod.sorted_methods(options)
       fastest_method = sorted_methods[:fastest]
       @alternate_methods = sorted_methods[:alternate]
+
+      # Add PDA if appropriate
+      pda_data = PDA.pda_data(@document)
+      if pda_data.present?
+        @alternate_methods.unshift fastest_method
+        fastest_method = {:method => PDA}.merge(pda_data)
+      end
+
+      Rails.logger.debug "mjc12test: fastest #{fastest_method}"
+      Rails.logger.debug "mjc12test: alternate #{@alternate_methods}"
       # If no other methods are found (i.e., there are no item records to process, such as for
       # an on-order record), ask a librarian
       fastest_method[:method] ||= AskLibrarian 
