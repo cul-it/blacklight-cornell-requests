@@ -17,10 +17,10 @@ module BlacklightCornellRequests
 
     def get_items
       items = []
-      holdings = JSON.parse(@document['items_json'])
-      holding_json = JSON.parse(@document['holdings_json'])
+      holdings = @document['items_json'] && JSON.parse(@document['items_json'])
+      holding_json = @document['holdings_json'] && JSON.parse(@document['holdings_json'])
       # Items are keyed by the associated holding record
-      holdings.each do |h, item_array|
+      holdings && holdings.each do |h, item_array|
         item_array.each do |i|
           items << Item.new(h, i, holding_json)
         end
@@ -54,24 +54,26 @@ module BlacklightCornellRequests
       puts "First item:"
       puts items[0].inspect
       linebreak
-      puts "Voyager delivery methods valid for this item:"
-      puts RequestPolicy.policy(items[0].circ_group, @requester.group, items[0].type['id'])
-      linebreak
-      puts "Individual item report:"
-      puts "ID\t\tStatus\tAvailable\tL2L\tHold\tRecall\n"
-      policy_hash = {}
-      items.each do |i|
-        rp = { }
-        policy_key = "#{i.circ_group}-#{@requester.group}-#{i.type['id']}"
-        if policy_hash[policy_key]
-          rp = policy_hash[policy_key]
-        else
-          rp = RequestPolicy.policy(i.circ_group, @requester.group, i.type['id'])
-          policy_hash[policy_key] = rp
+      if items[0]
+        puts "Voyager delivery methods valid for this item:"
+        puts RequestPolicy.policy(items[0].circ_group, @requester.group, items[0].type['id'])
+        linebreak
+        puts "Individual item report:"
+        puts "ID\t\tStatus\tAvailable\tL2L\tHold\tRecall\n"
+        policy_hash = {}
+        items.each do |i|
+          rp = { }
+          policy_key = "#{i.circ_group}-#{@requester.group}-#{i.type['id']}"
+          if policy_hash[policy_key]
+            rp = policy_hash[policy_key]
+          else
+            rp = RequestPolicy.policy(i.circ_group, @requester.group, i.type['id'])
+            policy_hash[policy_key] = rp
+          end
+          puts "#{i.id}\t#{i.status['code'].keys[0]}\t#{i.status['available']}\t\t#{l2l_available?(i, rp)}\t#{hold_available?(i, rp)}\t#{recall_available?(i, rp)}"
         end
-        puts "#{i.id}\t#{i.status['code'].keys[0]}\t#{i.status['available']}\t\t#{l2l_available?(i, rp)}\t#{hold_available?(i, rp)}\t#{recall_available?(i, rp)}"
+        linebreak
       end
-      linebreak
     end
 
     def linebreak

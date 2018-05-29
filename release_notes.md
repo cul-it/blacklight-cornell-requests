@@ -1,5 +1,12 @@
 # Release Notes - blacklight-cornell-requests
 
+## v2.0.2
+
+### Bug fixes
+- Delivery locations are now properly excluded in pickup location list (DISCOVERYACCESS-4241; also fixes DISCOVERYACCESS-4235)
+- PDA is offered as an option when appropriate (DISCOVERYACCESS-4231)
+- Fixed formatting of copy number (DISCOVERYACCESS-4242)
+
 ## v2.0.1
 - Fixed a bug causing the volume select box to appear when it shouldn't (DISCOVERYACCESS-4224)
 

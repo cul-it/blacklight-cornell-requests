@@ -4,7 +4,7 @@ module BlacklightCornellRequests
   class Item
 
     attr_reader :id, :holding_id, :location, :type, :status, :circ_group
-    attr_reader :copy_number, :call_number, :enum_parts
+    attr_reader :copy_number, :call_number, :enum_parts, :excluded_locations
 
     # Basic initializer
     #
@@ -31,6 +31,7 @@ module BlacklightCornellRequests
       if holdings_data.present?
         @call_number = holdings_data[holding_id]['call']
       end
+      @excluded_locations = RequestPolicy.excluded_locations(@circ_group)
     end
 
     # Enumeration is the single-string concatenation of three fields

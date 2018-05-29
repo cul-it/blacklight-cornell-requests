@@ -117,15 +117,7 @@ module BlacklightCornellRequests
     end
 
     def self.available?(item, patron)
-      # L2L is available for both Cornell and Guest patrons when:
-      # (1) the status is NOT_CHARGED, and
-      # (2) loan type is regular or (day AND not in the list of no L2L day loan types)
-      if status == STATUSES[:not_charged]
-        return regular_loan?(loan_type) ||
-               (day_loan?(loan_type) && !no_l2l_day_loan_types?(loan_type))
-      else
-        return false
-      end
+      # Disabled for now - using the l2l_available? method in RequestController instead
     end
   end
 
@@ -219,19 +211,7 @@ module BlacklightCornellRequests
     end
 
     def self.available?(item, patron)
-      # Items are available for hold under the following conditions:
-      # (1) status is charged and loan type is regular or day, OR
-      # (2) type is regular, patron type is cornell, and status is in transit
-      # TODO: ask Joanne about that condition. Should it matter for transit status
-      # whether patron is cornell-affiliated or not?
-      if regular_loan?(loan_type)
-        return true if status == STATUSES[:charged]
-        return patron_type == 'cornell' &&
-               (status == STATUSES[:in_transit_discharged] ||
-                status == STATUSES[:in_transit_on_hold])
-      elsif day_loan?(loan_type)
-        return status == STATUSES[:charged]
-      end
+      # Disabled for now - using the hold_available? method in RequestController instead
     end
 
   end
@@ -253,22 +233,13 @@ module BlacklightCornellRequests
     end
 
     def self.available?(item, patron)
-      # Items are available for recall under the following conditions:
-      # (1) patron is cornell-affililated, loan type is regular, and
-      #     status is charged or in-transit-discharged or in-transit-on-hold
-      if patron_type == 'cornell' && regular_loan?(loan_type)
-        return (status == STATUSES[:charged] ||
-                status == STATUSES[:in_transit_discharged] ||
-                status == STATUSES[:in_transit_on_hold])
-      else
-        return false
-      end
+      # Disabled for now - using the recall_available? method in RequestController instead
     end
   end
 
   class PDA < DeliveryMethod
 
-    TemplateName = ''
+    TemplateName = 'pda'
 
     def self.description
       'Patron-driven acquisition'
@@ -279,7 +250,7 @@ module BlacklightCornellRequests
     end
 
     def self.available?(item, patron)
-
+      item.nil?
     end
 
     def self.pda_data(solrdoc)
