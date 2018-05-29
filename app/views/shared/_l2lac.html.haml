@@ -21,8 +21,4 @@
             - if i.copy_number
               = "c. #{i.copy_number} "
             %span.copy-callnumber
-              = i.call_number
-            -if i.enumeration
-              %span.copy-chron.label
-                = i.enumeration
-            = " - #{i.location['name']}"
+              = " - #{i.call_number}"
