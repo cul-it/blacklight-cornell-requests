@@ -43,7 +43,7 @@ module BlacklightCornellRequests
       # Items are keyed by the associated holding record
       holdings.each do |h, item_array|
         item_array.each do |i|
-          items << Item.new(h, i)
+          items << Item.new(h, i, JSON.parse(@document['holdings_json']))
         end
       end
       @ti = work_metadata.title
