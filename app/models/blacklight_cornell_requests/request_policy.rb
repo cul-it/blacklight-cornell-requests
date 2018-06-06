@@ -64,7 +64,7 @@ module BlacklightCornellRequests
 
     end
 
-    def self.excluded_locations(circ_group)
+    def self.excluded_locations(circ_group, item_location)
       connection = nil
       begin
         connection = OCI8.new(ENV['ORACLE_RDONLY_PASSWORD'], ENV['ORACLE_RDONLY_PASSWORD'], "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=" + ENV['ORACLE_HOST'] + ")(PORT=1521))(CONNECT_DATA=(SID=" + ENV['ORACLE_SID'] + ")))")
@@ -102,7 +102,8 @@ module BlacklightCornellRequests
           # next
         end
 
-        Rails.logger.debug "mjc12test: excluded #{records}"
+        # Allow Bailey Hortorium (77) delivery to Mann circ (172)
+        records.delete(172) if item_location['number'] == 77
   
         return records
   
