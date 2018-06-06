@@ -80,6 +80,7 @@ module BlacklightCornellRequests
         ## group id 3  - Olin
         ## group id 19 - Uris
         ## group id 5  - Annex
+        ## group id 14 - Law
         ## Olin or Uris can't deliver to itselves and each other
         ## Annex group can deliver to itself
         ## Law group can deliver to itself
@@ -89,8 +90,11 @@ module BlacklightCornellRequests
         when 3, 19
           ## exclude both group id if Olin (181) or Uris (188)
           records << 181 << 188
-        when 5, 14
-          # 5 is annex and 14 is law
+        when 14
+          records.delete 171 # Law circ
+        when 5
+          records.delete 151 # Annex circ
+
           ## skip annex/law next time
           # logger.debug "sk274_log: Annex detected, skipping"
           # location_seen[location] = exclude_location_list
