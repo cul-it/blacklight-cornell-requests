@@ -94,12 +94,6 @@ module BlacklightCornellRequests
           records.delete 171 # Law circ
         when 5
           records.delete 151 # Annex circ
-
-          ## skip annex/law next time
-          # logger.debug "sk274_log: Annex detected, skipping"
-          # location_seen[location] = exclude_location_list
-          # holding[:exclude_location_id] = exclude_location_list
-          # next
         end
 
         # Allow Bailey Hortorium (77) delivery to Mann circ (172)
