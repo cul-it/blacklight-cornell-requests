@@ -31,7 +31,7 @@ module BlacklightCornellRequests
       if holdings_data.present?
         @call_number = holdings_data[holding_id]['call']
       end
-      @excluded_locations = RequestPolicy.excluded_locations(@circ_group)
+      @excluded_locations = RequestPolicy.excluded_locations(@circ_group, @location)
     end
 
     # Enumeration is the single-string concatenation of three fields
