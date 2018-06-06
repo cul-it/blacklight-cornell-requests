@@ -75,6 +75,30 @@ module BlacklightCornellRequests
         while r = cursor.fetch()
           records << r[0]
         end
+
+        ## handle exceptions
+        ## group id 3  - Olin
+        ## group id 19 - Uris
+        ## group id 5  - Annex
+        ## Olin or Uris can't deliver to itselves and each other
+        ## Annex group can deliver to itself
+        ## Law group can deliver to itself
+        ## Baily Hortorium CAN be delivered to Mann despite being in same group (16)
+        ## Others can't deliver to itself
+        case circ_group
+        when 3, 19
+          ## exclude both group id if Olin (181) or Uris (188)
+          records << 181 << 188
+        when 5, 14
+          # 5 is annex and 14 is law
+          ## skip annex/law next time
+          # logger.debug "sk274_log: Annex detected, skipping"
+          # location_seen[location] = exclude_location_list
+          # holding[:exclude_location_id] = exclude_location_list
+          # next
+        end
+
+        Rails.logger.debug "mjc12test: excluded #{records}"
   
         return records
   
