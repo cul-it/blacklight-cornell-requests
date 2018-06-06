@@ -1,5 +1,10 @@
 # Release Notes - blacklight-cornell-requests
 
+## v2.0.3
+- Fixed a bug that excluded the Annex as an Annex pickup location
+- Added code to handle other delivery location exceptions (Hortorium, Law, Olin/Uris) 
+- Fixed a bug that allowed L2L to appear as a delivery option for noncirculating items
+
 ## v2.0.2
 
 ### Bug fixes
