@@ -81,11 +81,13 @@ module BlacklightCornellRequests
         ## group id 19 - Uris
         ## group id 5  - Annex
         ## group id 14 - Law
+        ## group id 16 - Mann 
         ## Olin or Uris can't deliver to itselves and each other
         ## Annex group can deliver to itself
         ## Law group can deliver to itself
         ## Baily Hortorium CAN be delivered to Mann despite being in same group (16)
-        ## Others can't deliver to itself
+        ## Geneva should be a delivery location for Mann (why isn't it already? circ groups are different)
+        ## Others can't deliver to themselves
         case circ_group
         when 3, 19
           ## exclude both group id if Olin (181) or Uris (188)
@@ -94,6 +96,8 @@ module BlacklightCornellRequests
           records.delete 171 # Law circ
         when 5
           records.delete 151 # Annex circ
+        when 16 # Mann
+          records.delete 162 # Geneva circ
         end
 
         # Allow Bailey Hortorium (77) delivery to Mann circ (172)

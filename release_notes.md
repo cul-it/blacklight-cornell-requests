@@ -1,5 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
+## TBD
+
+- Added an exception allowing Geneva as a delivery destination for Mann materials (DISCOVERYACCESS-4345)
+
 ## v2.0.3
 - Fixed a bug that excluded the Annex as an Annex pickup location
 - Added code to handle other delivery location exceptions (Hortorium, Law, Olin/Uris) 
