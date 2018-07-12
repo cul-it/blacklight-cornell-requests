@@ -2,7 +2,9 @@
 
 ## TBD
 
+### Bug fixes
 - Added an exception allowing Geneva as a delivery destination for Mann materials (DISCOVERYACCESS-4345)
+- Enabled ILL requests for renewed items
 
 ## v2.0.3
 - Fixed a bug that excluded the Annex as an Annex pickup location
