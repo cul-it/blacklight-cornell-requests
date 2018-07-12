@@ -174,7 +174,7 @@ module BlacklightCornellRequests
       # (1) Item is at bindery
 
       return false unless self.enabled?
-
+      
       # Unfortunately, the rules governing which patron groups are eligible to use ILL
       # are not programmatically accessible. Thus, they are hard-coded here for your
       # enjoyment (based on a table provided by Joanne Leary as of 3/30/18).
@@ -185,6 +185,7 @@ module BlacklightCornellRequests
       return true if item.nocirc_loan? || noncirculating
       if item.regular_loan? || item.day_loan?
         return item.statusCode == STATUSES[:charged] ||
+               item.statusCode == STATUSES[:renewed] ||
                item.statusCode == STATUSES[:missing] ||
                item.statusCode == STATUSES[:lost]
       else
