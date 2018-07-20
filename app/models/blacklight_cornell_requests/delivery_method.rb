@@ -362,7 +362,7 @@ module BlacklightCornellRequests
 
   class MannSpecial < DeliveryMethod
 
-    TemplateName = 'mannspecial'
+    TemplateName = 'mann_special'
 
     def self.description
       'Mann Special Collections Request Form'
