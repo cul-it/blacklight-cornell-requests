@@ -1,6 +1,6 @@
 # Release Notes - blacklight-cornell-requests
 
-## TBD
+## v2.1
 
 ### New features
 - Added a delivery option for Mann Special Collections reading room (DISCOVERYACCESS-3484)
