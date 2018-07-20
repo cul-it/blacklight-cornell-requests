@@ -360,4 +360,33 @@ module BlacklightCornellRequests
     end
   end
 
+  class MannSpecial < DeliveryMethod
+
+    TemplateName = 'mannspecial'
+
+    def self.description
+      'Mann Special Collections Request Form'
+    end
+
+    def self.enabled?
+      !ENV['DISABLE_MANNSPECIAL'].present?
+    end
+
+    def self.time(options = {})
+      [1,2]
+    end
+
+    def self.available?(patron)
+      return false unless self.enabled?
+      
+      # Unfortunately, the rules governing which patron groups are eligible to use 
+      # are not programmatically accessible. Thus, they are hard-coded here for your
+      # enjoyment (based on a table provided by Joanne Leary as of 3/30/18). (Copied
+      # from ILL rules)
+      eligibile_patron_group_ids = [1,2,3,4,5,6,7,8,10,17]
+      eligibile_patron_group_ids.include? patron.group
+
+    end
+  end
+
 end
