@@ -360,4 +360,66 @@ module BlacklightCornellRequests
     end
   end
 
+  class MannSpecial < DeliveryMethod
+
+    TemplateName = 'mann_special'
+
+    def self.description
+      'Mann Special Collections Request Form'
+    end
+
+    def self.enabled?
+      !ENV['DISABLE_MANNSPECIAL'].present?
+    end
+
+    def self.time(options = {})
+      [1,2]
+    end
+
+    # For availability here, the patron rules are copied from ILL (a guess?)
+    # Item-related rules are taken from the discussion at
+    # https://culibrary.atlassian.net/browse/DISCOVERYACCESS-3484
+    def self.available?(item, patron)
+      return false unless self.enabled?
+      
+      # Unfortunately, the rules governing which patron groups are eligible to use 
+      # are not programmatically accessible. Thus, they are hard-coded here for your
+      # enjoyment (based on a table provided by Joanne Leary as of 3/30/18). (Copied
+      # from ILL rules)
+      eligibile_patron_group_ids = [1,2,3,4,5,6,7,8,10,17]
+      return false unless eligibile_patron_group_ids.include? patron.group
+
+      location = item.location['number']
+      if location == 73
+        Rails.logger.debug "mjc12test: Should be special RQ form #{}"
+        return true
+      elsif location == 77 || location == 78
+        holdings = item.holdings_data
+        does_not_circulate = false
+        special_collections = false
+        if holdings[item.holding_id]['notes'].present?
+          holdings[item.holding_id]['notes'].each do |note|
+            if note.include? 'DOES NOT CIRCULATE'
+              does_not_circulate = true
+            end
+            if note.include? 'Mann Library Special Collections'
+              special_collections = true
+            end
+          end
+        end
+        if special_collections || (location == 77 && does_not_circulate)
+          Rails.logger.debug "mjc12test: Should be special RQ form #{}"
+          return true
+        elsif item.type['id'] == 9 # nocirc
+          Rails.logger.debug "mjc12test: No request possible #{}"
+          return false
+        else
+          # Not special collections and not nocirc, so this is a Hortorium L2L item
+          Rails.logger.debug "mjc12test: hortorium L2L #{}"
+          return false
+        end
+      end
+    end
+  end
+
 end

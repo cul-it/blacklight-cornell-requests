@@ -2,7 +2,7 @@ module BlacklightCornellRequests
 
   class Work
 
-    attr_reader :bibid, :title, :author, :isbn, :pub_info, :ill_link, :scanit_link
+    attr_reader :bibid, :title, :author, :isbn, :pub_info, :ill_link, :scanit_link, :mann_special_delivery_link
 
     def initialize(bibid, solr_document)
       @bibid = bibid
@@ -12,6 +12,7 @@ module BlacklightCornellRequests
       @isbn = @doc['isbn_display']
       @pub_info = parse_pub_info(@doc)
       @ill_link = parse_ill(@doc)
+      @mann_special_delivery_link = create_mann_special_delivery_link()
       @scanit_link = create_scanit_link(@doc)
     end
 
@@ -88,6 +89,10 @@ module BlacklightCornellRequests
         scanit_link += "&rft.isbn=#{isbns}" + "&rft_id=urn%3AISBN%3A#{isbns}"
       end
       @scanit_link = scanit_link
+    end
+
+    def create_mann_special_delivery_link
+      "http://mannlib.cornell.edu/use/collections/special/registration"
     end
 
   end

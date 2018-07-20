@@ -3,7 +3,7 @@ module BlacklightCornellRequests
 
   class Item
 
-    attr_reader :id, :holding_id, :location, :type, :status, :circ_group
+    attr_reader :id, :holding_id, :holdings_data, :location, :type, :status, :circ_group
     attr_reader :copy_number, :call_number, :enum_parts, :excluded_locations
 
     # Basic initializer
@@ -15,6 +15,7 @@ module BlacklightCornellRequests
       return nil if (holding_id.nil? || item_data.nil?)
 
       @holding_id = holding_id
+      @holdings_data = holdings_data
       @id = item_data['id']
       # @location is the actual current location of the item; Solr index
       # combines the permanent location and temporary location fields so we
