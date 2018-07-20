@@ -143,6 +143,17 @@ module BlacklightCornellRequests
       # At this point, options is a hash with keys being available delivery methods
       # and values being arrays of items deliverable using the keyed method
 
+      # Make some adjustments if this is a special collections item (kind of hacky)
+      # TODO: If this item is ONLY available through Mann Special Collections request,
+      # then methods like L2L and Ask at Circ should not appear. But how to handle
+      # the case of an item that is both in special collections and regular collections
+      # somewhere else?
+      if options[MannSpecial]
+        Rails.logger.debug "mjc12test: MANN SPECIAL OPTIONS CHECK #{}"
+        options[AskCirculation] = []
+        # What about L2L?
+      end
+
       sorted_methods = DeliveryMethod.sorted_methods(options)
       fastest_method = sorted_methods[:fastest]
       @alternate_methods = sorted_methods[:alternate]
