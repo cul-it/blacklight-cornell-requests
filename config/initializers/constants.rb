@@ -13,6 +13,7 @@ module BlacklightCornellRequests
     AskLibrarian
     AskCirculation
     DocumentDelivery
+    MannSpecial
   )
   
   LOAN_TYPES = {

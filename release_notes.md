@@ -1,5 +1,14 @@
 # Release Notes - blacklight-cornell-requests
 
+## v2.1
+
+### New features
+- Added a delivery option for Mann Special Collections reading room (DISCOVERYACCESS-3484)
+
+### Bug fixes
+- Added an exception allowing Geneva as a delivery destination for Mann materials (DISCOVERYACCESS-4345)
+- Enabled ILL requests for renewed items
+
 ## v2.0.3
 - Fixed a bug that excluded the Annex as an Annex pickup location
 - Added code to handle other delivery location exceptions (Hortorium, Law, Olin/Uris) 
