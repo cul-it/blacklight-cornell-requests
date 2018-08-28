@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v2.1.1
+- Fixed a bug that allowed some on-reserve items to be requested
+
 ## v2.1
 
 ### New features
