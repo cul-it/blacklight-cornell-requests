@@ -179,8 +179,8 @@ module BlacklightCornellRequests
         available_request_methods.each do |rm|
           if rm::TemplateName == target
             @alternate_methods.unshift(fastest_method)
-            alt_array_index = @alternate_methods.index{ |am| am[:method] == rm }
-            fastest_method = {:method => rm, :items => @alternate_methods[alt_array_index]}
+            alt_array_index = @alternate_methods&.index{ |am| am[:method] == rm }
+            fastest_method = {:method => rm, :items => @alternate_methods && @alternate_methods[alt_array_index]}
             @alternate_methods.delete_if{ |am| am[:method] == fastest_method[:method] }
             break
           end
