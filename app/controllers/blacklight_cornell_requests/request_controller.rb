@@ -219,15 +219,15 @@ module BlacklightCornellRequests
     end
 
     def l2l_available?(item, policy)
-      L2L.enabled? && policy[:l2l] && item.available? && !item.noncirculating?
+      L2L.enabled? && policy && policy[:l2l] && item.available? && !item.noncirculating?
     end
 
     def hold_available?(item, policy)
-      Hold.enabled? && policy[:hold] && !item.available?
+      Hold.enabled? && policy && policy[:hold] && !item.available?
     end
 
     def recall_available?(item, policy)
-      Recall.enabled? && policy[:recall] && !item.available?
+      Recall.enabled? && policy && policy[:recall] && !item.available?
     end
 
     # Update the options hash with methods for a particular item
