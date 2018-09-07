@@ -1,7 +1,10 @@
 # Release Notes - blacklight-cornell-requests
 
 ## v2.1.1
+
+### Bug fixes
 - Fixed a bug that allowed some on-reserve items to be requested
+- Added nil method protections (DISCOVERYACCESS-4258, DISCOVERYACCESS-4496)
 
 ## v2.1
 
