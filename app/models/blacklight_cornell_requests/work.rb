@@ -45,7 +45,9 @@ module BlacklightCornellRequests
         ill_link += "&LoanTitle=#{CGI.escape(@title)}"
       end
       if solrdoc['author_addl_display'].present?
-        ill_link += "&LoanAuthor=#{solrdoc['author_addl_display']}"
+        ill_link += "&LoanAuthor=#{solrdoc['author_addl_display'][0]}"
+      else
+        ill_link += "&LoanAuthor=#{solrdoc['author_display']}"
       end
 
       # Populate the publisher data fields. This can be done
