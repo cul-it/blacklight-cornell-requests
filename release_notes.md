@@ -1,5 +1,11 @@
 # Release Notes - blacklight-cornell-requests
 
+## v2.1.1
+
+### Bug fixes
+- Made sure @ill_link was populated in request_controller.rb
+- Changed parameter names sent to ILL from item view link
+
 ## v2.1
 
 ### New features
