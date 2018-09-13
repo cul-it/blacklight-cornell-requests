@@ -27,7 +27,7 @@ module BlacklightCornellRequests
       session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
       redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
-      #magic_request target
+#      magic_request target
     end
 
     def magic_request target=''
@@ -47,7 +47,7 @@ module BlacklightCornellRequests
         end
       end
       @ti = work_metadata.title
-
+      @ill_link = work_metadata.ill_link
       # When we're entering the request system from a /catalog path, then we're starting
       # fresh — no volume should be pre-selected (or kept in the session). However,
       # if the referer is a different path — i.e., /request/*, then we *do* want to
