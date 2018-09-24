@@ -27,7 +27,7 @@ module BlacklightCornellRequests
       session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
       redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
-      #magic_request target
+#      magic_request target
     end
 
     def magic_request target=''
@@ -47,7 +47,7 @@ module BlacklightCornellRequests
         end
       end
       @ti = work_metadata.title
-
+      @ill_link = work_metadata.ill_link
       # When we're entering the request system from a /catalog path, then we're starting
       # fresh — no volume should be pre-selected (or kept in the session). However,
       # if the referer is a different path — i.e., /request/*, then we *do* want to
@@ -179,8 +179,8 @@ module BlacklightCornellRequests
         available_request_methods.each do |rm|
           if rm::TemplateName == target
             @alternate_methods.unshift(fastest_method)
-            alt_array_index = @alternate_methods.index{ |am| am[:method] == rm }
-            fastest_method = {:method => rm, :items => @alternate_methods[alt_array_index]}
+            alt_array_index = @alternate_methods&.index{ |am| am[:method] == rm }
+            fastest_method = {:method => rm, :items => @alternate_methods && @alternate_methods[alt_array_index]}
             @alternate_methods.delete_if{ |am| am[:method] == fastest_method[:method] }
             break
           end
@@ -219,15 +219,15 @@ module BlacklightCornellRequests
     end
 
     def l2l_available?(item, policy)
-      L2L.enabled? && policy[:l2l] && item.available? && !item.noncirculating?
+      L2L.enabled? && policy && policy[:l2l] && item.available? && !item.noncirculating?
     end
 
     def hold_available?(item, policy)
-      Hold.enabled? && policy[:hold] && !item.available?
+      Hold.enabled? && policy && policy[:hold] && !item.available?
     end
 
     def recall_available?(item, policy)
-      Recall.enabled? && policy[:recall] && !item.available?
+      Recall.enabled? && policy && policy[:recall] && !item.available?
     end
 
     # Update the options hash with methods for a particular item
