@@ -27,7 +27,7 @@ module BlacklightCornellRequests
       @year = item_data['year']
       @status = item_data['status']
       @circ_group = item_data['circGrp'].keys[0].to_i
-      @onReserve = item_data['onReserve']
+      @onReserve = item_data['onReserve'] || @location['code'].include?('res')
       @copy_number = item_data['copy']
       if holdings_data.present?
         @call_number = holdings_data[holding_id]['call']
