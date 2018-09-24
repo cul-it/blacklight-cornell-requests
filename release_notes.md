@@ -5,6 +5,8 @@
 ### Bug fixes
 - Fixed a bug that allowed some on-reserve items to be requested
 - Added nil method protections (DISCOVERYACCESS-4258, DISCOVERYACCESS-4496)
+- Made sure @ill_link was populated in request_controller.rb
+- Changed parameter names sent to ILL from item view link
 
 ## v2.1
 
