@@ -27,7 +27,7 @@
       = render :partial => 'shared/request_date'
       - if !@estimate.blank?
         .form-group
-          %label.control-label.col-sm-2 Delivery time:
+          .control-label.col-sm-2 Delivery time:
           .col-sm-10.delivery-estimate
             Approximately
             = delivery_estimate_display @estimate

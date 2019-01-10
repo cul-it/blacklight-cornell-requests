@@ -27,7 +27,7 @@
           %textarea(name="reqcomments" id="reqcomments" class="form-control")
       - if @estimate.present?
         .form-group
-          %label.control-label.col-sm-2 Delivery time:
+          .control-label.col-sm-2 Delivery time:
           .delivery-estimate.col-sm-10
             Approximately
             = delivery_estimate_display @estimate
