@@ -333,7 +333,6 @@ module BlacklightCornellRequests
         # req.netid = request.env['REMOTE_USER']
         # req.netid.sub! '@CORNELL.EDU', ''
         req.netid = user
-        req.netid = 'mhk33'
         # If the holding_id = 'any', then set to blank. Voyager expects an empty value for 'any copy',
         # but validation above expects a non-blank value!
         if params[:holding_id] == 'any'
