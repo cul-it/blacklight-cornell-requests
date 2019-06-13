@@ -9,14 +9,15 @@ module BlacklightCornellRequests
     # determine which Voyager delivery methods (hold, recall, callslip/L2L)
     # are allowed
     def self.policy(circ_group, patron_group, item_type)
+      Rails.logger.debug "mjc12test: cg, pg, it #{circ_group}, #{patron_group}, #{item_type}"
       return self.default_policy(circ_group, item_type) if patron_group == 0
       connection = nil
       begin
         connection = OCI8.new(ENV['ORACLE_RDONLY_PASSWORD'], ENV['ORACLE_RDONLY_PASSWORD'], "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=" + ENV['ORACLE_HOST'] + ")(PORT=1521))(CONNECT_DATA=(SID=" + ENV['ORACLE_SID'] + ")))")
         cursor = connection.parse('select place_call_slip, place_hold, place_recall from circ_policy_matrix c where c.circ_group_id=:circgroup and patron_group_id=:patrongroup and item_type_id=:itemtype')
-        cursor.bind_param('circgroup', circ_group)
-        cursor.bind_param('patrongroup', patron_group)
-        cursor.bind_param('itemtype', item_type)
+        cursor.bind_param('circgroup', circ_group, Integer)
+        cursor.bind_param('patrongroup', patron_group, Integer)
+        cursor.bind_param('itemtype', item_type, Integer)
 
         cursor.exec
         record = cursor.fetch
@@ -42,8 +43,8 @@ module BlacklightCornellRequests
       begin
         connection = OCI8.new(ENV['ORACLE_RDONLY_PASSWORD'], ENV['ORACLE_RDONLY_PASSWORD'], "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=" + ENV['ORACLE_HOST'] + ")(PORT=1521))(CONNECT_DATA=(SID=" + ENV['ORACLE_SID'] + ")))")
         cursor = connection.parse('select place_call_slip, place_hold, place_recall from circ_policy_matrix c where c.circ_group_id=:circgroup and item_type_id=:itemtype')
-        cursor.bind_param('circgroup', circ_group)
-        cursor.bind_param('itemtype', item_type)
+        cursor.bind_param('circgroup', circ_group, Integer)
+        cursor.bind_param('itemtype', item_type, Integer)
 
         cursor.exec
         record = cursor.fetch
@@ -69,7 +70,7 @@ module BlacklightCornellRequests
       begin
         connection = OCI8.new(ENV['ORACLE_RDONLY_PASSWORD'], ENV['ORACLE_RDONLY_PASSWORD'], "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=" + ENV['ORACLE_HOST'] + ")(PORT=1521))(CONNECT_DATA=(SID=" + ENV['ORACLE_SID'] + ")))")
         cursor = connection.parse('select location_id from circ_policy_locs where circ_group_id=:circgroup')
-        cursor.bind_param('circgroup', circ_group)
+        cursor.bind_param('circgroup', circ_group, Integer)
         cursor.exec
         records = []
         while r = cursor.fetch()

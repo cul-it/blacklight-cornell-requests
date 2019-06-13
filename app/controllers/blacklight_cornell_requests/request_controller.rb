@@ -27,7 +27,7 @@ module BlacklightCornellRequests
       session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
       redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
-#      magic_request target
+      #magic_request target
     end
 
     def magic_request target=''
