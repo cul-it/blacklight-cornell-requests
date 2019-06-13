@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v2.1.2
+- Fixed a 'bind type not given' error
+
 ## v2.1.1
 
 ### Bug fixes
