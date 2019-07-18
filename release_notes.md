@@ -1,5 +1,15 @@
 # Release Notes - blacklight-cornell-requests
 
+## IN PROGRESS
+- Added an easier way to switch users for debugging
+
+
+## v.2.2.0
+- Added the ability to specify callslip delivery rule exceptions in the .env file (DISCOVERYACCESS-4954)
+
+## v2.1.2
+- Fixed a 'bind type not given' error
+
 ## v2.1.1
 
 ### Bug fixes
