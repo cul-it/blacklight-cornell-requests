@@ -24,10 +24,13 @@ module BlacklightCornellRequests
     end
 
     def auth_magic_request target=''
-      session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
+      session[:cuwebauth_return_path] = magic_request_path(params[:bibid])
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
-      redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
-      #magic_request target
+      if ENV['DEBUG_USER'] && Rails.env.development?
+        magic_request target
+      else
+        redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+      end
     end
 
     def magic_request target=''
@@ -435,9 +438,15 @@ module BlacklightCornellRequests
 
 
     def user
-      netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
-      netid.sub!('@CORNELL.EDU', '') unless netid.nil?
-      netid.sub!('@cornell.edu', '') unless netid.nil?
+      netid = nil
+      if ENV['DEBUG_USER'] && Rails.env.development?
+        netid = ENV['DEBUG_USER']
+      else
+        netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
+      end
+
+      netid = netid.sub('@CORNELL.EDU', '') unless netid.nil?
+      netid = netid.sub('@cornell.edu', '') unless netid.nil?
 
       netid
     end
