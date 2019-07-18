@@ -434,7 +434,7 @@ module BlacklightCornellRequests
       session[:volume] = params[:volume]
       session[:setvol] = 1
       respond_to do |format|
-        format.js {render nothing: true}
+        format.js {render body: nil}
       end
     end
 
