@@ -13,13 +13,15 @@ module BlacklightCornellRequests
 
   class RequestController < ApplicationController
 
-    include Blacklight::Catalog # needed for "fetch", replaces "include SolrHelper"
+    # Blacklight::Catalog is needed for "fetch", replaces "include SolrHelper".
+    # As of B7, it now supplies search_service, and fetch is called as search_service.fetch
+    include Blacklight::Catalog
     include Cornell::LDAP
 
     # This may seem redundant, but it makes it easier to fetch the document from
     # various model classes
     def get_solr_doc doc_id
-      resp, document = fetch doc_id
+      resp, document = search_service.fetch doc_id
       document
     end
 
@@ -36,7 +38,7 @@ module BlacklightCornellRequests
     def magic_request target=''
 
       @id = params[:bibid]
-      resp, @document = fetch @id
+      resp, @document = search_service.fetch @id
       @document = @document
 
       work_metadata = Work.new(@id, @document)
@@ -403,7 +405,7 @@ module BlacklightCornellRequests
       if params[:library_id].blank?
         flash[:error] = "Please select a library pickup location"
       else
-        resp, document = fetch params[:bibid]
+        resp, document = search_service.fetch params[:bibid]
         isbn = document[:isbn_display]
         req = BlacklightCornellRequests::Request.new(params[:bibid])
 
