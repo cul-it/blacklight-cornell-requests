@@ -1,5 +1,7 @@
--title = the_vernaculator('title_display', 'title_vern_display')
--subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
+-title = the_vernaculator(@document['title_display'], @document['title_vern_display'])
+-subtitle = the_vernaculator(@document['subtitle_display'], @document['subtitle_vern_display'])
+
+- Rails.logger.debug "mjc12test: itemstouse - #{@items}"
 - @selected_volume = params[:volume]
 = render :partial => 'shared/back_to_item'
 %h1.request-type
@@ -9,7 +11,7 @@
     %h2.blacklight-title_display.item-title-request
       =title
     %div.request-author
-      =show_presenter(@document).field_value 'title_responsibility_display'
+      = author_display
     %form#req.l2l-request.form-horizontal{:method => 'post', :action => make_voyager_request_path({:bibid =>@id})}
       -if @volumes.present? && @volumes.count > 1
         .form-group

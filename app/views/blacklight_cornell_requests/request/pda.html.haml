@@ -1,5 +1,5 @@
--title = the_vernaculator('title_display', 'title_vern_display')
--subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
+-title = the_vernaculator(@document['title_display'], @document['title_vern_display'])
+-subtitle = the_vernaculator(@document['subtitle_display'], @document['subtitle_vern_display'])
 = render :partial => 'shared/back_to_item'
 %h2
   = "Purchase request for user: #{@netid}"
@@ -7,7 +7,7 @@
   %h3.blacklight-title_display.item-title-request
     =title
   %div.request-author
-    =show_presenter(@document).field_value 'title_responsibility_display'
+      = author_display
   .clearfix
     -if @alternate_methods && @alternate_methods.count > 1
       %a{:href => @iis[:pda][:url], :title =>'Submit Purchase Request',:class => 'btn btn-danger pull-left'}

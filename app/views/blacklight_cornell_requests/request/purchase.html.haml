@@ -1,5 +1,5 @@
--title = the_vernaculator('title_display', 'title_vern_display')
--subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
+-title = the_vernaculator(@document['title_display'], @document['title_vern_display'])
+-subtitle = the_vernaculator(@document['subtitle_display'], @document['subtitle_vern_display'])
 = render :partial => 'shared/back_to_item'
 - unless flash[:success]
   %h1.request-type Purchase Request
@@ -7,7 +7,7 @@
     %div.well
       %h2.item-title-request.blacklight-title_display=title
       %div.request-author
-        =show_presenter(@document).field_value 'title_responsibility_display'
+        = author_display
       %form#req.form-horizontal{:method => 'post', :action => blacklight_cornell_request.make_purchase_request_path}
         %input(type="hidden" name="bid" value="#{@id}" id="bid")
         %input(type="hidden" name="request_action" value="purchase" id="request_action")
