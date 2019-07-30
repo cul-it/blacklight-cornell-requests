@@ -3,8 +3,8 @@
 = render :partial => 'shared/back_to_item'
 - unless flash[:success]
   %h1.request-type Purchase Request
-  %div.row
-    %div.well
+  %div.card
+    %div.card-body
       %h2.item-title-request.blacklight-title_display=title
       %div.request-author
         = author_display

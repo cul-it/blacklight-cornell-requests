@@ -4,15 +4,15 @@
 = render :partial => 'shared/back_to_item'
 %h1.request-type
   = "Request a hold for #{@netid}"
-%div.row
-  %div.well
+%div.card
+  %div.card-body
     %h2.item-title-request.blacklight-title_display=title
     %div.request-author
       = author_display
     %form#req.form-horizontal{:method => 'post', :action => make_voyager_request_path}
       -if @volumes.present? && @volumes.count > 1
-        .form-group
-          %label.control-label.col-sm-2{:for => "volume-selection"}
+        .form-group.row
+          %label.col-form-label.col-sm-2{:for => "volume-selection"}
             Current Volume:
           .col-sm-10.delivery-estimate
             = render :partial =>'shared/volume_select'
@@ -20,19 +20,20 @@
       %input(type="hidden" name="request_action" value="hold" id="request_action")
       = render :partial => 'shared/reqac'
       = render :partial => 'shared/reqpu'
-      .form-group
-        %label.control-label.col-sm-2{:for => 'reqcomments'} Notes to library staff:
+      .form-group.row
+        %label.col-form-label.col-sm-2{:for => 'reqcomments'} Notes to library staff:
         .col-sm-10
           %textarea(name="reqcomments" id="reqcomments" class="form-control")
       = render :partial => 'shared/request_date'
       - if !@estimate.blank?
-        .form-group
-          .control-label.col-sm-2 Delivery time:
+        .form-group.row
+          .col-form-label.col-sm-2 Delivery time:
           .col-sm-10.delivery-estimate
             Approximately
             = delivery_estimate_display @estimate
       -if @alternate_methods && @alternate_methods.count > 1
-        %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit hold request")
+        %div.clearfix
+          %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit hold request")
         = render :partial => 'shared/request_options'
       -else
         %div.clearfix
