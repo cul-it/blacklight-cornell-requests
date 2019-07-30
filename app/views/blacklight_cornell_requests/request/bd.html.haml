@@ -4,42 +4,43 @@
 = render :partial => 'shared/back_to_item'
 %h2
   = "Borrow Direct Request for #{@netid}"
-%div.well
-  %h3.item-title-request.blacklight-title_display
-    =title
-    -if @iis.present?
-      -@iis.each do |copyn, copyd|
-        -if copyd[:item_enum].present?
-          = copyd[:item_enum]
+%div.card
+  %div.card-body
+    %h3.item-title-request.blacklight-title_display
+      =title
+      -if @iis.present?
+        -@iis.each do |copyn, copyd|
+          -if copyd[:item_enum].present?
+            = copyd[:item_enum]
 
-  %div.request-author
-    = author_display
+    %div.request-author
+      = author_display
 
-  - if !@estimate.blank?
-    %p
-      Delivery time:
-      = delivery_estimate_display @estimate
+    - if !@estimate.blank?
+      %p
+        Delivery time:
+        = delivery_estimate_display @estimate
 
-  - if @isbn.present?
-    %form#req.bd-request.form-horizontal{:method => 'post', :action => make_bd_request_path}
-      = render :partial => 'shared/reqpu_bd'
-      .form-group
-        %label.control-label.col-sm-2{:for => 'reqcomments'} Notes to staff:
-        .col-sm-10
-          %textarea(name="reqcomments" id="reqcomments" class="form-control")
-      %div.clearfix
-        %input#bd-request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit Borrow Direct request")
-        %span{:id => 'request-loading-spinner'}
-      %div#request-message-well
+    - if @isbn.present?
+      %form#req.bd-request{:method => 'post', :action => make_bd_request_path}
+        = render :partial => 'shared/reqpu_bd'
+        .form-group.row
+          %label.col-sm-2.col-form-label{:for => 'reqcomments'} Notes to staff:
+          .col-sm-10
+            %textarea(name="reqcomments" id="reqcomments" class="form-control")
+        %div.clearfix
+          %input#bd-request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit Borrow Direct request")
+          %span{:id => 'request-loading-spinner'}
+        %div#request-message-well
 
-  - else
-    %p To request this item, search Borrow Direct  and place a request.
-    = link_to 'Search Borrow Direct', borrowdirect_url_from_title(@ti), :class => 'btn btn-danger pull-left'
+    - else
+      %p To request this item, search Borrow Direct  and place a request.
+      = link_to 'Search Borrow Direct', borrowdirect_url_from_title(@ti), :class => 'btn btn-danger pull-left'
 
-  -if @alternate_methods && @alternate_methods.count > 1
-    = render :partial => 'shared/request_options'
-  -else
-    .form-alternative-action
-      = succeed "." do
-        If you need further help, please
-        =link_to 'Ask a Librarian','http://www.library.cornell.edu/ask'
+    -if @alternate_methods && @alternate_methods.count > 1
+      = render :partial => 'shared/request_options'
+    -else
+      .form-alternative-action
+        = succeed "." do
+          If you need further help, please
+          =link_to 'Ask a Librarian','http://www.library.cornell.edu/ask'
