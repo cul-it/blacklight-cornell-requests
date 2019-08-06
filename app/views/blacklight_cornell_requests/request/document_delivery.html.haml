@@ -1,23 +1,24 @@
 
--title = the_vernaculator('title_display', 'title_vern_display')
--subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
+-title = the_vernaculator(@document['title_display'], @document['title_vern_display'])
+-subtitle = the_vernaculator(@document['subtitle_display'], @document['subtitle_vern_display'])
 = render :partial => 'shared/back_to_item'
 %h2 ScanIt
-%div.well
-  %h3.item-title-request.blacklight-title_display=title
-  %div.request-author
-    =show_presenter(@document).field_value 'title_responsibility_display'
-  %p
-    Click the button below to go to the ScanIt form and place your request.
-  .clearfix
-    %a{:href => @scanit_link, :title =>'Submit ScanIt Request',:class => 'btn btn-danger pull-left', :target => '_blank'}
-      Go to ScanIt
-  -if @alternate_methods && @alternate_methods.count > 1
-    = render :partial => 'shared/request_options'
-  -else
-    %div.accordion-heading.request-options.pull-left.form-alternative-action
-    or
-    =link_to 'Ask a Librarian','http://www.library.cornell.edu/ask'
-    for help.
+%div.card
+  %div.card-body
+    %h3.item-title-request.blacklight-title_display=title
+    %div.request-author
+      = author_display
+    %p
+      Click the button below to go to the ScanIt form and place your request.
+    .clearfix
+      %a{:href => @scanit_link, :title =>'Submit ScanIt Request',:class => 'btn btn-danger pull-left', :target => '_blank'}
+        Go to ScanIt
+    -if @alternate_methods && @alternate_methods.count > 1
+      = render :partial => 'shared/request_options'
+    -else
+      %div.accordion-heading.request-options.pull-left.form-alternative-action
+      or
+      =link_to 'Ask a Librarian','http://www.library.cornell.edu/ask'
+      for help.
 
 

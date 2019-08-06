@@ -1,6 +1,6 @@
 - special_delivery_options = parsed_special_delivery(@fod_data)
-.form-group
-  %label.control-label.col-sm-2{:for => "pickup-locations"} Pick up at:
+.form-group.row
+  %label.col-form-label.col-sm-2{:for => "pickup-locations"} Pick up at:
   .col-sm-10
     %select#pickup-locations.form-control{:name => 'library_id'}
       %option(value='') -- Select a location --

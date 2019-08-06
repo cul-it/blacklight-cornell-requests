@@ -13,27 +13,32 @@ module BlacklightCornellRequests
 
   class RequestController < ApplicationController
 
-    include Blacklight::Catalog # needed for "fetch", replaces "include SolrHelper"
+    # Blacklight::Catalog is needed for "fetch", replaces "include SolrHelper".
+    # As of B7, it now supplies search_service, and fetch is called as search_service.fetch
+    include Blacklight::Catalog
     include Cornell::LDAP
 
     # This may seem redundant, but it makes it easier to fetch the document from
     # various model classes
     def get_solr_doc doc_id
-      resp, document = fetch doc_id
+      resp, document = search_service.fetch doc_id
       document
     end
 
     def auth_magic_request target=''
-      session[:cuwebauth_return_path] =  magic_request_path(params[:bibid])
+      session[:cuwebauth_return_path] = magic_request_path(params[:bibid])
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
-      redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
-      #magic_request target
+      if ENV['DEBUG_USER'] && Rails.env.development?
+        magic_request target
+      else
+        redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+      end
     end
 
     def magic_request target=''
 
       @id = params[:bibid]
-      resp, @document = fetch @id
+      resp, @document = search_service.fetch @id
       @document = @document
 
       work_metadata = Work.new(@id, @document)
@@ -349,6 +354,7 @@ module BlacklightCornellRequests
         if response[:failure].blank?
           # Note: the :flash=>'success' in this case is not setting the actual flash message,
           # but instead specifying a URL parameter that acts as a flag in Blacklight's show.html.erb view.
+          flash[:error] = nil # Without this, a blank 'error' flash appears beneath the success message in B7 ... for some reason
           render js: "window.location = '#{Rails.application.routes.url_helpers.solr_document_path(params[:bibid], :flash=>'success')}'"
           return
         else
@@ -400,7 +406,7 @@ module BlacklightCornellRequests
       if params[:library_id].blank?
         flash[:error] = "Please select a library pickup location"
       else
-        resp, document = fetch params[:bibid]
+        resp, document = search_service.fetch params[:bibid]
         isbn = document[:isbn_display]
         req = BlacklightCornellRequests::Request.new(params[:bibid])
 
@@ -429,15 +435,21 @@ module BlacklightCornellRequests
       session[:volume] = params[:volume]
       session[:setvol] = 1
       respond_to do |format|
-        format.js {render nothing: true}
+        format.js {render body: nil}
       end
     end
 
 
     def user
-      netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
-      netid.sub!('@CORNELL.EDU', '') unless netid.nil?
-      netid.sub!('@cornell.edu', '') unless netid.nil?
+      netid = nil
+      if ENV['DEBUG_USER'] && Rails.env.development?
+        netid = ENV['DEBUG_USER']
+      else
+        netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
+      end
+
+      netid = netid.sub('@CORNELL.EDU', '') unless netid.nil?
+      netid = netid.sub('@cornell.edu', '') unless netid.nil?
 
       netid
     end

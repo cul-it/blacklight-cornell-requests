@@ -1,8 +1,9 @@
-%div.request-message.well
-  %p
-    - if status == 'success'
-      %i.fa.fa-check
-    - else
-      %i.fa.fa-exclamation-triangle
-    %span#request-message
-      = message
+%div.request-message.card
+  %div.card-body
+    %p
+      - if status == 'success'
+        %i.fa.fa-check
+      - else
+        %i.fa.fa-exclamation-triangle
+      %span#request-message
+        = message

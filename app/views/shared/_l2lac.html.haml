@@ -3,8 +3,8 @@
 -## the difference between it and L2L?)
 - Rails.logger.debug "mjc12test: itemstouse - #{@items}"
 -if (@items.present? && @items.length > 0)
-  .form-group
-    .control-label.col-sm-2
+  .form-group.row
+    .col-form-label.col-sm-2
       -if (@items.length > 1)
         Select a copy:
       -elsif (@items.length == 1)
