@@ -1,19 +1,21 @@
--title = the_vernaculator('title_display', 'title_vern_display')
--subtitle = the_vernaculator('subtitle_display', 'subtitle_vern_display')
+-title = the_vernaculator(@document['title_display'], @document['title_vern_display'])
+-subtitle = the_vernaculator(@document['subtitle_display'], @document['subtitle_vern_display'])
+
+- Rails.logger.debug "mjc12test: itemstouse - #{@items}"
 - @selected_volume = params[:volume]
 = render :partial => 'shared/back_to_item'
 %h1.request-type
   = "Request Cornell library to library delivery for user: #{@netid}"
-%div.row
-  %div.well
+%div.card
+  %div.card-body
     %h2.blacklight-title_display.item-title-request
       =title
     %div.request-author
-      =show_presenter(@document).field_value 'title_responsibility_display'
-    %form#req.l2l-request.form-horizontal{:method => 'post', :action => make_voyager_request_path({:bibid =>@id})}
+      = author_display
+    %form#req.l2l-request{:method => 'post', :action => make_voyager_request_path({:bibid =>@id})}
       -if @volumes.present? && @volumes.count > 1
-        .form-group
-          %label.control-label.col-sm-2{:for => "volume-selection"}
+        .form-group.row
+          %label.col-form-label.col-sm-2{:for => "volume-selection"}
             Current volume:
           .delivery-estimate.col-sm-10
             = render :partial =>'shared/volume_select'
@@ -21,18 +23,19 @@
       %input(type="hidden" name="request_action" value="callslip" id="request_action")
       = render :partial => 'shared/l2lac'
       = render :partial => 'shared/reqpu'
-      .form-group
-        %label.control-label.col-sm-2{:for => 'reqcomments'} Notes to library staff:
+      .form-group.row
+        %label.col-form-label.col-sm-2{:for => 'reqcomments'} Notes to library staff:
         .col-sm-10
           %textarea(name="reqcomments" id="reqcomments" class="form-control")
       - if @estimate.present?
-        .form-group
-          .control-label.col-sm-2 Delivery time:
+        .form-group.row
+          .col-form-label.col-sm-2 Delivery time:
           .delivery-estimate.col-sm-10
             Approximately
             = delivery_estimate_display @estimate
       -if @alternate_methods && @alternate_methods.count > 1
-        %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit delivery request")
+        %div.clearfix
+          %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit delivery request")
         = render :partial => 'shared/request_options'
       -else
         %div.clearfix

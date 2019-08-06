@@ -15,14 +15,14 @@ Gem::Specification.new do |s|
 
   s.files = Dir["{app,config,db,lib}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.md"]
 
-  s.add_dependency "rails", "~> 4.0"
-  s.add_dependency 'protected_attributes'
+  s.add_dependency "rails", "~> 5.1"
+  s.add_dependency 'protected_attributes_continued'
   # s.add_dependency "jquery-rails"
   s.add_dependency 'haml', ['>= 3.0.0']
   s.add_dependency 'haml-rails'
   s.add_dependency 'httpclient'
   s.add_dependency 'net-ldap'
-  s.add_dependency 'blacklight',['>= 5.9']
+  s.add_dependency 'blacklight'
   s.add_dependency 'i18n'
   s.add_dependency 'nokogiri'
   s.add_dependency 'dotenv'

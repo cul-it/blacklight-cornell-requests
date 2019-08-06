@@ -1,6 +1,13 @@
 # Release Notes - blacklight-cornell-requests
 
-## v.2.2.0
+## v3.0
+- Updated code for Blacklight 7. This update is not backwards-compatible (due to use of the protected_attributes/protected_attributes_continued gem).
+
+## v2.2.1
+- Added an easier way to switch users for debugging
+
+
+## v2.2.0
 - Added the ability to specify callslip delivery rule exceptions in the .env file (DISCOVERYACCESS-4954)
 
 ## v2.1.2

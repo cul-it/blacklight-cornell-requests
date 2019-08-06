@@ -11,7 +11,14 @@ module BlacklightCornellRequests
   			"#{time_estimate[0]} to #{time_estimate[1]} working days"
   		end
 
-  	end
+    end
+    
+    def author_display
+      # This is supposed to use Blacklight's show_presenter, but I haven't been able to get it to work
+      # in Blacklight 7...
+      # show_presenter(@document).field_value 'title_responsibility_display'
+      @document['title_responsibility_display'] ? @document['title_responsibility_display'][0] : nil
+    end
 
     # Return an array of select list option parameters corresponding to the
     # special programs specified in params. Example:
