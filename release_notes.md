@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.0.1
+- Fixed an indentation error in the PDA request view
+
 ## v3.0
 - Updated code for Blacklight 7. This update is not backwards-compatible (due to use of the protected_attributes/protected_attributes_continued gem).
 
