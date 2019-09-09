@@ -8,7 +8,7 @@
     %h3.blacklight-title_display.item-title-request
       =title
     %div.request-author
-        = author_display
+      = author_display
     .clearfix
       -if @alternate_methods && @alternate_methods.count > 1
         %a{:href => @iis[:pda][:url], :title =>'Submit Purchase Request',:class => 'btn btn-danger pull-left'}
