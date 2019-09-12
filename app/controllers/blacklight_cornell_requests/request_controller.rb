@@ -185,8 +185,9 @@ module BlacklightCornellRequests
           if rm::TemplateName == target
             @alternate_methods.unshift(fastest_method)
             alt_array_index = @alternate_methods&.index{ |am| am[:method] == rm }
-            fastest_method = {:method => rm, :items => @alternate_methods && @alternate_methods[alt_array_index]}
+            fastest_method = {:method => rm, :items => @alternate_methods[alt_array_index][:items]} if alt_array_index.present?
             @alternate_methods.delete_if{ |am| am[:method] == fastest_method[:method] }
+            flash.now.alert = I18n.t('requests.invalidtarget', target: rm.description) if alt_array_index.nil?
             break
           end
         end
