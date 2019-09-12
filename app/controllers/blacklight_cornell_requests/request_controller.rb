@@ -349,7 +349,7 @@ module BlacklightCornellRequests
         Rails.logger.info "Response:" + response.inspect
         if !response[:error].blank?
           flash[:error] = response[:error]
-          render :partial => '/flash_msg', :layout => false
+          render :partial => '/shared/flash_msg', :layout => false
           return
         end
         if response[:failure].blank?
@@ -364,7 +364,7 @@ module BlacklightCornellRequests
         end
       end
 
-      render :partial => '/flash_msg', :layout => false
+      render :partial => '/shared/flash_msg', :layout => false
 
     end
 
@@ -398,7 +398,7 @@ module BlacklightCornellRequests
         flash[:error] = errors.join('<br/>').html_safe
       end
 
-      render :partial => '/flash_msg', :layout => false
+      render :partial => '/shared/flash_msg', :layout => false
 
     end
 
@@ -424,7 +424,7 @@ module BlacklightCornellRequests
       if status
         render :partial => 'bd_notification', :layout => false, locals: {:message => status_msg, :status => status}
       else
-        render :partial => '/flash_msg', :layout => false
+        render :partial => '/shared/flash_msg', :layout => false
       end
 
     end
