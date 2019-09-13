@@ -185,8 +185,9 @@ module BlacklightCornellRequests
           if rm::TemplateName == target
             @alternate_methods.unshift(fastest_method)
             alt_array_index = @alternate_methods&.index{ |am| am[:method] == rm }
-            fastest_method = {:method => rm, :items => @alternate_methods && @alternate_methods[alt_array_index]}
+            fastest_method = {:method => rm, :items => @alternate_methods[alt_array_index][:items]} if alt_array_index.present?
             @alternate_methods.delete_if{ |am| am[:method] == fastest_method[:method] }
+            flash.now.alert = I18n.t('requests.invalidtarget', target: rm.description) if alt_array_index.nil?
             break
           end
         end
@@ -348,7 +349,7 @@ module BlacklightCornellRequests
         Rails.logger.info "Response:" + response.inspect
         if !response[:error].blank?
           flash[:error] = response[:error]
-          render :partial => '/flash_msg', :layout => false
+          render :partial => '/shared/flash_msg', :layout => false
           return
         end
         if response[:failure].blank?
@@ -363,7 +364,7 @@ module BlacklightCornellRequests
         end
       end
 
-      render :partial => '/flash_msg', :layout => false
+      render :partial => '/shared/flash_msg', :layout => false
 
     end
 
@@ -397,7 +398,7 @@ module BlacklightCornellRequests
         flash[:error] = errors.join('<br/>').html_safe
       end
 
-      render :partial => '/flash_msg', :layout => false
+      render :partial => '/shared/flash_msg', :layout => false
 
     end
 
@@ -423,7 +424,7 @@ module BlacklightCornellRequests
       if status
         render :partial => 'bd_notification', :layout => false, locals: {:message => status_msg, :status => status}
       else
-        render :partial => '/flash_msg', :layout => false
+        render :partial => '/shared/flash_msg', :layout => false
       end
 
     end

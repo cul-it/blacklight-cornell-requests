@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.0.2
+- Fixed a bug causing an "implicit nil conversion" error when a bad target is requested (DISCOVERYACCESS-5293).
+
 ## v3.0.1
 - Fixed an indentation error in the PDA request view
 
