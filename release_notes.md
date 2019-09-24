@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.0.3
+- Changed the path of the _flash_msg partial to correspond to its new location in Blacklight 7. (DISCOVERYACCESS-5162).
+
 ## v3.0.2
 - Fixed a bug causing an "implicit nil conversion" error when a bad target is requested (DISCOVERYACCESS-5293).
 
