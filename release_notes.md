@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.0.4
+- Update Mann special delivery method to reflect new voyager location codes
+
 ## v3.0.3
 - Changed the path of the _flash_msg partial to correspond to its new location in Blacklight 7. (DISCOVERYACCESS-5162).
 
