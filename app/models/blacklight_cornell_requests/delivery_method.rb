@@ -390,7 +390,7 @@ module BlacklightCornellRequests
       return false unless eligibile_patron_group_ids.include? patron.group
 
       location = item.location['number']
-      if location == 73
+      if location == 251 || location == 252
         Rails.logger.debug "mjc12test: Should be special RQ form #{}"
         return true
       elsif location == 77 || location == 78
