@@ -138,6 +138,9 @@ module BlacklightCornellRequests
     end
 
     def self.available?(patron)
+      Rails.logger.debug "mjc12test: testing BD availability for #{patron.group}"
+      return true
+      
       # Unfortunately, the rules governing which patron groups are eligible to use BD
       # are not programmatically accessible. Thus, they are hard-coded here for your
       # enjoyment (based on a table provided by Joanne Leary as of 3/30/18). See also
@@ -179,7 +182,7 @@ module BlacklightCornellRequests
       # are not programmatically accessible. Thus, they are hard-coded here for your
       # enjoyment (based on a table provided by Joanne Leary as of 3/30/18).
       ill_patron_group_ids = [1,2,3,4,5,6,7,8,10,17]
-      return false unless ill_patron_group_ids.include? patron.group
+      #return false unless ill_patron_group_ids.include? patron.group
 
       return true if item.statusCode == STATUSES[:at_bindery]
       return true if item.nocirc_loan? || noncirculating
