@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.0.5
+- Added new Cornell Tech - Bloomberg Center to location select lists
+
 ## v3.0.4
 - Update Mann special delivery method to reflect new voyager location codes
 
