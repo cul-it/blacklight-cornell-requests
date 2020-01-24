@@ -319,7 +319,6 @@ module BlacklightCornellRequests
     end
 
     def make_voyager_request
-
       # Validate the form data
       errors = []
       if params[:holding_id].blank?
@@ -356,14 +355,13 @@ module BlacklightCornellRequests
           # Note: the :flash=>'success' in this case is not setting the actual flash message,
           # but instead specifying a URL parameter that acts as a flag in Blacklight's show.html.erb view.
           flash[:error] = nil # Without this, a blank 'error' flash appears beneath the success message in B7 ... for some reason
-          render js: "window.location = '#{Rails.application.routes.url_helpers.solr_document_path(params[:bibid], :flash=>'success')}'"
+          render js: "$('#main-flashes').hide(); window.location = '#{Rails.application.routes.url_helpers.solr_document_path(params[:bibid], :flash=>'success')}'"
           return
         else
           Rails.logger.info "Response: was failure" + response[:failure].inspect
           flash[:error] = response[:failure]
         end
       end
-
       render :partial => '/shared/flash_msg', :layout => false
 
     end
