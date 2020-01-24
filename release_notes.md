@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.0.6
+- Added extra js to ensure the window.location call doesn't display in the browser. (DISCOVERYACCESS-4225)
+
 ## v3.0.5
 - Added new Cornell Tech - Bloomberg Center to location select lists
 
