@@ -19,6 +19,7 @@
       %option{:value => "E"} Vet Circulation
       - if special_delivery_options.present?
         - special_delivery_options.each do |special_option|
-          %option{:value => special_option[:value]} #{special_option[:label]}
+          - if !special_option[:bd_value].empty?
+            %option{:value => special_option[:bd_value]} #{special_option[:label]}
 - if special_delivery_options.present?
   %p NOTE: You are eligible for one or more special program delivery options. Select one of the 'Special Program Delivery' choices from the list above.

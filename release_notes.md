@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.0.7
+- Additional logic for displaying special delivery options in the request forms.
+
 ## v3.0.6
 - Added extra js to ensure the window.location call doesn't display in the browser. (DISCOVERYACCESS-4225)
 
