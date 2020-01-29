@@ -1,3 +1,4 @@
+- special_delivery_options = parsed_special_delivery(@fod_data)
 .form-group.row
   %label.col-sm-2.col-form-label{:for => "pickup-locations"} Pick up at:
   .col-sm-10
@@ -6,7 +7,6 @@
       %option{:value => "D"} * Olin Circulation (default)
       %option{:value => "F"} Africana Circulation
       %option{:value => "G"} Annex Circulation
-      %option{:value => "XX"} Cornell Tech - Bloomberg Center
       %option{:value => "H"} Fine Arts Circulation
       %option{:value => "A"} Geneva Circulation
       %option{:value => "I"} ILR Circulation
@@ -17,3 +17,9 @@
       %option{:value => "L"} Music Circulation
       %option{:value => "M"} Ornithology Circulation
       %option{:value => "E"} Vet Circulation
+      - if special_delivery_options.present?
+        - special_delivery_options.each do |special_option|
+          - if !special_option[:bd_value].empty?
+            %option{:value => special_option[:bd_value]} #{special_option[:label]}
+- if special_delivery_options.present?
+  %p NOTE: You are eligible for one or more special program delivery options. Select one of the 'Special Program Delivery' choices from the list above.
