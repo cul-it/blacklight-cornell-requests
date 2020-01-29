@@ -31,7 +31,8 @@ module BlacklightCornellRequests
       # option, which has its own entry in the select list and shouldn't be repeated here.
       params['programs'].reject{|p| p['location_id'] == 224}.sort_by{|p| p['name']}.map do |p|
         formatted_label = "Special Program Delivery: #{p['name']}"
-        { :label => formatted_label, :value => p['location_id'] }
+        bd_value = p['bd_loc_code'].present? ? p['bd_loc_code'] : ""
+        { :label => formatted_label, :value => p['location_id'], :bd_value => bd_value }
       end
 
     end
