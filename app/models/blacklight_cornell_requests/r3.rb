@@ -22,7 +22,7 @@ module BlacklightCornellRequests
       # Items are keyed by the associated holding record
       holdings && holdings.each do |h, item_array|
         item_array.each do |i|
-          items << Item.new(h, i, holding_json)
+          items << Item.new(h, i, holding_json) if i["active"].nil? || (i["active"].present? && i["active"])
         end
       end
       items
