@@ -36,7 +36,7 @@ module BlacklightCornellRequests
     end
 
     def magic_request target=''
-
+      
       @id = params[:bibid]
       resp, @document = search_service.fetch @id
       @document = @document
@@ -48,9 +48,19 @@ module BlacklightCornellRequests
       # Items are keyed by the associated holding record
       holdings.each do |h, item_array|
         item_array.each do |i|
-          items << Item.new(h, i, JSON.parse(@document['holdings_json']))
+          items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if i["active"].nil? || (i["active"].present? && i["active"])
         end
       end
+      # This isn't likely to happen, because the Request item button should be suppressed, but if there's
+      # a work with only one item and that item is inactive, we need to redirect because the items array
+      # will be empty.
+      if items.empty? 
+        flash[:alert] = "There are no items available to request for this title."
+        redirect_to '/catalog/' + params["bibid"]
+        return
+      end
+
+
       @ti = work_metadata.title
       @ill_link = work_metadata.ill_link
       # When we're entering the request system from a /catalog path, then we're starting
