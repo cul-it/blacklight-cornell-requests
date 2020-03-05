@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.0.8
+- Updated the magic-request function to prevent inactive items from being dis[played to the user for selection. (DISCOVERYACCESS-5825)
+
 ## v3.0.7
 - Additional logic for displaying special delivery options in the request forms.
 
