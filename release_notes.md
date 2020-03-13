@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.1.0
+- Added a new .env flag (REQUEST_BYPASS_ROUTING_CHECK) to disable all L2L delivery exclusions/inclusions at once.
+
 ## v3.0.8
 - Updated the magic-request function to prevent inactive items from being displayed to the user for selection. (DISCOVERYACCESS-5825)
 
