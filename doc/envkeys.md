@@ -52,7 +52,9 @@ The service keys that work at present are:
 * `DISABLE_RECALL`
 
 ### Modifying behavior
-Library-to-library paging options can be modified by adding an especially cryptic key-value pair to the `.env` file. This has the effect of enabling or disabling delivery between specific libraries.
+Library-to-library delivery requests usually are not allowed to be made to the circ desk of the owning library (e.g., books in Olin can't be paged/L2Led to Olin Circ). There are exceptions to this rule (see below), but that's how things normally operate. If for some drastic reason one wants to disable this behavior and allow delivery to own circ desks throughout the entire library system (say, a viral epidemic shutting down normal university life altogether), this can be done by setting the `.env` flag `REQUEST_BYPASS_ROUTING_CHECK=1`. That affects *all* CUL libraries.
+
+Library-to-library paging options can be modified on a case-by-case by adding an especially cryptic key-value pair to the `.env` file. This has the effect of enabling or disabling delivery between specific libraries.
 
 For example: `REQUEST_ROUTING_EXCEPTIONS='g3:d181,d188;g14:a171'`
 

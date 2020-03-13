@@ -66,6 +66,8 @@ module BlacklightCornellRequests
     end
 
     def self.excluded_locations(circ_group, item_location)
+      return [] if ENV['REQUEST_BYPASS_ROUTING_CHECK'].present?
+      
       connection = nil
       begin
         connection = OCI8.new(ENV['ORACLE_RDONLY_PASSWORD'], ENV['ORACLE_RDONLY_PASSWORD'], "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=" + ENV['ORACLE_HOST'] + ")(PORT=1521))(CONNECT_DATA=(SID=" + ENV['ORACLE_SID'] + ")))")
@@ -107,7 +109,6 @@ module BlacklightCornellRequests
         records.delete(172) if item_location['number'] == 77
 
         records = self.check_additional_exclusions(circ_group, records)
-  
         return records
   
       rescue OCIError
