@@ -109,7 +109,6 @@ module BlacklightCornellRequests
         records.delete(172) if item_location['number'] == 77
 
         records = self.check_additional_exclusions(circ_group, records)
-        Rails.logger.debug("mjc12test: Returning records: #{records}" )
         return records
   
       rescue OCIError
