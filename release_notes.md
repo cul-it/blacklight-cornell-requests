@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.1.1
+- Removed Africana from list of delivery libraries. 
+
 ## v3.1.0
 - Added a new .env flag (REQUEST_BYPASS_ROUTING_CHECK) to disable all L2L delivery exclusions/inclusions at once.
 - Modified the list of delivery libraries presented when requesting, in response to COVID-19 service changes.
