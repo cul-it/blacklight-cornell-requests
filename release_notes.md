@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.1.2
+- Expanded Volume attr_reader to include enum, chron and year. (DISCOVERYACCESS-5887)
+
 ## v3.1.1
 - Removed Africana from list of delivery libraries. 
 
