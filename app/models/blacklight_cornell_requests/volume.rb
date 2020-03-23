@@ -2,7 +2,7 @@ module BlacklightCornellRequests
 
   class Volume
 
-    attr_reader :items  
+    attr_reader :items, :enum, :chron, :year
 
     ####### Class methods #######
 
