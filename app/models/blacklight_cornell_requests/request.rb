@@ -16,6 +16,7 @@ module BlacklightCornellRequests
     ASK_CIRCULATION = 'circ'
     ASK_LIBRARIAN = 'ask'
     LIBRARY_ANNEX = 'Library Annex'
+    MANN_SPECIAL = 'Mann Special'
     DOCUMENT_DELIVERY = 'document_delivery'
     # The doc del form can't be pre-populated as we do with the ILL form, so the URL is constant
     DOCUMENT_DELIVERY_URL = ENV['ILLIAD_URL'] + '?Action=10&Form=22'
@@ -57,7 +58,7 @@ module BlacklightCornellRequests
 
     attr_accessor :bibid, :holdings_data, :service, :document, :request_options, :alternate_options
     attr_accessor :au, :ti, :isbn, :document, :ill_link, :scanit_link, :pub_info, :netid, :estimate, :items, :volumes, :all_items, :in_borrow_direct
-    attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN, :DOCUMENT_DELIVERY
+    attr_accessor :L2L, :BD, :HOLD, :RECALL, :PURCHASE, :PDA, :ILL, :ASK_CIRCULATION, :ASK_LIBRARIAN, :DOCUMENT_DELIVERY, :MANN_SPECIAL
     attr_accessor :NOT_CHARGED, :CHARGED, :RENEWED, :OVERDUE, :RECALL_REQUEST, :HOLD_REQUEST, :ON_HOLD
     attr_accessor :IN_TRANSIT, :IN_TRANSIT_DISCHARGED, :IN_TRANSIT_ON_HOLD, :DISCHARGED, :MISSING
     attr_accessor :LOST_LIBRARY_APPLIED, :LOST_SYSTEM_APPLIED, :LOST, :CLAIMS_RETURNED, :DAMAGED

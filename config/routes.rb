@@ -17,6 +17,7 @@ BlacklightCornellRequests::Engine.routes.draw do
   get 'ask/:bibid' =>'request#ask', :as =>'request_ask'
   get 'document_delivery/:bibid/:volume' => 'request#document_delivery', :as => 'request_document_delivery_with_vol', :constraints => { :volume => /.*/ }
   get 'document_delivery/:bibid' => 'request#document_delivery', :as => 'request_document_delivery'
+  get 'mann_special/:bibid' => 'request#mann_special', :as => 'request_mann_special'
   match 'voyager/:bibid' => 'request#make_voyager_request', :as => 'make_voyager_request',  via: [:get, :post]
 
 

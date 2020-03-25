@@ -88,6 +88,14 @@
                   Purchase request
               %td
                 = delivery_estimate_display BlacklightCornellRequests::PDA.time
+          - elsif option[:method] == BlacklightCornellRequests::MannSpecial
+            %tr
+              %td
+                = link_to request_mann_special_path(@id), {:title => @ti} do
+                  %i.fa.fa-arrow-circle-right
+                  Mann Special Collections
+              %td
+                = delivery_estimate_display BlacklightCornellRequests::MannSpecial.time
 %p.form-alternative-action
   = succeed "." do
     If you need further help, please
