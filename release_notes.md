@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.1.3
+- Add Mann Special to the alternate delivery methods when the user chooses another method. (DISCOVERYACCESS-5113)
+
 ## v3.1.2
 - Expanded Volume attr_reader to include enum, chron and year. (DISCOVERYACCESS-5887)
 

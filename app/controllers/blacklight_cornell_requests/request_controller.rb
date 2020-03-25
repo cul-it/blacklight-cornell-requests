@@ -168,7 +168,6 @@ module BlacklightCornellRequests
         options[AskCirculation] = []
         # What about L2L?
       end
-
       sorted_methods = DeliveryMethod.sorted_methods(options)
       fastest_method = sorted_methods[:fastest]
       @alternate_methods = sorted_methods[:alternate]
@@ -189,7 +188,7 @@ module BlacklightCornellRequests
       # If target (i.e., a particular delivery method) is specified in the URL, then we
       # have to prefer that method above others (even if others are faster in theory).
       # This code is a bit ugly, but it swaps the fastest method with the appropriate entry
-      # in the alternate_methods array.
+      # in the alternate_methods array. 
       if target.present?
         available_request_methods.each do |rm|
           if rm::TemplateName == target
@@ -229,7 +228,6 @@ module BlacklightCornellRequests
       if @counter.blank? and session[:search].present?
         @counter = session[:search][:counter]
       end
-
       render fastest_method[:method]::TemplateName
 
     end
@@ -318,6 +316,10 @@ module BlacklightCornellRequests
 
     def document_delivery
       return magic_request Request::DOCUMENT_DELIVERY
+    end
+
+    def mann_special
+      return magic_request Request::MANN_SPECIAL
     end
 
     def blacklight_solr
