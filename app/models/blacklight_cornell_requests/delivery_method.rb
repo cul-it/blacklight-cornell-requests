@@ -187,6 +187,7 @@ module BlacklightCornellRequests
         return item.statusCode == STATUSES[:charged] ||
                item.statusCode == STATUSES[:renewed] ||
                item.statusCode == STATUSES[:missing] ||
+               item.statusCode == STATUSES[:in_transit_on_hold] ||
                item.statusCode == STATUSES[:lost]
       else
         return false

@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.1.4
+- Allow ILL requests for "in transit on hold" items. (DISCOVERYACCESS-4929)
+
 ## v3.1.3
 - Add Mann Special to the alternate delivery methods when the user chooses another method. (DISCOVERYACCESS-5113)
 
