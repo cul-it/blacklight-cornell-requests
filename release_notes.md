@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.1.5
+- Remove Geneva Circulation from the list of regular delivery locations. (DISCOVERYACCESS-5959)
+
 ## v3.1.4
 - Allow ILL requests for "in transit on hold" items. (DISCOVERYACCESS-4929)
 
