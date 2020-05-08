@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.1.6
+- Trap the RecordNotFound exceptions when there's a bad or missing bibid. (DISCOVERYACCESS-5863)
+
 ## v3.1.5
 - Remove Geneva Circulation from the list of regular delivery locations. (DISCOVERYACCESS-5959)
 
