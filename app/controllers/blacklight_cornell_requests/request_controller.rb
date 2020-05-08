@@ -38,7 +38,15 @@ module BlacklightCornellRequests
     def magic_request target=''
       
       @id = params[:bibid]
-      resp, @document = search_service.fetch @id
+      # added rescue for DISCOVERYACCESS-5863
+      begin
+        resp, @document = search_service.fetch @id
+      rescue Blacklight::Exceptions::RecordNotFound => e
+        Rails.logger.debug("******* " + e.inspect)
+        flash[:notice] = I18n.t('blacklight.search.errors.invalid_solr_id')
+        redirect_to '/catalog'
+        return
+      end
       @document = @document
 
       work_metadata = Work.new(@id, @document)
