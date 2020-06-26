@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.1.7
+- Modified the list of delivery libraries presented when requesting, in response to COVID-19 pickup location changes.
+
 ## v3.1.6
 - Trap the RecordNotFound exceptions when there's a bad or missing bibid. (DISCOVERYACCESS-5863)
 

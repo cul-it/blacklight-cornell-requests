@@ -5,22 +5,24 @@
     %select#pickup-locations.form-control{:name => 'library_id'}
       %option(value='') -- Select a location --
       -# %option{:value => "149", 'data-bd-code': 'F'} Africana Circulation
-      %option{:value => "151", 'data-bd-code': 'G'} Annex Circulation
+      %option{:value => "157"} Annex Garage Entrance
+      %option{:value => "151", 'data-bd-code': 'G'} Annex Main Entrance
       -# %option{:value => '224'} Faculty Department Office
       -# %option{:value => "160", 'data-bd-code': 'H'} Fine Arts Circulation
       -# %option{:value => "162", 'data-bd-code': 'A'} Geneva Circulation
       -# %option{:value => "167", 'data-bd-code': 'I'} ILR Circulation
       -# %option{:value => "171", 'data-bd-code': 'B'} Law Circulation
       -# %option{:value => "241", 'data-bd-code': 'K'} Management Circulation
-      %option{:value => "172", 'data-bd-code': 'C'} Mann Circulation
+      %option{:value => "159"} Mann Curbside
+      %option{:value => "172", 'data-bd-code': 'C'} Mann Lobby
       -# %option{:value => "176", 'data-bd-code': 'J'} Math Circulation
       -# %option{:value => "179", 'data-bd-code': 'L'} Music Circulation
-      %option{:value => "181", 'data-bd-code': 'D'} Olin Circulation
+      -# %option{:value => "181", 'data-bd-code': 'D'} Olin Circulation
       -# %option{:value => "219", 'data-bd-code': 'M'} Ornithology Circulation
       - if special_delivery_options.present?
         - special_delivery_options.each do |special_option|
           -# %option{:value => special_option[:value], 'data-bd-code': special_option[:bd_value]} #{special_option[:label]}
-      -# %option{:value => "188"} Uris Circulation
+      %option{:value => "188"} Uris Clock Tower
       -# %option{:value => "189", 'data-bd-code': 'E'} Vet Circulation
 - if special_delivery_options.present?
   -# %p NOTE: You are eligible for one or more special program delivery options. Select one of the 'Special Program Delivery' choices from the list above.
