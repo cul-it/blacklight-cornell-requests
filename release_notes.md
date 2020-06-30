@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.1.8
+- Temporarily ensure that the five valid COVID-19 pickup locations all display.
+
 ## v3.1.7
 - Modified the list of delivery libraries presented when requesting, in response to COVID-19 pickup location changes.
 
