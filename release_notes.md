@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.1.9
+- Annex Main Entrance becomes Annex Curbside at literally the last minute.
+
 ## v3.1.8
 - Temporarily ensure that the five valid COVID-19 pickup locations all display.
 
