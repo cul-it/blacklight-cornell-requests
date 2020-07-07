@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.2.0
+- Some requests are pulling copies from libraries that are currently invalid due to Covid-19. Can only request from 1 of the 5 valid libraries.
+
 ## v3.1.9
 - Annex Main Entrance becomes Annex Curbside at literally the last minute.
 
