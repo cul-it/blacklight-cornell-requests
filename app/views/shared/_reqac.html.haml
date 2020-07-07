@@ -31,9 +31,31 @@
               %span.copy-chron.label
                 = copyd[:chron]
 -else
-  .form-group.row
-    .col-sm-10.offset-sm-2
-      .radio
-        %label{ :for => "copy-any"}
-          %input(id="copy-any" class="copy-select" type="radio" name="holding_id" value="any" data-exclude-location="[]" checked)
-          Any Copy
+  -## Commenting these out for now due to Covid-19 requirements. Can't have an item in an unrequestable
+  -## library getting requested. So treating them like l2lac for now.
+  -#.form-group.row
+  -#  .col-sm-10.offset-sm-2
+  -#    .radio
+  -#      %label{ :for => "copy-any"}
+  -#        %input(id="copy-any" class="copy-select" type="radio" name="holding_id" value="any" data-exclude-location="[]" checked)
+  -#        Any Copy
+  -if (@items.present? && @items.length > 0)
+    .form-group.row
+      .col-form-label.col-sm-2
+        -if (@items.length > 1)
+          Select a copy:
+        -elsif (@items.length == 1)
+          This copy:
+      .col-sm-10
+        -@items.each do |i|
+          .radio
+            %label{ :for => "copy-#{i.id}"}
+              -if (@items.length == 1)
+                %input(id="copy-#{i.id}" class="copy-select" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="#{i.excluded_locations}" checked)
+              -else
+                %input(id="copy-#{i.id}" class="copy-select" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="#{i.excluded_locations}")
+              = "#{i.location['name']} #{i.enumeration} "
+              - if i.copy_number
+                = "c. #{i.copy_number} "
+              %span.copy-callnumber
+                = " - #{i.call_number}"
