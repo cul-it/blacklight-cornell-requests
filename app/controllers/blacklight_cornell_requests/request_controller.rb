@@ -3,6 +3,7 @@ require_dependency "blacklight_cornell_requests/application_controller"
 module BlacklightCornellRequests
 
   class RequestDatabaseException < StandardError
+    # :requestable_libraries is a temporary, Covid-19 variable
     attr_reader :data
 
     def initialize(data)
@@ -12,7 +13,6 @@ module BlacklightCornellRequests
   end
 
   class RequestController < ApplicationController
-
     # Blacklight::Catalog is needed for "fetch", replaces "include SolrHelper".
     # As of B7, it now supplies search_service, and fetch is called as search_service.fetch
     include Blacklight::Catalog
@@ -50,13 +50,16 @@ module BlacklightCornellRequests
       @document = @document
 
       work_metadata = Work.new(@id, @document)
+      # Temporary Covid-19 work around: patrons can only make delivery requests from 5 libraries, use
+      # this string to prevent other locations from appearing in the items array.
+      requestable_libraries = "Library Annex, Mann Library, Olin Library, Kroch Library Asia, Uris Library"
       # Create an array of all the item records associated with the bibid
       items = []
       holdings = JSON.parse(@document['items_json'] || '{}')
       # Items are keyed by the associated holding record
       holdings.each do |h, item_array|
         item_array.each do |i|
-          items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if i["active"].nil? || (i["active"].present? && i["active"])
+          items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || (i["active"].present? && i["active"])) && (i['location']['library'].present? && requestable_libraries.include?(i['location']['library']))
         end
       end
       # This isn't likely to happen, because the Request item button should be suppressed, but if there's
@@ -123,7 +126,6 @@ module BlacklightCornellRequests
       available_request_methods = DeliveryMethod.enabled_methods
       requester = Patron.new(user)
       borrow_direct = CULBorrowDirect.new(requester, work_metadata)
-
       # We have the following delivery methods to evaluate (at most) for each item:
       # L2L, BD, ILL, Hold, Recall, Patron-driven acquisition, Purchase request
       # ScanIt, Ask a librarian, ask at circ desk
@@ -179,7 +181,6 @@ module BlacklightCornellRequests
       sorted_methods = DeliveryMethod.sorted_methods(options)
       fastest_method = sorted_methods[:fastest]
       @alternate_methods = sorted_methods[:alternate]
-
       # Add PDA if appropriate
       pda_data = PDA.pda_data(@document)
       if pda_data.present?
