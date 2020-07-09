@@ -1,4 +1,4 @@
-class ChangeCircPolicyGroup < ActiveRecord::Migration
+class ChangeCircPolicyGroup < ActiveRecord::Migration[5.2]
   def change
     av = BlacklightCornellRequests::Circ_policy_locs.where(:LOCATION_ID => 216).first
     if !av.nil? 
