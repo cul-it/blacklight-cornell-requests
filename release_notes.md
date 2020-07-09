@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.2.1
+- Add version number ([5.2]) to migration files.
+
 ## v3.2.0
 - Some requests are pulling copies from libraries that are currently invalid due to Covid-19. Can only request from 1 of the 5 valid libraries.
 
