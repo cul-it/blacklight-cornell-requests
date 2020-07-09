@@ -1,4 +1,4 @@
-class CondCreateBlacklightCornellRequestsCircPolicyLocs < ActiveRecord::Migration
+class CondCreateBlacklightCornellRequestsCircPolicyLocs < ActiveRecord::Migration[5.2]
 # the attributes in the model are defined in upper case so these must be upper case.
   def up 
     if !ActiveRecord::Base.connection.table_exists? :blacklight_cornell_requests_circ_policy_locs 
