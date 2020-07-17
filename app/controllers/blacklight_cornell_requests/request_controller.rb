@@ -3,7 +3,6 @@ require_dependency "blacklight_cornell_requests/application_controller"
 module BlacklightCornellRequests
 
   class RequestDatabaseException < StandardError
-    # :requestable_libraries is a temporary, Covid-19 variable
     attr_reader :data
 
     def initialize(data)
@@ -52,14 +51,21 @@ module BlacklightCornellRequests
       work_metadata = Work.new(@id, @document)
       # Temporary Covid-19 work around: patrons can only make delivery requests from 5 libraries, use
       # this string to prevent other locations from appearing in the items array.
-      requestable_libraries = "Library Annex, Mann Library, Olin Library, Kroch Library Asia, Uris Library"
+      requestable_libraries = "Library Annex, Mann Library, Olin Library, Kroch Library Asia, Uris Library, ILR Library"
       # Create an array of all the item records associated with the bibid
       items = []
-      holdings = JSON.parse(@document['items_json'] || '{}')
-      # Items are keyed by the associated holding record
-      holdings.each do |h, item_array|
-        item_array.each do |i|
-          items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || (i["active"].present? && i["active"])) && (i['location']['library'].present? && requestable_libraries.include?(i['location']['library']))
+
+      # Somehow a user was able to request an ETAS work though no request button appears in the UI
+      # for that work -- hacked the URL perhaps. So adding a check to see if the document includes
+      # the etas_facet. If it does, bypass everything. This is a temporary Covid-19 change. Note:
+      # customized the alert for this situation in the items.empty? block below.
+      if @document['etas_facet'].nil? || @document['etas_facet'].empty?
+        holdings = JSON.parse(@document['items_json'] || '{}')
+        # Items are keyed by the associated holding record
+        holdings.each do |h, item_array|
+          item_array.each do |i|
+            items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || (i["active"].present? && i["active"])) && (i['location']['library'].present? && requestable_libraries.include?(i['location']['library']))
+          end
         end
       end
       # This isn't likely to happen, because the Request item button should be suppressed, but if there's
@@ -67,6 +73,7 @@ module BlacklightCornellRequests
       # will be empty.
       if items.empty? 
         flash[:alert] = "There are no items available to request for this title."
+        flash[:alert] = "This title may not be requested because it is available online." if @document['etas_facet'].present?
         redirect_to '/catalog/' + params["bibid"]
         return
       end
