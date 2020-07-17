@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.2.2
+- Add ILR Library to the list of valid, "requestable" libraries.
+
 ## v3.2.1
 - Add version number ([5.2]) to migration files.
 
