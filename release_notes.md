@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.2.3
+- Add the Music Library to the list of valid, "requestable" libraries.
+
 ## v3.2.2
 - Add ILR Library to the list of valid, "requestable" libraries.
 
