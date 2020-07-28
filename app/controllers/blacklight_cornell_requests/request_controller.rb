@@ -47,11 +47,10 @@ module BlacklightCornellRequests
         return
       end
       @document = @document
-
       work_metadata = Work.new(@id, @document)
       # Temporary Covid-19 work around: patrons can only make delivery requests from 5 libraries, use
       # this string to prevent other locations from appearing in the items array.
-      requestable_libraries = "Library Annex, Mann Library, Olin Library, Kroch Library Asia, Uris Library, ILR Library"
+      requestable_libraries = "Library Annex, Mann Library, Olin Library, Kroch Library Asia, Uris Library, ILR Library, Music Library"
       # Create an array of all the item records associated with the bibid
       items = []
 
@@ -67,13 +66,16 @@ module BlacklightCornellRequests
             items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || (i["active"].present? && i["active"])) && (i['location']['library'].present? && requestable_libraries.include?(i['location']['library']))
           end
         end
+      else
+        flash[:alert] = "This title may not be requested because it is available online." if @document['etas_facet'].present?
+        redirect_to '/catalog/' + params["bibid"]
+        return        
       end
       # This isn't likely to happen, because the Request item button should be suppressed, but if there's
       # a work with only one item and that item is inactive, we need to redirect because the items array
       # will be empty.
-      if items.empty? 
+      if @document['items_json'].present? && eval(@document['items_json']).size == 1 && items.empty?
         flash[:alert] = "There are no items available to request for this title."
-        flash[:alert] = "This title may not be requested because it is available online." if @document['etas_facet'].present?
         redirect_to '/catalog/' + params["bibid"]
         return
       end
