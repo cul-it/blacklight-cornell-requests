@@ -50,7 +50,7 @@ module BlacklightCornellRequests
       work_metadata = Work.new(@id, @document)
       # Temporary Covid-19 work around: patrons can only make delivery requests from 5 libraries, use
       # this string to prevent other locations from appearing in the items array.
-      requestable_libraries = "Library Annex, Mann Library, Olin Library, Kroch Library Asia, Uris Library, ILR Library, Music Library"
+      requestable_libraries = "Library Annex, Mann Library, Olin Library, Kroch Library Asia, Uris Library, ILR Library, Music Library, Africana Library"
       # Create an array of all the item records associated with the bibid
       items = []
 
