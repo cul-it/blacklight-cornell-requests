@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.2.5
+- Add the Fine Arts Library to the list of valid, "requestable" libraries.
+
 ## v3.2.4
 - Add the Africana Library to the list of valid, "requestable" libraries.
 
