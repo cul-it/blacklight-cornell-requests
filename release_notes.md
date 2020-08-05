@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.2.6
+- Restore special delivery options on the request form.
+
 ## v3.2.5
 - Add the Fine Arts Library to the list of valid, "requestable" libraries.
 
