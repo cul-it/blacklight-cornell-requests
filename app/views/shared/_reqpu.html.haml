@@ -19,8 +19,8 @@
       -# %option{:value => "219", 'data-bd-code': 'M'} Ornithology Circulation
       - if special_delivery_options.present?
         - special_delivery_options.each do |special_option|
-          -# %option{:value => special_option[:value], 'data-bd-code': special_option[:bd_value]} #{special_option[:label]}
+          %option{:value => special_option[:value], 'data-bd-code': special_option[:bd_value]} #{special_option[:label]}
       %option{:value => "188"} Uris Clock Tower
       -# %option{:value => "189", 'data-bd-code': 'E'} Vet Circulation
 - if special_delivery_options.present?
-  -# %p NOTE: You are eligible for one or more special program delivery options. Select one of the 'Special Program Delivery' choices from the list above.
+  %p NOTE: You are eligible for one or more special program delivery options. Select one of the 'Special Program Delivery' choices from the list above.
