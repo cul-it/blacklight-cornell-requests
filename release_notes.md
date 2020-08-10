@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.2.7
+- Add the Vet Library to the list of valid, "requestable" libraries, and make it a pickup location.
+
 ## v3.2.6
 - Restore special delivery options on the request form.
 

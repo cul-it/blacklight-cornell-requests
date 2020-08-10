@@ -102,7 +102,7 @@ requests =
   suppressPickup: (excludedPickups, selectedPickup) ->
     $.each excludedPickups, (i, location_id) ->
       # temporary Covid-19 hack for limited pickup locations. We do not want any of these 5 getting removed from the select
-      if location_id != 172 and location_id != 159 and location_id != 188 and location_id != 151 and location_id != 157 and location_id != 149
+      if location_id != 172 and location_id != 159 and location_id != 188 and location_id != 151 and location_id != 189 and location_id != 157 and location_id != 149
         console.log(location_id)
         targetedPickup = '#pickup-locations option[value="' + location_id + '"]'
         $(targetedPickup).remove()
