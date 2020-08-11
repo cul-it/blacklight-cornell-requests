@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.2.8
+- The Veterinary Library must be a special delivery option and not a standard pickup location.
+
 ## v3.2.7
 - Add the Vet Library to the list of valid, "requestable" libraries, and make it a pickup location.
 
