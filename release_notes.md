@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.3.0
+- Add the Mathematics Library to the list of valid, "requestable" libraries.
+
 ## v3.2.9
 - Add the Law Library to the list of valid, "requestable" libraries, and make it a pickup location.
 
