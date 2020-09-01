@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.3.1
+- Update pickup locations for BD requests.
+
 ## v3.3.0
 - Add the Mathematics Library to the list of valid, "requestable" libraries.
 
