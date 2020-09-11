@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.3.2
+- Add Uris to the list of pickup locations for BD requests, and change BD time estimate to 7 days.
+
 ## v3.3.1
 - Update pickup locations for BD requests.
 

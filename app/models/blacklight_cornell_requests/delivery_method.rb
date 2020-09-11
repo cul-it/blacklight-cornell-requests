@@ -134,7 +134,9 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      [3,5]
+      # temporary covid change
+      # [3,5]
+      [7, 7]
     end
 
     def self.available?(patron)
