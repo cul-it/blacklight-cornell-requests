@@ -28,7 +28,8 @@
                 = link_to request_bd_path(@id), {:title => @ti} do
                   %i.fa.fa-arrow-circle-right
                   Borrow Direct
-              %td
+              %td 
+                approximately 
                 = delivery_estimate_display BlacklightCornellRequests::BD.time
           - elsif option[:method] == BlacklightCornellRequests::Hold
             %tr
