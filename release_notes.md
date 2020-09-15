@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.3.3
+- Fix width of Recall template so it spans the full width of the layout.
+
 ## v3.3.2
 - Add Uris to the list of pickup locations for BD requests, and change BD time estimate to 7 days.
 
