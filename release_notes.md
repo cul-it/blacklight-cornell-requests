@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.3.4
+- Add link to library hours page and extend l2l delivery time. (DISCOVERYACCESS-6364)
+
 ## v3.3.3
 - Fix width of Recall template so it spans the full width of the layout.
 
