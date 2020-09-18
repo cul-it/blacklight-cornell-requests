@@ -113,7 +113,9 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      options[:annex] ? [1, 2] : [2, 2]
+      # temporary covid change
+      # options[:annex] ? [1, 2] : [2, 2]
+      [2, 4]
     end
 
     def self.available?(item, patron)
