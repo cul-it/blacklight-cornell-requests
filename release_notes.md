@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.3.5
+- When an item can be scanned, display additional text on the Ask a librarian page.  (DISCOVERYACCESS-6312)
+
 ## v3.3.4
 - Add link to library hours page and extend l2l delivery time. (DISCOVERYACCESS-6364)
 
