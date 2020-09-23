@@ -47,6 +47,7 @@ module BlacklightCornellRequests
         return
       end
       @document = @document
+      @scan = params[:scan].present? ? params[:scan] : ""
       work_metadata = Work.new(@id, @document)
       # Temporary Covid-19 work around: patrons can only make delivery requests from 5 libraries, use
       # this string to prevent other locations from appearing in the items array.
