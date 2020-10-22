@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.3.6
+- Modified the text of the Law School pickup location.
+
 ## v3.3.5
 - When an item can be scanned, display additional text on the Ask a librarian page.  (DISCOVERYACCESS-6312)
 
