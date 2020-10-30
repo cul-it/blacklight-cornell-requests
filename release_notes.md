@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.3.7
+- Add the "Mail this item to me" special delivery location and prevent looping back through code on HEAD request.
+
 ## v3.3.6
 - Modified the text of the Law School pickup location.
 

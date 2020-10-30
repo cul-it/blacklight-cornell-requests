@@ -26,6 +26,9 @@ module BlacklightCornellRequests
 
     def auth_magic_request target=''
       session[:cuwebauth_return_path] = magic_request_path(params[:bibid])
+      if request.headers["REQUEST_METHOD"] == "HEAD"
+        return
+      end
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
       if ENV['DEBUG_USER'] && Rails.env.development?
         magic_request target
