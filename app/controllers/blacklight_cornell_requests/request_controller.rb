@@ -26,6 +26,7 @@ module BlacklightCornellRequests
 
     def auth_magic_request target=''
       session[:cuwebauth_return_path] = magic_request_path(params[:bibid])
+      Rails.logger.info("**************************** return path (1) = " + session[:cuwebauth_return_path].inspect)
       if request.headers["REQUEST_METHOD"] == "HEAD"
         return
       end
@@ -33,6 +34,7 @@ module BlacklightCornellRequests
       if ENV['DEBUG_USER'] && Rails.env.development?
         magic_request target
       else
+        Rails.logger.info("**************************** return path (2) = " + session[:cuwebauth_return_path].inspect)
         redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
       end
     end
