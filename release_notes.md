@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.3.9
+- Modified the text of the Annex pickup location.
+
 ## v3.3.8
 - Prevent looping back through code on HEAD request.
 
