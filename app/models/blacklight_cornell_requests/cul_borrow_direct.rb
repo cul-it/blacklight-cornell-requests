@@ -1,5 +1,8 @@
 require 'dotenv'
 require 'borrow_direct'
+require 'net/http'
+require 'uri'
+require 'json'
 
 module BlacklightCornellRequests
 
@@ -7,12 +10,30 @@ module BlacklightCornellRequests
 
     attr_reader :mode, :patron, :work, :available
 
+    ######## Constants for updated API calls ########
+    TEST = {
+      :base_url => 'https://bdtest.relais-host.com',
+      :api_key => ENV['BORROW_DIRECT_TEST_API_KEY']
+    }
+    PROD = {
+      :base_url => 'https://borrow-direct.relais-host.com',
+      :api_key => ENV['BORROW_DIRECT_PROD_API_KEY']
+    }
+    # Values shared by both test and production environments
+    COMMON = {
+      :symbol => 'CORNELL',
+      :group => 'PATRON',
+      :partnership => 'BD'
+    }
+    #################################################
+
     # patron should be a Patron instance
     # work = { :isbn, :title }
     # ISBN is best, but title will work if ISBN isn't available.
     def initialize(patron, work)
       @patron = patron
       @work = work
+      @credentials = nil
 
       # Set parameters for the Borrow Direct API
       BorrowDirect::Defaults.library_symbol = 'CORNELL'
@@ -24,6 +45,9 @@ module BlacklightCornellRequests
       # PRODUCTION - use default production URL
       # any other URL beginning with http - use that
       set_mode ENV['BORROW_DIRECT_URL']
+
+      # AID is the AuthenticationId needed to use the Borrow Direct APIs
+      @aid = authenticate
 
       @available = available_in_bd?
     end
@@ -37,10 +61,12 @@ module BlacklightCornellRequests
       case mode
       when 'TEST'
         api_base = BorrowDirect::Defaults::TEST_API_BASE
+        @credentials = TEST
       when 'PRODUCTION'
         api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
         BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
         @mode = 'PRODUCTION'
+        @credentials = PROD
       when /^http/
         # It's possible for the mode to be something other than 'test' or
         # 'production' (since it usually comes from the ENV settings). When
@@ -52,56 +78,124 @@ module BlacklightCornellRequests
       else
         # Assume we're using test
         api_base = BorrowDirect::Defaults::TEST_API_BASE
+        @credentials = TEST
       end
 
       BorrowDirect::Defaults.api_base = api_base
     end
 
+    # (new APIs)
+    # Use the authentication API to get an 'AID' token needed for other API calls
+    # returns the AID, or nil if there is an error
+    def authenticate
+      uri = URI.parse("#{@credentials[:base_url]}/portal-service/user/authentication")
+      body = {
+        "LibrarySymbol" => COMMON[:symbol],
+        'UserGroup' => COMMON[:group],
+        'PartnershipId'=> COMMON[:partnership],
+        'ApiKey' => @credentials[:api_key],
+        'PatronId' => @patron.barcode
+      }
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+
+      request = Net::HTTP::Post.new(uri.path, {'Content-Type' => 'application/json' })
+      request.body = body.to_json
+      response = http.request(request)
+      Rails.logger.debug("mjc12test: authn response: #{response.code} #{response.body}")
+
+      if (response.code.to_i == 200)
+        return JSON.parse(response.body)['AuthorizationId']
+      else
+        Rails.logger.warn("Warning: Requests unable to obtain AuthorizationId from Borrow Direct (response: #{response.code} #{response.body}")
+        return nil
+      end
+    end
+
     # Determine Borrow Direct availability for an ISBN or title
     def available_in_bd?
-
       # Don't bother if BD has been disabled in .env
       return false if ENV['DISABLE_BORROW_DIRECT'].present?
       # Or if the user isn't eligible
       return false unless BD.available?(@patron)
 
-      set_mode(ENV['BORROW_DIRECT_URL']) unless @mode.present?
-
-      Rails.cache.fetch("bd-availability-#{@work.bibid}", :expires_in => 5.minutes) do
+      ######## Code for updated API calls ########
+  #    Rails.cache.fetch("bd-availability-#{@work.bibid}", :expires_in => 5.minutes) do
         response = nil
         Rails.logger.debug "mjc12test: DOING A FRESH BD CALL #{@work.title}, #{@work.isbn}"
-        # This block can throw timeout errors if BD takes to long to respond
-        begin
-          if @work.isbn.present?
-            # Note: [*<variable>] gives us an array if we don't already have one,
-            # which we need for the map.
-            response = BorrowDirect::FindItem.new.find(:isbn => ([*@work.isbn].map!{|i| i = i.clean_isbn}))
-          elsif @work.title.present?
-            response = BorrowDirect::FindItem.new.find(:phrase => @work.title)
-          end
 
-          return response.requestable?
-
-        rescue Errno::ECONNREFUSED => e
-          #  ExceptionNotifier.notify_exception(e)
-          Rails.logger.warn 'Requests: Borrow Direct connection was refused'
-          Rails.logger.warn e.message
-          Rails.logger.warn e.backtrace.inspect
-          return false
-        rescue BorrowDirect::HttpTimeoutError => e
-          Rails.logger.warn 'Requests: Borrow Direct check timed out'
-          Rails.logger.warn e.message
-          Rails.logger.warn e.backtrace.inspect
-          return false
-        rescue BorrowDirect::Error => e
-          Rails.logger.warn 'Requests: Borrow Direct gave error.'
-          Rails.logger.warn e.message
-          Rails.logger.warn e.backtrace.inspect
-          Rails.logger.warn response.inspect
-          return false
+        # Get the ISBNs or work title to use as search parameters
+        # TODO: The new APIs use a more flexible CQL query structure that might let us
+        # incorporate multiple metadata components into a single search. Something to consider.
+        query_param = ''
+        if @work.isbn.present?
+          # Note: [*<variable>] gives us an array if we don't already have one,
+          # which we need for the map.
+          isbns = ([*@work.isbn].map!{|i| i = i.clean_isbn})
+          query_param = 'isbn=' + isbns.join(' or isbn=')
+        elsif @work.title.present?
+          query_param = @work.title
         end
 
-      end
+        # Use the Find Item API to determine availability. This API returns results asynchronously,
+        # with additional results being updated each time we query the same URL. Unfortunately, we
+        # have to keep querying the API until the entire result set is complete, then parse it ourselves
+        # to determine whether an item is available locally.
+        uri = URI.parse("#{@credentials[:base_url]}/di/search?query=#{query_param}&aid=#{@aid}")
+
+        response = Net::HTTP.get_response(uri)
+
+        if (response.code.to_i == 200)
+          return JSON.parse(response.body)['TotalItemCount'] > 0
+        elsif (response.code.to_i == 404)
+          # This indicates "no result"
+          return false
+        else
+          Rails.logger.warn("Warning: Requests unable to complete an item search in Borrow Direct (response: #{response.code} #{response.body}")
+          return false
+        end
+     # end
+      ############################################
+
+      # old code follows
+
+      # set_mode(ENV['BORROW_DIRECT_URL']) unless @mode.present?
+
+      # Rails.cache.fetch("bd-availability-#{@work.bibid}", :expires_in => 5.minutes) do
+      #   response = nil
+      #   Rails.logger.debug "mjc12test: DOING A FRESH BD CALL #{@work.title}, #{@work.isbn}"
+      #   # This block can throw timeout errors if BD takes to long to respond
+      #   begin
+      #     if @work.isbn.present?
+      #       # Note: [*<variable>] gives us an array if we don't already have one,
+      #       # which we need for the map.
+      #       response = BorrowDirect::FindItem.new.find(:isbn => ([*@work.isbn].map!{|i| i = i.clean_isbn}))
+      #     elsif @work.title.present?
+      #       response = BorrowDirect::FindItem.new.find(:phrase => @work.title)
+      #     end
+
+      #     return response.requestable?
+
+      #   rescue Errno::ECONNREFUSED => e
+      #     #  ExceptionNotifier.notify_exception(e)
+      #     Rails.logger.warn 'Requests: Borrow Direct connection was refused'
+      #     Rails.logger.warn e.message
+      #     Rails.logger.warn e.backtrace.inspect
+      #     return false
+      #   rescue BorrowDirect::HttpTimeoutError => e
+      #     Rails.logger.warn 'Requests: Borrow Direct check timed out'
+      #     Rails.logger.warn e.message
+      #     Rails.logger.warn e.backtrace.inspect
+      #     return false
+      #   rescue BorrowDirect::Error => e
+      #     Rails.logger.warn 'Requests: Borrow Direct gave error.'
+      #     Rails.logger.warn e.message
+      #     Rails.logger.warn e.backtrace.inspect
+      #     Rails.logger.warn response.inspect
+      #     return false
+      #   end
+
+      # end
     end
 
     # Place an item request through the Borrow Direct API
