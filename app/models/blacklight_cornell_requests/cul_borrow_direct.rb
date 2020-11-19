@@ -212,10 +212,10 @@ module BlacklightCornellRequests
             query_pending = false
             return false
           end
-
-          # At this point, we should have all the records from the search
-          return json_response['Record'][0]['Item']
         end
+
+        # At this point, we should have all the records from the search
+        return json_response['Record'][0]['Item']
     end
 
     # Given an array of record items returned from the BD search API, determine whether
