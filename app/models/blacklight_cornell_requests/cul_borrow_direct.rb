@@ -193,11 +193,11 @@ module BlacklightCornellRequests
         # to determine whether an item is available locally.
         uri = URI.parse("#{@credentials[:base_url]}/di/search?query=#{query}&aid=#{@aid}")
         query_pending = true
+        json_response = {}
 
         while query_pending
           response = Net::HTTP.get_response(uri)
           num_searches += 1
-          json_response = {}
           if (response.code.to_i == 200)
             # The ActiveCatalog parameter in the response indicates how many BD catalogs are being
             # actively searched. When the search is complete, this number should be 0.
