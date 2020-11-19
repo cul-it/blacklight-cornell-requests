@@ -136,7 +136,7 @@ module BlacklightCornellRequests
           isbns = ([*@work.isbn].map!{|i| i = i.clean_isbn})
           query_param = 'isbn=' + isbns.join(' or isbn=')
         elsif @work.title.present?
-          query_param = @work.title
+          query_param = 'title=' + @work.title
         end
 
         records = search_bd(query_param)
