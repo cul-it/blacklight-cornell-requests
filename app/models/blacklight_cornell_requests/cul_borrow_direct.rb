@@ -202,7 +202,7 @@ module BlacklightCornellRequests
             # The ActiveCatalog parameter in the response indicates how many BD catalogs are being
             # actively searched. When the search is complete, this number should be 0.
             json_response = JSON.parse(response.body)
-            query_pending = json_response['ActiveCatalog'] == 0
+            query_pending = json_response['ActiveCatalog'] > 0
           elsif (response.code.to_i == 404)
             # This indicates "no result"
             query_pending = false
