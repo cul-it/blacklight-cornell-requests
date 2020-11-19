@@ -136,7 +136,7 @@ module BlacklightCornellRequests
           isbns = ([*@work.isbn].map!{|i| i = i.clean_isbn})
           query_param = 'isbn=' + isbns.join(' or isbn=')
         elsif @work.title.present?
-          query_param = 'title=' + @work.title
+          query_param = 'ti=' + URI.encode("\"#{@work.title}\"")
         end
 
         records = search_bd(query_param)
@@ -194,19 +194,14 @@ module BlacklightCornellRequests
         uri = URI.parse("#{@credentials[:base_url]}/di/search?query=#{query}&aid=#{@aid}")
         query_pending = true
         json_response = {}
-        Rails.logger.debug "mjc12test: starting loop"
+
         while query_pending
           response = Net::HTTP.get_response(uri)
-          Rails.logger.debug "mjc12test: got response #{response.code} #{response.body}"
-
           if (response.code.to_i == 200)
             # The ActiveCatalog parameter in the response indicates how many BD catalogs are being
             # actively searched. When the search is complete, this number should be 0.
-
             json_response = JSON.parse(response.body)
             query_pending = json_response['ActiveCatalog'] > 0
-            Rails.logger.debug "mjc12test: done response"
-
           elsif (response.code.to_i == 404)
             # This indicates "no result"
             query_pending = false
@@ -217,7 +212,6 @@ module BlacklightCornellRequests
             return nil
           end
         end
-        Rails.logger.debug "mjc12test: ending loop"
 
         # At this point, we should have all the records from the search
         return json_response['Record'][0]['Item']
