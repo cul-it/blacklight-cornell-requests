@@ -120,6 +120,8 @@ module BlacklightCornellRequests
       return false unless BD.available?(@patron)
 
       ######## Code for updated API calls ########
+      #
+      # (re-enable caching in the next line once we're done testing the lookup)
   #    Rails.cache.fetch("bd-availability-#{@work.bibid}", :expires_in => 5.minutes) do
         response = nil
         Rails.logger.debug "mjc12test: DOING A FRESH BD CALL #{@work.title}, #{@work.isbn}"
@@ -137,23 +139,8 @@ module BlacklightCornellRequests
           query_param = @work.title
         end
 
-        # Use the Find Item API to determine availability. This API returns results asynchronously,
-        # with additional results being updated each time we query the same URL. Unfortunately, we
-        # have to keep querying the API until the entire result set is complete, then parse it ourselves
-        # to determine whether an item is available locally.
-        uri = URI.parse("#{@credentials[:base_url]}/di/search?query=#{query_param}&aid=#{@aid}")
-
-        response = Net::HTTP.get_response(uri)
-
-        if (response.code.to_i == 200)
-          return JSON.parse(response.body)['TotalItemCount'] > 0
-        elsif (response.code.to_i == 404)
-          # This indicates "no result"
-          return false
-        else
-          Rails.logger.warn("Warning: Requests unable to complete an item search in Borrow Direct (response: #{response.code} #{response.body}")
-          return false
-        end
+        records = search_bd(query_param)
+        return requestable?(records)
      # end
       ############################################
 
@@ -196,6 +183,60 @@ module BlacklightCornellRequests
       #   end
 
       # end
+    end
+
+    # Use the Find Item BD API to execute a search. Returns the array of records provided in the response.
+    def search_bd(query)
+        # Use the Find Item API to determine availability. This API returns results asynchronously,
+        # with additional results being updated each time we query the same URL. Unfortunately, we
+        # have to keep querying the API until the entire result set is complete, then parse it ourselves
+        # to determine whether an item is available locally.
+        uri = URI.parse("#{@credentials[:base_url]}/di/search?query=#{query}&aid=#{@aid}")
+        query_pending = true
+
+        while query_pending
+          response = Net::HTTP.get_response(uri)
+          num_searches += 1
+          json_response = {}
+          if (response.code.to_i == 200)
+            # The ActiveCatalog parameter in the response indicates how many BD catalogs are being
+            # actively searched. When the search is complete, this number should be 0.
+            json_response = JSON.parse(response.body)
+            query_pending = json_response['ActiveCatalog'] == 0
+          elsif (response.code.to_i == 404)
+            # This indicates "no result"
+            query_pending = false
+            return false
+          else
+            Rails.logger.warn("Warning: Requests unable to complete an item search in Borrow Direct (response: #{response.code} #{response.body}")
+            query_pending = false
+            return false
+          end
+
+          # At this point, we should have all the records from the search
+          return json_response['Record'][0]['Item']
+        end
+    end
+
+    # Given an array of record items returned from the BD search API, determine whether
+    # the item can be requested from BD as a whole (from Cornell's perspective). For now,
+    # that means that there are no Cornell items that are currently available.
+    def requestable?(records)
+      #Rails.logger.debug("mjc12test2: records array main #{records}")
+
+      cornell_records = records.select { |rec| rec['CatalogName'] == 'CORNELL' }
+      # If there are no records from the Cornell catalog, we can say it's requestable via BD
+      return true if cornell_records.empty?
+
+      cornell_records.each do |rec|
+        holdings = rec['Holding']
+
+        # If any of the Cornell record holdings is marked Available, then it's not requestable via BD
+        return false if holdings.any? { |h| h['Availability'] == 'Available' }
+      end
+
+      # If we've made it this far, it's requestable!
+      return true
     end
 
     # Place an item request through the Borrow Direct API
