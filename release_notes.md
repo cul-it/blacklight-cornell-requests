@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.4.0
+- Use the new Borrow Direct API. (DISCOVERYACCESS-6712)
+
 ## v3.3.9
 - Modified the text of the Annex pickup location.
 
