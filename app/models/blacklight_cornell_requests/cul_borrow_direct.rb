@@ -242,6 +242,9 @@ module BlacklightCornellRequests
     # :pickup_location is the BD location code (not CUL location code)
     # :notes are any notes on the request
     def request_from_bd(params)
+      Rails.logger.info("**************** Request from BD params: " + params.inspect)
+      Rails.logger.info("**************** @work: " + @work.inspect)
+      Rails.logger.info("**************** @patron: " + @patron.inspect)
       response = nil
       # This block can throw timeout errors if BD takes to long to respond
       begin

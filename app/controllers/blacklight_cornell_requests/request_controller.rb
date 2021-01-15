@@ -35,6 +35,7 @@ module BlacklightCornellRequests
     end
 
     def magic_request target=''
+      Rails.logger.info("*************************** user (magic_request): " + user.inspect)
       if request.headers["REQUEST_METHOD"] == "HEAD"
         head :no_content
         return
@@ -436,6 +437,8 @@ module BlacklightCornellRequests
     end
 
     def make_bd_request
+      
+      Rails.logger.info("*************************** user: " + user.inspect)
 
       if params[:library_id].blank?
         flash[:error] = "Please select a library pickup location"
