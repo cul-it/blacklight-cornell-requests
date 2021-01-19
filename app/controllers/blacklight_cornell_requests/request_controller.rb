@@ -446,8 +446,9 @@ module BlacklightCornellRequests
         resp, document = search_service.fetch params[:bibid]
         isbn = document[:isbn_display]
         req = BlacklightCornellRequests::Request.new(params[:bibid])
-
+        Rails.logger.info("*************************** req (request controller): " + req.inspect)
         resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id], :notes => params[:reqcomments] })
+        Rails.logger.info("*************************** resp (request controller): " + resp.inspect)
         if resp
           status = 'success'
           status_msg = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."

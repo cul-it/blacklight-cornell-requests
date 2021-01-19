@@ -140,6 +140,7 @@ module BlacklightCornellRequests
         end
 
         records = search_bd(query_param)
+        Rails.logger.info("************************** records (available in bd): " + records.inspect)
         return records ? requestable?(records) : false
      # end
       ############################################
@@ -187,6 +188,7 @@ module BlacklightCornellRequests
 
     # Use the Find Item BD API to execute a search. Returns the array of records provided in the response.
     def search_bd(query)
+        Rails.logger.info("************************** query (search bd): " + query.inspect)
         # Use the Find Item API to determine availability. This API returns results asynchronously,
         # with additional results being updated each time we query the same URL. Unfortunately, we
         # have to keep querying the API until the entire result set is complete, then parse it ourselves
@@ -203,6 +205,7 @@ module BlacklightCornellRequests
             json_response = JSON.parse(response.body)
             query_pending = json_response['ActiveCatalog'] > 0
           elsif (response.code.to_i == 404)
+            Rails.logger.info("************************** response (search bd, 404): " + response.body.inspect)
             # This indicates "no result"
             query_pending = false
             return nil
@@ -225,26 +228,37 @@ module BlacklightCornellRequests
 
       cornell_records = records.select { |rec| rec['CatalogName'] == 'CORNELL' }
       # If there are no records from the Cornell catalog, we can say it's requestable via BD
-      return true if cornell_records.empty?
+      # tlw72: this looks like it's not the case. I found an instance where the Cornell item was on order,
+      # and the only other record, was a item that was checked out. That suggests it's possible to have
+      # no Cornell records and no other records that are available. So commenting out the next line.
+      # return true if cornell_records.empty?
 
       cornell_records.each do |rec|
         holdings = rec['Holding']
 
         # If any of the Cornell record holdings is marked Available, then it's not requestable via BD
+        Rails.logger.info("************************** holdings for Cornell item: " + holdings.inspect)
         return false if holdings.any? { |h| h['Availability'] == 'Available' }
       end
 
-      # If we've made it this far, it's requestable!
-      return true
+      # If we've made it this far, it's requestable! tlw72: may not be true. See comment above.
+      # Check the other records to see if any are available, and only return true if there is.
+      non_cornell_records = records.select { |rec| rec['CatalogName'] != 'CORNELL' }
+      non_cornell_records.each do |rec|
+        holdings = rec['Holding']
+
+        # If any of the record holdings is marked Available, then it's requestable via BD
+        Rails.logger.info("************************** holdings for non-Cornell item: " + holdings.inspect)
+        return true if holdings.any? { |h| h['Availability'] == 'Available' }
+      end
+      # If we get this far, nothing is available.
+      return false
     end
 
     # Place an item request through the Borrow Direct API
     # :pickup_location is the BD location code (not CUL location code)
     # :notes are any notes on the request
     def request_from_bd(params)
-      Rails.logger.info("**************** Request from BD params: " + params.inspect)
-      Rails.logger.info("**************** @work: " + @work.inspect)
-      Rails.logger.info("**************** @patron: " + @patron.inspect)
       response = nil
       # This block can throw timeout errors if BD takes to long to respond
       begin
