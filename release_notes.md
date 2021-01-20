@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.4.1
+- Updated the requestable? method to ensure availability. (DISCOVERYACCESS-6712)
+
 ## v3.4.0
 - Use the new Borrow Direct API. (DISCOVERYACCESS-6712)
 
