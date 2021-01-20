@@ -1195,7 +1195,6 @@ module BlacklightCornellRequests
           # which we need for the map.
           response = BorrowDirect::RequestItem.new(patron_barcode(params[:netid])).make_request(params[:pickup_location], {:isbn => [*params[:isbn]].map!{|i| i = i.clean_isbn}[0]}, params[:notes])
         end
-
         return response  # response should be the BD request tracking number
 
       rescue Errno::ECONNREFUSED => e

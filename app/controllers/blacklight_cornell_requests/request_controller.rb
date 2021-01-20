@@ -436,14 +436,13 @@ module BlacklightCornellRequests
     end
 
     def make_bd_request
-
+      
       if params[:library_id].blank?
         flash[:error] = "Please select a library pickup location"
       else
         resp, document = search_service.fetch params[:bibid]
         isbn = document[:isbn_display]
         req = BlacklightCornellRequests::Request.new(params[:bibid])
-
         resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id], :notes => params[:reqcomments] })
         if resp
           status = 'success'

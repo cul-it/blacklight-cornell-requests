@@ -225,7 +225,10 @@ module BlacklightCornellRequests
 
       cornell_records = records.select { |rec| rec['CatalogName'] == 'CORNELL' }
       # If there are no records from the Cornell catalog, we can say it's requestable via BD
-      return true if cornell_records.empty?
+      # tlw72: this looks like it's not the case. I found an instance where the Cornell item was on order,
+      # and the only other record, was a item that was checked out. That suggests it's possible to have
+      # no Cornell records and no other records that are available. So commenting out the next line.
+      # return true if cornell_records.empty?
 
       cornell_records.each do |rec|
         holdings = rec['Holding']
@@ -234,8 +237,17 @@ module BlacklightCornellRequests
         return false if holdings.any? { |h| h['Availability'] == 'Available' }
       end
 
-      # If we've made it this far, it's requestable!
-      return true
+      # If we've made it this far, it's requestable! tlw72: may not be true. See comment above.
+      # Check the other records to see if any are available, and only return true if there is.
+      non_cornell_records = records.select { |rec| rec['CatalogName'] != 'CORNELL' }
+      non_cornell_records.each do |rec|
+        holdings = rec['Holding']
+
+        # If any of the record holdings is marked Available, then it's requestable via BD
+        return true if holdings.any? { |h| h['Availability'] == 'Available' }
+      end
+      # If we get this far, nothing is available.
+      return false
     end
 
     # Place an item request through the Borrow Direct API
