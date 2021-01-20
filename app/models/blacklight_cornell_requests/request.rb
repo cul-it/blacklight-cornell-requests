@@ -1187,8 +1187,6 @@ module BlacklightCornellRequests
     #   :pickup_location (code)
     #   :isbn
     def request_from_bd(params)
-      Rails.logger.info("**************** params (request.rb, request_from_bd): " + params.inspect)
-      
       response = nil
       # This block can throw timeout errors if BD takes to long to respond
       begin
@@ -1197,7 +1195,6 @@ module BlacklightCornellRequests
           # which we need for the map.
           response = BorrowDirect::RequestItem.new(patron_barcode(params[:netid])).make_request(params[:pickup_location], {:isbn => [*params[:isbn]].map!{|i| i = i.clean_isbn}[0]}, params[:notes])
         end
-        Rails.logger.info("**************** BD response (request.rb): " + response.inspect)
         return response  # response should be the BD request tracking number
 
       rescue Errno::ECONNREFUSED => e
