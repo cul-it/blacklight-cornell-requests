@@ -234,7 +234,9 @@ module BlacklightCornellRequests
         holdings = rec['Holding']
 
         # If any of the Cornell record holdings is marked Available, then it's not requestable via BD
-        return false if holdings.any? { |h| h['Availability'] == 'Available' }
+        if holdings.present?
+          return false if holdings.any? { |h| h['Availability'] == 'Available' }
+        end
       end
 
       # If we've made it this far, it's requestable! tlw72: may not be true. See comment above.
@@ -244,7 +246,9 @@ module BlacklightCornellRequests
         holdings = rec['Holding']
 
         # If any of the record holdings is marked Available, then it's requestable via BD
-        return true if holdings.any? { |h| h['Availability'] == 'Available' }
+        if holdings.present?
+          return true if holdings.any? { |h| h['Availability'] == 'Available' }
+        end
       end
       # If we get this far, nothing is available.
       return false
