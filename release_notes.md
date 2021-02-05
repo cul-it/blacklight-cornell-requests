@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.4.2
+- Needed to check for holdings being present in requestable? method.
+
 ## v3.4.1
 - Updated the requestable? method to ensure availability. (DISCOVERYACCESS-6712)
 
