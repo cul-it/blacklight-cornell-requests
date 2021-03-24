@@ -30,7 +30,7 @@ module BlacklightCornellRequests
     # patron should be a Patron instance
     # work = { :isbn, :title }
     # ISBN is best, but title will work if ISBN isn't available.
-    def initialize(patron, work)
+    def initialize(patron, work, add_request=false)
       @patron = patron
       @work = work
       @credentials = nil
@@ -49,7 +49,8 @@ module BlacklightCornellRequests
       # AID is the AuthenticationId needed to use the Borrow Direct APIs
       @aid = authenticate
 
-      @available = available_in_bd?
+      @available = available_in_bd? if !add_request
+      
     end
 
     # Switch between test and production configuration
@@ -212,7 +213,6 @@ module BlacklightCornellRequests
             return nil
           end
         end
-
         # At this point, we should have all the records from the search
         return json_response['Record'][0]['Item']
     end
@@ -259,34 +259,33 @@ module BlacklightCornellRequests
     # :notes are any notes on the request
     def request_from_bd(params)
       response = nil
-      # This block can throw timeout errors if BD takes to long to respond
-      begin
-        if @work.isbn.present?
-          # Note: [*<variable>] gives us an array if we don't already have one,
-          # which we need for the map.
-          response = BorrowDirect::RequestItem.new(@patron.barcode).make_request(params[:pickup_location], {:isbn => [*@work.isbn.map!{|i| i = i.clean_isbn}[0]]}, params[:notes])
-        end
+      hash = {}
+      hash["BibliographicInfo"] = {}
+      hash["RequestFor"] = {}
+      hash["ElectronicDelivery"] = {}
+      hash["ElectronicDelivery"]["DeliveryMethod"] = "P"
+      hash["ElectronicDelivery"]["DeliveryAddress"] = params[:library_id]
+      hash["PartnershipId"] = "BD"
+      hash["RequestFor"]["PatronId"] = @patron.barcode
+      hash["RequestInfo"] = {"Notes" => params[:reqcomments]} if params[:reqcomments].present?
 
-        return response  # response should be the BD request tracking number
-
-      rescue Errno::ECONNREFUSED => e
-        #  ExceptionNotifier.notify_exception(e)
-        Rails.logger.warn 'Requests: Borrow Direct connection was refused'
-        Rails.logger.warn e.message
-        Rails.logger.warn e.backtrace.inspect
-        return false
-      rescue BorrowDirect::HttpTimeoutError => e
-        Rails.logger.warn 'Requests: Borrow Direct check timed out'
-        Rails.logger.warn e.message
-        Rails.logger.warn e.backtrace.inspect
-        return false
-      rescue BorrowDirect::Error => e
-        Rails.logger.warn 'Requests: Borrow Direct gave error.'
-        Rails.logger.warn e.message
-        Rails.logger.warn e.backtrace.inspect
-        Rails.logger.warn response.inspect
-        return false
+      if @work[:isbn].present?
+        isbns = [*@work[:isbn]].map!{|i| i = i.clean_isbn}
+        hash["BibliographicInfo"]["ISBN"] = isbns
       end
+
+      if @work[:title].present?
+        hash["BibliographicInfo"]["Title"] = @work[:title]
+      end
+
+      uri = URI.parse("#{@credentials[:base_url]}/portal-service/request/add?aid=#{@aid}")
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      request = Net::HTTP::Post.new(uri, {'Content-Type' => 'application/json' })
+      request.body = JSON.generate(hash)
+      response = http.request(request)
+       
+      return response  # response should include the BD request tracking number
 
     end
 
