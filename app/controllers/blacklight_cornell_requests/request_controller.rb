@@ -436,17 +436,26 @@ module BlacklightCornellRequests
     end
 
     def make_bd_request
-      
       if params[:library_id].blank?
         flash[:error] = "Please select a library pickup location"
       else
-        resp, document = search_service.fetch params[:bibid]
-        isbn = document[:isbn_display]
-        req = BlacklightCornellRequests::Request.new(params[:bibid])
-        resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id], :notes => params[:reqcomments] })
+        # We can speed this up by eliminating the search_service call. Added hidden fields to
+        # the bd haml file so that we can get the title and ISBN that way. (tlw72)
+        isbn = params[:isbn]
+        title = params[:title]
+        requester = Patron.new(user)
+        work = { :isbn => isbn, :title => title }
+        # Will need to reconsider whether to go back to using the request_from_bd in the Request model.
+        # Doing it this way for now because CULBorrowDirect already has an authenticate method and it's called
+        # on initialization. Passing the boolean provides a way of distinguishing between the availability
+        # check and the add request call.
+        add_request = true
+        req = BlacklightCornellRequests::CULBorrowDirect.new(requester, work, add_request)
+        resp = req.request_from_bd(params)
+        body_hash = JSON[resp.body]
         if resp
           status = 'success'
-          status_msg = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
+          status_msg = I18n.t('requests.success') + " The Borrow Direct request number is #{body_hash['RequestNumber']}."
         else
           status = 'failure'
           status_msg = "There was an error when submitting this request to Borrow Direct. Your request could not be completed."
