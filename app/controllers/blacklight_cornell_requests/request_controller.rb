@@ -453,12 +453,16 @@ module BlacklightCornellRequests
         req = BlacklightCornellRequests::CULBorrowDirect.new(requester, work, add_request)
         resp = req.request_from_bd(params)
         body_hash = JSON[resp.body]
-        if resp
+        if resp.is_a?(Net::HTTPSuccess)
           status = 'success'
           status_msg = I18n.t('requests.success') + " The Borrow Direct request number is #{body_hash['RequestNumber']}."
         else
           status = 'failure'
-          status_msg = "There was an error when submitting this request to Borrow Direct. Your request could not be completed."
+          if !body_hash['Problem'].nil? && body_hash['Problem']['Message'].present?
+            status_msg = body_hash['Problem']['Message']
+          else
+            status_msg = "There was an error when submitting this request to Borrow Direct. Your request could not be completed."
+          end
         end
       end
 
