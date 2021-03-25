@@ -1,4 +1,9 @@
 - special_delivery_options = parsed_special_delivery(@fod_data)
+- Rails.logger.info("********************************************* @WORK = " + @ti.inspect)
+.form-group.row
+  %input{:type=>"hidden", :value=>@ti, :name=>:title}
+.form-group.row
+  %input{:type=>"hidden", :value=>@isbn, :name=>:isbn}
 .form-group.row
   %label.col-sm-2.col-form-label{:for => "pickup-locations"} Pick up at:
   .col-sm-10

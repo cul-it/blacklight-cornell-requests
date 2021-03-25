@@ -1,5 +1,11 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.4.4
+- Display the BD error message when possible to provide more context. (DISCOVERYACCESS-6967)
+
+## v3.4.3
+- Use the new Borrow Direct 'Add Request' API. (DISCOVERYACCESS-6890)
+
 ## v3.4.2
 - Needed to check for holdings being present in requestable? method.
 
