@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.4.5
+- Revert to previous BD API until Relais/OCLC sort out routing list issue.
+
 ## v3.4.4
 - Display the BD error message when possible to provide more context. (DISCOVERYACCESS-6967)
 
