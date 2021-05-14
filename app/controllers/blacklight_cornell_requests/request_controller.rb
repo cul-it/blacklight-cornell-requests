@@ -59,22 +59,12 @@ module BlacklightCornellRequests
       # Create an array of all the item records associated with the bibid
       items = []
 
-      # Somehow a user was able to request an ETAS work though no request button appears in the UI
-      # for that work -- hacked the URL perhaps. So adding a check to see if the document includes
-      # the etas_facet. If it does, bypass everything. This is a temporary Covid-19 change. Note:
-      # customized the alert for this situation in the items.empty? block below.
-      if @document['etas_facet'].nil? || @document['etas_facet'].empty?
-        holdings = JSON.parse(@document['items_json'] || '{}')
-        # Items are keyed by the associated holding record
-        holdings.each do |h, item_array|
-          item_array.each do |i|
-            items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || (i["active"].present? && i["active"])) && (i['location']['library'].present? && requestable_libraries.include?(i['location']['library']))
-          end
+      holdings = JSON.parse(@document['items_json'] || '{}')
+      # Items are keyed by the associated holding record
+      holdings.each do |h, item_array|
+        item_array.each do |i|
+          items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || (i["active"].present? && i["active"])) && (i['location']['library'].present? && requestable_libraries.include?(i['location']['library']))
         end
-      else
-        flash[:alert] = "This title may not be requested because it is available online." if @document['etas_facet'].present?
-        redirect_to '/catalog/' + params["bibid"]
-        return        
       end
       # This isn't likely to happen, because the Request item button should be suppressed, but if there's
       # a work with only one item and that item is inactive, we need to redirect because the items array
