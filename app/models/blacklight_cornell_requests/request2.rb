@@ -1,6 +1,6 @@
 require 'benchmark'
 require 'borrow_direct'
-include BlacklightCornellRequests::Cornell::LDAP
+#include BlacklightCornellRequests::Cornell::LDAP
 
 module BlacklightCornellRequests
   # @author Matt Connolly

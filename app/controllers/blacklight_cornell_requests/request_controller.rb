@@ -15,7 +15,7 @@ module BlacklightCornellRequests
     # Blacklight::Catalog is needed for "fetch", replaces "include SolrHelper".
     # As of B7, it now supplies search_service, and fetch is called as search_service.fetch
     include Blacklight::Catalog
-    include Cornell::LDAP
+    #include Cornell::LDAP
 
     # This may seem redundant, but it makes it easier to fetch the document from
     # various model classes
@@ -234,7 +234,8 @@ module BlacklightCornellRequests
       @mann_special_delivery_link = work_metadata.mann_special_delivery_link
       @scanit_link = work_metadata.scanit_link
       @netid = user
-      @name = get_patron_name user
+      #### FOLIO TODO
+      @name = "Matthew Connolly" #get_patron_name user
       @volume = params[:volume]
       @fod_data = get_fod_data user
       @items = fastest_method[:items]
@@ -354,7 +355,7 @@ module BlacklightCornellRequests
     end
 
     def make_voyager_request
-      # Validate the form data
+      Validate the form data
       errors = []
       if params[:holding_id].blank?
         errors << I18n.t('requests.errors.holding_id.blank')
@@ -367,37 +368,37 @@ module BlacklightCornellRequests
         flash[:error] = errors.join('<br/>').html_safe
       end
 
-      if errors.blank?
-        # Hand off the data to the request model for sending
-        req = BlacklightCornellRequests::Request.new(params[:bibid])
-        # req.netid = request.env['REMOTE_USER']
-        # req.netid.sub! '@CORNELL.EDU', ''
-        req.netid = user
-        # If the holding_id = 'any', then set to blank. Voyager expects an empty value for 'any copy',
-        # but validation above expects a non-blank value!
-        if params[:holding_id] == 'any'
-          params[:holding_id] = ''
-        end
+      # if errors.blank?
+      #   # Hand off the data to the request model for sending
+      #   req = BlacklightCornellRequests::Request.new(params[:bibid])
+      #   # req.netid = request.env['REMOTE_USER']
+      #   # req.netid.sub! '@CORNELL.EDU', ''
+      #   req.netid = user
+      #   # If the holding_id = 'any', then set to blank. Voyager expects an empty value for 'any copy',
+      #   # but validation above expects a non-blank value!
+      #   if params[:holding_id] == 'any'
+      #     params[:holding_id] = ''
+      #   end
 
-        response = req.make_voyager_request params
-        Rails.logger.info "Response:" + response.inspect
-        if !response[:error].blank?
-          flash[:error] = response[:error]
-          render :partial => '/shared/flash_msg', :layout => false
-          return
-        end
-        if response[:failure].blank?
-          # Note: the :flash=>'success' in this case is not setting the actual flash message,
-          # but instead specifying a URL parameter that acts as a flag in Blacklight's show.html.erb view.
-          flash[:error] = nil # Without this, a blank 'error' flash appears beneath the success message in B7 ... for some reason
-          render js: "$('#main-flashes').hide(); window.location = '#{Rails.application.routes.url_helpers.solr_document_path(params[:bibid], :flash=>'success')}'"
-          return
-        else
-          Rails.logger.info "Response: was failure" + response[:failure].inspect
-          flash[:error] = response[:failure]
-        end
-      end
-      render :partial => '/shared/flash_msg', :layout => false
+      #   response = req.make_voyager_request params
+      #   Rails.logger.info "Response:" + response.inspect
+      #   if !response[:error].blank?
+      #     flash[:error] = response[:error]
+      #     render :partial => '/shared/flash_msg', :layout => false
+      #     return
+      #   end
+      #   if response[:failure].blank?
+      #     # Note: the :flash=>'success' in this case is not setting the actual flash message,
+      #     # but instead specifying a URL parameter that acts as a flag in Blacklight's show.html.erb view.
+      #     flash[:error] = nil # Without this, a blank 'error' flash appears beneath the success message in B7 ... for some reason
+      #     render js: "$('#main-flashes').hide(); window.location = '#{Rails.application.routes.url_helpers.solr_document_path(params[:bibid], :flash=>'success')}'"
+      #     return
+      #   else
+      #     Rails.logger.info "Response: was failure" + response[:failure].inspect
+      #     flash[:error] = response[:failure]
+      #   end
+      # end
+      # render :partial => '/shared/flash_msg', :layout => false
 
     end
 
