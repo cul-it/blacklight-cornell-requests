@@ -13,6 +13,18 @@ module BlacklightCornellRequests
       @group = patron_group
     end
 
+    def get_folio_record
+      # Use the cul-folio-edge gem to retrieve a user's FOLIO record.
+      url = ENV['OKAPI_URL']
+      tenant = ENV['OKAPI_TENANT']
+      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
+     # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
+      account = CUL::FOLIO::Edge.patron_account(url, tenant, token[:token], {:username => @netid})
+     # Rails.logger.debug("mjc12test: Got FOLIO account #{account.inspect}")
+      #render json: account
+      
+    end
+
     def get_barcode(netid)
 
       return @barcode if @barcode.present?
