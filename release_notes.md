@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.4.6
+- Remove ETAS logic from the request controller. (DISCOVERYACCESS-7045)
+
 ## v3.4.5
 - Revert to previous BD API until Relais/OCLC sort out routing list issue.
 
