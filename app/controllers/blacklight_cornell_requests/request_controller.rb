@@ -234,8 +234,10 @@ module BlacklightCornellRequests
       @mann_special_delivery_link = work_metadata.mann_special_delivery_link
       @scanit_link = work_metadata.scanit_link
       @netid = user
-      #### FOLIO TODO
-      @name = "Matthew Connolly" #get_patron_name user
+      @patron = BlacklightCornellRequests::Patron.new(@netid).get_folio_record()
+
+      @name = "#{@patron[:user]['personal']['firstName']} #{@patron[:user]['personal']['lastName']}"
+
       @volume = params[:volume]
       @fod_data = get_fod_data user
       @items = fastest_method[:items]
@@ -303,47 +305,47 @@ module BlacklightCornellRequests
     # These one-line service functions simply return the name of the view
     # that should be rendered for each one.
     def l2l
-      return magic_request Request::L2L
+      return magic_request 'l2l'
     end
 
     def hold
-      return magic_request Request::HOLD
+      return magic_request 'hold'
     end
 
     def recall
-      return magic_request Request::RECALL
+      return magic_request 'recall'
     end
 
     def bd
-      return magic_request Request::BD
+      return magic_request 'bd'
     end
 
     def ill
-      return magic_request Request::ILL
+      return magic_request 'ill'
     end
 
     def purchase
-      return magic_request Request::PURCHASE
+      return magic_request 'purchase'
     end
 
     def pda
-      return magic_request Request::PDA
+      return magic_request 'pda'
     end
 
     def ask
-      return magic_request Request::ASK_LIBRARIAN
+      return magic_request 'ask'
     end
 
     def circ
-      return magic_request Request::ASK_CIRCULATION
+      return magic_request 'circ'
     end
 
     def document_delivery
-      return magic_request Request::DOCUMENT_DELIVERY
+      return magic_request 'document_delivery'
     end
 
     def mann_special
-      return magic_request Request::MANN_SPECIAL
+      return magic_request 'mann_special'
     end
 
     def blacklight_solr
