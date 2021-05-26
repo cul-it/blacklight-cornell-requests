@@ -63,4 +63,4 @@
         .clearfix
           %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit purchase request")
         -if @alternate_methods && @alternate_methods.count > 1
-            = render :partial => 'shared/request_options'
+          = render :partial => 'shared/request_options'
