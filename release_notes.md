@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v3.4.8
+- Fix indentation on request a purchase form
+
 ## v3.4.7
 - Update bootstrap markup for request a purchase form
 
