@@ -1,3 +1,5 @@
+require 'cul/folio/edge'
+
 module BlacklightCornellRequests
   # @author Matt Connolly
 
@@ -19,6 +21,34 @@ module BlacklightCornellRequests
         available_request_methods << method_class if method_class.enabled?
       end
       available_request_methods
+    end
+
+    # Use the cul-folio-edge gem to determine which FOLIO delivery methods are available for the
+    # item/patron combo specified
+    def self.available_folio_methods(item, patron)
+      # Get a FOLIO Okapi token for further requests
+      url = ENV['OKAPI_URL']
+      tenant = ENV['OKAPI_TENANT']
+      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
+
+      Rails.logger.debug "mjc12test: Trying to get AFM options ..."
+      Rails.logger.debug "mjc12test: tenant: #{tenant}"
+      Rails.logger.debug "mjc12test: token: #{token[:token]}"
+      Rails.logger.debug "mjc12test: patron group: #{patron.record['patronGroup']}"
+      Rails.logger.debug "mjc12test: item type: #{item.type['id']}"
+      Rails.logger.debug "mjc12test: item loan type: #{item.loan_type['id']}"
+      Rails.logger.debug "mjc12test: item location: #{item.location['id']}"
+
+      # TODO: add error handling
+      options = CUL::FOLIO::Edge.request_options(
+        url, 
+        tenant, 
+        token[:token],
+        patron.record['patronGroup'],
+        item.type['id'],
+        item.loan_type['id'],
+        item.location['id']
+      )
     end
 
     def self.description
@@ -185,14 +215,18 @@ module BlacklightCornellRequests
       ill_patron_group_ids = [1,2,3,4,5,6,7,8,10,17]
       return false unless ill_patron_group_ids.include? patron.group
 
-      return true if item.statusCode == STATUSES[:at_bindery]
-      return true if item.nocirc_loan? || noncirculating
+      #return true if item.statusCode == STATUSES[:at_bindery]
+      return true if noncirculating
       if item.regular_loan? || item.day_loan?
-        return item.statusCode == STATUSES[:charged] ||
-               item.statusCode == STATUSES[:renewed] ||
-               item.statusCode == STATUSES[:missing] ||
-               item.statusCode == STATUSES[:in_transit_on_hold] ||
-               item.statusCode == STATUSES[:lost]
+        return item.status == 'Checked out' ||
+               item.status == 'Aged to lost' ||
+               item.status == 'In transit' ||
+               item.status == 'Claimed returned' ||
+               item.status == 'Declared lost' ||
+               item.status == 'Long missing' ||
+               item.status == 'Lost and paid' ||
+               item.status == 'Missing' ||
+               item.status == 'Unavailable'
       else
         return false
       end
@@ -283,7 +317,14 @@ module BlacklightCornellRequests
 
     def self.available?(item, patron)
       # RULE: Cornell patron, missing/lost status
-      [12,13,14].include? item.statusCode
+      [
+        'Aged to lost',
+        'Claimed returned',
+        'Declared lost',
+        'Long missing',
+        'Lost and paid',
+        'Missing'
+      ].include? item.status
     end
   end
 
@@ -320,7 +361,7 @@ module BlacklightCornellRequests
       # Items are available for 'ask at circulation' under the following conditions:
       # (1) Loan type is minute, and status is charged or not charged
       # (2) Loan type is nocirc
-      item.noncirculating? || (item.minute_loan? && (item.statusCode == 1 || item.statusCode == 2 ))
+      item.noncirculating? || (item.minute_loan? && (item.status == 'Available' || item.status == 'Checked out' ))
     end
   end
 
@@ -359,9 +400,21 @@ module BlacklightCornellRequests
       #                     'Thesis',
       #                     'Newspaper' (20)
       #                     'Microform'] (19)
-      eligible_formats = [2, 3, 5, 7, 8, 15, 18, 19, 20]
+      #eligible_formats = [2, 3, 5, 7, 8, 15, 18, 19, 20]
 
-      return self.enabled? && item.circ_group == 5 && eligible_formats.include?(item.type['id'])
+      eligible_formats = [
+        '1a54b431-2e4f-452d-9cae-9cee66c9a892', # Book
+        '30b3e36a-d3b2-415e-98c2-47fbdf878862', # Visual
+        'a0a83d6c-2898-4e42-9aff-999c1fdd7c8f', # Periodical
+        '14a1925d-148e-46a6-ada3-4cbcfad810e5', # Serial
+        'd9acad2f-2aac-4b48-9097-e6ab85906b25', # Textual resource
+        'cd9e54bc-d3c0-45d9-818d-0de1ec57a6e7', # Newspaper
+        'd5dd238b-dcdb-421d-b2a7-4f004091466b', # Music (score)
+        'fd6c6515-d470-4561-9c32-3e3290d4ca98', # Microform
+        'dd0bf600-dbd9-44ab-9ff2-e2a61a6539f1', # Soundrec
+      ]
+
+      return self.enabled? && eligible_formats.include?(item.type['id'])
     end
   end
 
@@ -415,7 +468,7 @@ module BlacklightCornellRequests
         if special_collections || (location == 77 && does_not_circulate)
           Rails.logger.debug "mjc12test: Should be special RQ form #{}"
           return true
-        elsif item.type['id'] == 9 # nocirc
+        elsif item.type['id'] == '2e48e713-17f3-4c13-a9f8-23845bb210a4' # nocirc
           Rails.logger.debug "mjc12test: No request possible #{}"
           return false
         else
