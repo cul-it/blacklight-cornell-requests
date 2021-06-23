@@ -44,13 +44,15 @@ module BlacklightCornellRequests
       # added rescue for DISCOVERYACCESS-5863
       begin
         resp, @document = search_service.fetch @id
+        #Rails.logger.debug "mjc12test: doc: #{@document.inspect}"
       rescue Blacklight::Exceptions::RecordNotFound => e
         Rails.logger.debug("******* " + e.inspect)
         flash[:notice] = I18n.t('blacklight.search.errors.invalid_solr_id')
         redirect_to '/catalog'
         return
       end
-      @document = @document
+     # @document = @document
+     #Rails.logger.debug "mjc12test: document = #{@document.inspect}"
       @scan = params[:scan].present? ? params[:scan] : ""
       work_metadata = Work.new(@id, @document)
       # Temporary Covid-19 work around: patrons can only make delivery requests from 5 libraries, use
@@ -63,22 +65,31 @@ module BlacklightCornellRequests
       # for that work -- hacked the URL perhaps. So adding a check to see if the document includes
       # the etas_facet. If it does, bypass everything. This is a temporary Covid-19 change. Note:
       # customized the alert for this situation in the items.empty? block below.
-      if @document['etas_facet'].nil? || @document['etas_facet'].empty?
+      # if @document['etas_facet'].nil? || @document['etas_facet'].empty?
         holdings = JSON.parse(@document['items_json'] || '{}')
+        Rails.logger.debug "mjc12test: holdings: #{holdings}"
+
         # Items are keyed by the associated holding record
         holdings.each do |h, item_array|
+
           item_array.each do |i|
-            items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || (i["active"].present? && i["active"])) && (i['location']['library'].present? && requestable_libraries.include?(i['location']['library']))
+            Rails.logger.debug "mjc12test: item arr: #{i}"
+
+            items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || i["active"]) && (i['location']['name'].present? && requestable_libraries.include?(i['location']['name']))
           end
         end
-      else
-        flash[:alert] = "This title may not be requested because it is available online." if @document['etas_facet'].present?
-        redirect_to '/catalog/' + params["bibid"]
-        return        
-      end
+      # else
+      #   flash[:alert] = "This title may not be requested because it is available online." if @document['etas_facet'].present?
+      #   redirect_to '/catalog/' + params["bibid"]
+      #   return        
+      # end
+
+
+
       # This isn't likely to happen, because the Request item button should be suppressed, but if there's
       # a work with only one item and that item is inactive, we need to redirect because the items array
       # will be empty.
+      Rails.logger.debug "mjc12test: items: #{items}"
       if @document['items_json'].present? && eval(@document['items_json']).size == 1 && items.empty?
         flash[:alert] = "There are no items available to request for this title."
         redirect_to '/catalog/' + params["bibid"]
@@ -137,17 +148,16 @@ module BlacklightCornellRequests
         end
       end
 
-      available_request_methods = DeliveryMethod.enabled_methods
+      enabled_request_methods = DeliveryMethod.enabled_methods
       requester = Patron.new(user)
       borrow_direct = CULBorrowDirect.new(requester, work_metadata)
       # We have the following delivery methods to evaluate (at most) for each item:
       # L2L, BD, ILL, Hold, Recall, Patron-driven acquisition, Purchase request
       # ScanIt, Ask a librarian, ask at circ desk
       #
-      # For the voyager methods (L2L, Hold, Recall), we do the following for each item:
-      # 1. Get the circ group, patron group, and item type
-      # 2. Use those values to look up the request policy
-      # 3. Combine (2) with item availability to determine which methods are available
+      # For the FOLIO methods (L2L, Hold, Recall), we can use the cul-folio-edge
+      # gem to determine if they can be used (based on patron group, material type,
+      # loan type, and location)
       #
       # For BD, do a single call to the BD API for the bib-level ISBN (NOT for each item)
       #
@@ -158,23 +168,20 @@ module BlacklightCornellRequests
       # i.e., each key in the hash is the class, e.g. L2L, and that points to
       # an array of items available via that method
       options = {}
-      available_request_methods.each do |rm|
+      enabled_request_methods.each do |rm|
         options[rm] = []
       end
-      # First get the Voyager methods. Policy hash is used to cache policies for
-      # particular parameter combinations so that we minimize DB queries
-      policy_hash = {}
+
       items.each do |i|
         rp = {}
-        # TODO: use a symbol instead of a string for the keys?
-        policy_key = "#{i.circ_group}-#{requester.group}-#{i.type['id']}"
-        if policy_hash[policy_key]
-          rp = policy_hash[policy_key]
-        else
-          rp = RequestPolicy.policy(i.circ_group, requester.group, i.type['id'])
-          policy_hash[policy_key] = rp
-        end
-        options = update_options(i, rp, options, requester)
+        # policy_key = "#{i.circ_group}-#{requester.group}-#{i.type['id']}"
+        # if policy_hash[policy_key]
+        #   rp = policy_hash[policy_key]
+        # else
+        #   rp = RequestPolicy.policy(i.circ_group, requester.group, i.type['id'])
+        #   policy_hash[policy_key] = rp
+        # end
+        options = update_options(i, options, requester)
       end
       options[BD] = [1] if borrow_direct.available
 
@@ -213,7 +220,7 @@ module BlacklightCornellRequests
       # This code is a bit ugly, but it swaps the fastest method with the appropriate entry
       # in the alternate_methods array. 
       if target.present?
-        available_request_methods.each do |rm|
+        enabled_request_methods.each do |rm|
           if rm::TemplateName == target
             @alternate_methods.unshift(fastest_method)
             alt_array_index = @alternate_methods&.index{ |am| am[:method] == rm }
@@ -236,7 +243,7 @@ module BlacklightCornellRequests
       @netid = user
       @patron = BlacklightCornellRequests::Patron.new(@netid).get_folio_record()
 
-      @name = "#{@patron[:user]['personal']['firstName']} #{@patron[:user]['personal']['lastName']}"
+      @name = "#{@patron['personal']['firstName']} #{@patron['personal']['lastName']}"
 
       @volume = params[:volume]
       @fod_data = get_fod_data user
@@ -258,7 +265,7 @@ module BlacklightCornellRequests
 
     end
 
-    def l2l_available?(item, policy)
+    def l2l_available?(item)
       L2L.enabled? && policy && policy[:l2l] && item.available? && !item.noncirculating?
     end
 
@@ -272,12 +279,15 @@ module BlacklightCornellRequests
 
     # Update the options hash with methods for a particular item
     # TODO: there's probably a better way to do this!
-    def update_options(item, policy, options, patron)
+    def update_options(item, options, patron)
+
+      available_folio_methods = DeliveryMethod.available_folio_methods(item, patron)
+      Rails.logger.debug "mjc12test: AFM: #{available_folio_methods}"
 
       options[ILL] << item if ILL.available?(item, patron)
-      options[L2L] << item if l2l_available?(item, policy)
-      options[Hold].push(item) if hold_available?(item, policy)
-      options[Recall] << item if recall_available?(item, policy)
+      options[L2L] << item if L2L.enabled? && available_folio_methods[:l2l]
+      options[Hold].push(item) if Hold.enabled? && available_folio_methods[:hold]
+      options[Recall] << item if Recall.enabled? && available_folio_methods[:recall]
       options[PurchaseRequest] << item if PurchaseRequest.available?(item, patron)
       options[DocumentDelivery] << item if DocumentDelivery.available?(item, patron)
       options[AskLibrarian] << item if AskLibrarian.available?(item, patron)
