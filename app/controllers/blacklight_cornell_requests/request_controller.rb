@@ -283,11 +283,12 @@ module BlacklightCornellRequests
 
       available_folio_methods = DeliveryMethod.available_folio_methods(item, patron)
       Rails.logger.debug "mjc12test: AFM: #{available_folio_methods}"
+      Rails.logger.debug "mjc12test: item is #{item.status}"
 
       options[ILL] << item if ILL.available?(item, patron)
-      options[L2L] << item if L2L.enabled? && available_folio_methods[:l2l]
-      options[Hold].push(item) if Hold.enabled? && available_folio_methods[:hold]
-      options[Recall] << item if Recall.enabled? && available_folio_methods[:recall]
+      options[L2L] << item if L2L.enabled? && available_folio_methods.include?(:l2l)
+      options[Hold].push(item) if Hold.enabled? && available_folio_methods.include?(:hold)
+      options[Recall] << item if Recall.enabled? && available_folio_methods.include?(:recall)
       options[PurchaseRequest] << item if PurchaseRequest.available?(item, patron)
       options[DocumentDelivery] << item if DocumentDelivery.available?(item, patron)
       options[AskLibrarian] << item if AskLibrarian.available?(item, patron)

@@ -22,6 +22,21 @@ module BlacklightCornellRequests
     :day     => 2,
     :regular => 3
   }
+
+  # This map of request options by item status is taken directly
+  # from the FOLIO ui-requests module, requestTypesByItemStatus, at 
+  # https://github.com/folio-org/ui-requests/blob/master/src/constants.js
+  REQUEST_TYPES_BY_ITEM_STATUS = {
+    'Checked out': [:hold, :recall],
+    'Available': [:l2l],
+    'Awaiting pickup': [:hold, :recall],
+    'Awaiting delivery': [:hold, :recall],
+    'In transit': [:hold, :recall],
+    'Missing': [:hold],
+    'Paged': [:hold, :recall],
+    'On order': [:hold, :recall],
+    'In process': [:hold, :recall]
+  }
   
   # STATUSES = {
   #   :not_charged            => 1,

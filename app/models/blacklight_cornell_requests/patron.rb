@@ -24,6 +24,8 @@ module BlacklightCornellRequests
      
      # TODO: add error handling
       account = CUL::FOLIO::Edge.patron_record(url, tenant, token[:token], @netid)[:user]
+      #Rails.logger.debug "mjc12test: patron record for #{@netid}, #{url}, #{tenant}: #{account}"
+
       #Rails.logger.debug("mjc12test: Got FOLIO account #{account.inspect}")
       #render json: account
       account

@@ -40,7 +40,7 @@ module BlacklightCornellRequests
       Rails.logger.debug "mjc12test: item location: #{item.location['id']}"
 
       # TODO: add error handling
-      options = CUL::FOLIO::Edge.request_options(
+      result = CUL::FOLIO::Edge.request_options(
         url, 
         tenant, 
         token[:token],
@@ -49,6 +49,19 @@ module BlacklightCornellRequests
         item.loan_type['id'],
         item.location['id']
       )
+      Rails.logger.debug "mjc12test: AFM lookup results: #{result}"
+      if result[:code] >= 300
+        return []
+      end
+
+
+
+      # The options returned from FOLIO reflect the request policy determined for the item and patron.
+      # They do not consider item status, e.g., whether it's available or checked out. So we have
+      # to do this. Not the prettiest code....
+      res = REQUEST_TYPES_BY_ITEM_STATUS[:"#{item.status}"]
+      Rails.logger.debug "mjc12test: RTBYS: #{res}"
+      return result[:request_methods].select { |rm| REQUEST_TYPES_BY_ITEM_STATUS[:"#{item.status}"].include?(rm) }
     end
 
     def self.description
