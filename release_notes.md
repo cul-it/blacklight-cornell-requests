@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.0
+Extensive rewrite of the code to replace Voyager functionality with FOLIO!
+
 ## v3.4.8
 - Fix indentation on request a purchase form
 
