@@ -1,4 +1,5 @@
 require_dependency "blacklight_cornell_requests/application_controller"
+require 'date'
 
 module BlacklightCornellRequests
 
@@ -44,7 +45,7 @@ module BlacklightCornellRequests
       # added rescue for DISCOVERYACCESS-5863
       begin
         resp, @document = search_service.fetch @id
-        #Rails.logger.debug "mjc12test: doc: #{@document.inspect}"
+        Rails.logger.debug "mjc12test: doc: #{@document.inspect}"
       rescue Blacklight::Exceptions::RecordNotFound => e
         Rails.logger.debug("******* " + e.inspect)
         flash[:notice] = I18n.t('blacklight.search.errors.invalid_solr_id')
@@ -283,7 +284,7 @@ module BlacklightCornellRequests
 
       available_folio_methods = DeliveryMethod.available_folio_methods(item, patron)
       Rails.logger.debug "mjc12test: AFM: #{available_folio_methods}"
-      Rails.logger.debug "mjc12test: item is #{item.status}"
+      Rails.logger.debug "mjc12test: item is #{item.inspect}"
 
       options[ILL] << item if ILL.available?(item, patron)
       options[L2L] << item if L2L.enabled? && available_folio_methods.include?(:l2l)
@@ -367,8 +368,9 @@ module BlacklightCornellRequests
       Blacklight.solr_config
     end
 
-    def make_voyager_request
-      Validate the form data
+    # Use the FOLIO APIs to place a hold, recall, or page/L2L request
+    def make_folio_request
+      # Validate the form data
       errors = []
       if params[:holding_id].blank?
         errors << I18n.t('requests.errors.holding_id.blank')
@@ -381,8 +383,7 @@ module BlacklightCornellRequests
         flash[:error] = errors.join('<br/>').html_safe
       end
 
-      # if errors.blank?
-      #   # Hand off the data to the request model for sending
+      if errors.blank?
       #   req = BlacklightCornellRequests::Request.new(params[:bibid])
       #   # req.netid = request.env['REMOTE_USER']
       #   # req.netid.sub! '@CORNELL.EDU', ''
@@ -392,27 +393,50 @@ module BlacklightCornellRequests
       #   if params[:holding_id] == 'any'
       #     params[:holding_id] = ''
       #   end
+      
+        # To submit a FOLIO request, we need:
+        # 1. Okapi URL
+        # 2. Okapi tenant
+        # 3. Okapi auth token
+        # 4. item ID
+        # 5. requester ID
+        # 6. request type (Hold, Recall, or Page)
+        # 7. request date
+        # 8. fulfillment preference (default to Delivery)
+        # 9. service point ID for pickup
+        # 10. comments, if any
+        url = ENV['OKAPI_URL']
+        tenant = ENV['OKAPI_TENANT']
+        token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])[:token]
+        item_id = params[:holding_id]
+        requester_id = Patron.new(user).record['id']
+        request_type = params[:request_action]
+        request_date = DateTime.now.iso8601
+        pickup_location = params[:library_id]
+        comments = params[:reqcomments]
+
+        response = CUL::FOLIO::Edge.request_item(url, tenant, token, item_id, requester_id, request_type, request_date, 'Delivery', pickup_location, comments)
+        Rails.logger.debug "mjc12test: got response #{response}"
 
       #   response = req.make_voyager_request params
-      #   Rails.logger.info "Response:" + response.inspect
       #   if !response[:error].blank?
       #     flash[:error] = response[:error]
       #     render :partial => '/shared/flash_msg', :layout => false
       #     return
       #   end
-      #   if response[:failure].blank?
-      #     # Note: the :flash=>'success' in this case is not setting the actual flash message,
-      #     # but instead specifying a URL parameter that acts as a flag in Blacklight's show.html.erb view.
-      #     flash[:error] = nil # Without this, a blank 'error' flash appears beneath the success message in B7 ... for some reason
-      #     render js: "$('#main-flashes').hide(); window.location = '#{Rails.application.routes.url_helpers.solr_document_path(params[:bibid], :flash=>'success')}'"
-      #     return
-      #   else
-      #     Rails.logger.info "Response: was failure" + response[:failure].inspect
-      #     flash[:error] = response[:failure]
-      #   end
-      # end
-      # render :partial => '/shared/flash_msg', :layout => false
+        if response[:error].nil?
+          # Note: the :flash=>'success' in this case is not setting the actual flash message,
+          # but instead specifying a URL parameter that acts as a flag in Blacklight's show.html.erb view.
+          flash[:error] = nil # Without this, a blank 'error' flash appears beneath the success message in B7 ... for some reason
+          render js: "$('#main-flashes').hide(); window.location = '#{Rails.application.routes.url_helpers.solr_document_path(params[:bibid], :flash=>'success')}'"
+          return
+        else
+          Rails.logger.info "Response: was failure" + response[:error].inspect
+          flash[:error] = response[:error]
+        end
+      end
 
+      render :partial => '/shared/flash_msg', :layout => false
     end
 
     def make_purchase_request

@@ -10,7 +10,7 @@
     %h2.item-title-request.blacklight-title_display=title
     %div.request-author
       = author_display
-    %form#req.form-horizontal{:method => 'post', :action => make_voyager_request_path}
+    %form#req.form-horizontal{:method => 'post', :action => make_folio_request_path}
       -if @volumes.present? && @volumes.count > 1
         .form-group.row
           %label.col-sm-2.col-form-label{:for => "volume-selection"}
@@ -18,7 +18,7 @@
           .col-sm-10.delivery-estimate
             = render :partial =>'shared/volume_select'
       %input(type="hidden" name="bid" value="#{@id}" id="bid")
-      %input(type="hidden" name="request_action" value="recall" id="request_action")
+      %input(type="hidden" name="request_action" value="Recall" id="request_action")
       = render :partial => 'shared/reqac'
       = render :partial => 'shared/reqpu'
       .form-group.row
