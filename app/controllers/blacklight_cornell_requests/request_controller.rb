@@ -45,7 +45,7 @@ module BlacklightCornellRequests
       # added rescue for DISCOVERYACCESS-5863
       begin
         resp, @document = search_service.fetch @id
-        Rails.logger.debug "mjc12test: doc: #{@document.inspect}"
+       # Rails.logger.debug "mjc12test: doc: #{@document.inspect}"
       rescue Blacklight::Exceptions::RecordNotFound => e
         Rails.logger.debug("******* " + e.inspect)
         flash[:notice] = I18n.t('blacklight.search.errors.invalid_solr_id')
@@ -68,13 +68,13 @@ module BlacklightCornellRequests
       # customized the alert for this situation in the items.empty? block below.
       # if @document['etas_facet'].nil? || @document['etas_facet'].empty?
         holdings = JSON.parse(@document['items_json'] || '{}')
-        Rails.logger.debug "mjc12test: holdings: #{holdings}"
+        #Rails.logger.debug "mjc12test: holdings: #{holdings}"
 
         # Items are keyed by the associated holding record
         holdings.each do |h, item_array|
 
           item_array.each do |i|
-            Rails.logger.debug "mjc12test: item arr: #{i}"
+           # Rails.logger.debug "mjc12test: item arr: #{i}"
 
             items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || i["active"]) && (i['location']['name'].present? && requestable_libraries.include?(i['location']['name']))
           end
@@ -90,7 +90,7 @@ module BlacklightCornellRequests
       # This isn't likely to happen, because the Request item button should be suppressed, but if there's
       # a work with only one item and that item is inactive, we need to redirect because the items array
       # will be empty.
-      Rails.logger.debug "mjc12test: items: #{items}"
+      #Rails.logger.debug "mjc12test: items: #{items}"
       if @document['items_json'].present? && eval(@document['items_json']).size == 1 && items.empty?
         flash[:alert] = "There are no items available to request for this title."
         redirect_to '/catalog/' + params["bibid"]
@@ -129,7 +129,7 @@ module BlacklightCornellRequests
           if @volumes.count > 1
             render 'shared/_volume_select'
             return
-          else
+          elsif @volumes.count == 1
             vol = @volumes[0]
             redirect_to '/request' + request.env['PATH_INFO'] + "?enum=#{vol.enum}&chron=#{vol.chron}&year=#{vol.year}"
             return
@@ -186,7 +186,7 @@ module BlacklightCornellRequests
       end
       options[BD] = [1] if borrow_direct.available
 
-      Rails.logger.debug "mjc12test: options hash - #{options}"
+      #Rails.logger.debug "mjc12test: options hash - #{options}"
       # At this point, options is a hash with keys being available delivery methods
       # and values being arrays of items deliverable using the keyed method
 
@@ -196,7 +196,7 @@ module BlacklightCornellRequests
       # the case of an item that is both in special collections and regular collections
       # somewhere else?
       if options[MannSpecial]
-        Rails.logger.debug "mjc12test: MANN SPECIAL OPTIONS CHECK #{}"
+        #Rails.logger.debug "mjc12test: MANN SPECIAL OPTIONS CHECK #{}"
         options[AskCirculation] = []
         # What about L2L?
       end
@@ -283,8 +283,8 @@ module BlacklightCornellRequests
     def update_options(item, options, patron)
 
       available_folio_methods = DeliveryMethod.available_folio_methods(item, patron)
-      Rails.logger.debug "mjc12test: AFM: #{available_folio_methods}"
-      Rails.logger.debug "mjc12test: item is #{item.inspect}"
+      # Rails.logger.debug "mjc12test: AFM: #{available_folio_methods}"
+      # Rails.logger.debug "mjc12test: item is #{item.inspect}"
 
       options[ILL] << item if ILL.available?(item, patron)
       options[L2L] << item if L2L.enabled? && available_folio_methods.include?(:l2l)
