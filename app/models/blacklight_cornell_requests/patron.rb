@@ -33,7 +33,7 @@ module BlacklightCornellRequests
 
     def barcode
 
-      @record['barcode']
+      @record && @record['barcode']
 
       # uri = URI.parse(ENV['NETID_URL'] + "?netid=#{@netid}")
       # response = Net::HTTP.get_response(uri)
