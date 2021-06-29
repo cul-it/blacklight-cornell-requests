@@ -58,7 +58,7 @@ module BlacklightCornellRequests
       work_metadata = Work.new(@id, @document)
       # Temporary Covid-19 work around: patrons can only make delivery requests from 5 libraries, use
       # this string to prevent other locations from appearing in the items array.
-      requestable_libraries = "Library Annex, Mann Library, Olin Library, Kroch Library Asia, Uris Library, ILR Library, Music Library, Africana Library, Fine Arts Library, Veterinary Library, Law Library, Mathematics Library"
+      requestable_libraries = "Library Annex, Mann Library, Olin Library, Kroch Library Asia, Uris Library, ILR Library, Music Library, Music Library (Lincoln Hall), Africana Library, Fine Arts Library, Veterinary Library, Law Library, Mathematics Library"
       # Create an array of all the item records associated with the bibid
       items = []
 
@@ -74,9 +74,10 @@ module BlacklightCornellRequests
         holdings.each do |h, item_array|
 
           item_array.each do |i|
-           # Rails.logger.debug "mjc12test: item arr: #{i}"
+            #Rails.logger.debug "mjc12test: item arr: #{i}"
 
             items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || i["active"]) && (i['location']['name'].present? && requestable_libraries.include?(i['location']['name']))
+            #Rails.logger.debug "mjc12test: added #{items}"
           end
         end
       # else
@@ -173,6 +174,7 @@ module BlacklightCornellRequests
         options[rm] = []
       end
 
+      #Rails.logger.debug "mjc12test: items: #{items}"
       items.each do |i|
         rp = {}
         # policy_key = "#{i.circ_group}-#{requester.group}-#{i.type['id']}"
@@ -283,7 +285,7 @@ module BlacklightCornellRequests
     def update_options(item, options, patron)
 
       available_folio_methods = DeliveryMethod.available_folio_methods(item, patron)
-      # Rails.logger.debug "mjc12test: AFM: #{available_folio_methods}"
+      Rails.logger.debug "mjc12test: AFM: #{available_folio_methods}"
       # Rails.logger.debug "mjc12test: item is #{item.inspect}"
 
       options[ILL] << item if ILL.available?(item, patron)
@@ -402,7 +404,7 @@ module BlacklightCornellRequests
         # 5. requester ID
         # 6. request type (Hold, Recall, or Page)
         # 7. request date
-        # 8. fulfillment preference (default to Delivery)
+        # 8. fulfillment preference (default to Hold Shelf)
         # 9. service point ID for pickup
         # 10. comments, if any
         url = ENV['OKAPI_URL']
@@ -415,7 +417,7 @@ module BlacklightCornellRequests
         pickup_location = params[:library_id]
         comments = params[:reqcomments]
 
-        response = CUL::FOLIO::Edge.request_item(url, tenant, token, item_id, requester_id, request_type, request_date, 'Delivery', pickup_location, comments)
+        response = CUL::FOLIO::Edge.request_item(url, tenant, token, item_id, requester_id, request_type, request_date, 'Hold Shelf', pickup_location, comments)
         Rails.logger.debug "mjc12test: got response #{response}"
 
       #   response = req.make_voyager_request params
