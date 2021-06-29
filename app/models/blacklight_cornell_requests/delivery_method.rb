@@ -38,6 +38,7 @@ module BlacklightCornellRequests
       Rails.logger.debug "mjc12test: item type: #{item.type['id']}"
       Rails.logger.debug "mjc12test: item loan type: #{item.loan_type['id']}"
       Rails.logger.debug "mjc12test: item location: #{item.location['id']}"
+      Rails.logger.debug "mjc12test: item status: #{item.status}"
 
       # TODO: add error handling
       result = CUL::FOLIO::Edge.request_options(
