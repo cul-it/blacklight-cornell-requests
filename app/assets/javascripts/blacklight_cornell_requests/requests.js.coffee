@@ -21,6 +21,7 @@ requests =
 
     # Listener for most types of requests
     $('#request-submit').click ->
+      $('#request-loading-spinner').spin('requesting')
       requests.submitForm()
       return false
 

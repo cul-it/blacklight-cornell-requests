@@ -34,6 +34,7 @@
       -if @alternate_methods && @alternate_methods.count > 1
         %div.clearfix
           %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit hold request")
+          %span{:id => 'request-loading-spinner'}
         = render :partial => 'shared/request_options'
       -else
         %div.clearfix
