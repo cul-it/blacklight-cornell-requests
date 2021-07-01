@@ -188,9 +188,14 @@ module BlacklightCornellRequests
     def self.available?(patron)
       # Unfortunately, the rules governing which patron groups are eligible to use BD
       # are not programmatically accessible. Thus, they are hard-coded here for your
-      # enjoyment (based on a table provided by Joanne Leary as of 3/30/18). See also
+      # enjoyment (based on a list provided by Caitlin on 7/1/21). See also
       # the logic for ILL below. TODO: unify these two in a separate function. They're the same
-      bd_patron_group_ids = [1,2,3,4,5,6,7,8,10,17]
+      bd_patron_group_ids = [
+        '503a81cd-6c26-400f-b620-14c08943697c',  # faculty
+        'ad0bc554-d5bc-463c-85d1-5562127ae91b',  # graduate
+        '3684a786-6671-4268-8ed0-9db82ebca60b',  # staff
+        'bdc2b6d4-5ceb-4a12-ab46-249b9a68473e'   # undergraduate
+      ]
 
       bd_patron_group_ids.include? patron.group
     end
@@ -225,8 +230,13 @@ module BlacklightCornellRequests
       
       # Unfortunately, the rules governing which patron groups are eligible to use ILL
       # are not programmatically accessible. Thus, they are hard-coded here for your
-      # enjoyment (based on a table provided by Joanne Leary as of 3/30/18).
-      ill_patron_group_ids = [1,2,3,4,5,6,7,8,10,17]
+      # enjoyment (based on a table provided by Caitlin on 7/1/21).
+      ill_patron_group_ids = [
+        '503a81cd-6c26-400f-b620-14c08943697c',  # faculty
+        'ad0bc554-d5bc-463c-85d1-5562127ae91b',  # graduate
+        '3684a786-6671-4268-8ed0-9db82ebca60b',  # staff
+        'bdc2b6d4-5ceb-4a12-ab46-249b9a68473e'   # undergraduate
+      ]
       return false unless ill_patron_group_ids.include? patron.group
 
       #return true if item.statusCode == STATUSES[:at_bindery]
