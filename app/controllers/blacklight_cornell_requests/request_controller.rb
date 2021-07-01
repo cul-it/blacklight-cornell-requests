@@ -1,5 +1,6 @@
 require_dependency "blacklight_cornell_requests/application_controller"
 require 'date'
+require 'json'
 
 module BlacklightCornellRequests
 
@@ -433,8 +434,9 @@ module BlacklightCornellRequests
           render js: "$('#main-flashes').hide(); window.location = '#{Rails.application.routes.url_helpers.solr_document_path(params[:bibid], :flash=>'success')}'"
           return
         else
-          Rails.logger.info "Response: was failure" + response[:error].inspect
-          flash[:error] = response[:error]
+          error = JSON.parse(response[:error])
+          Rails.logger.info "Request: response failed: " + error.to_s
+          flash[:error] = "Error: the request could not be completed (#{error['errors'][0]['message']})"
         end
       end
 
