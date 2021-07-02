@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.0.2
+- Have the make_bd_request method run thrpugh the CULBorrowDirect model.
+
 ## v4.0.1
 - Bug fixes for requestable libraries list and BD/ILL patron groups list
 - Make request error messages more user-friendly
