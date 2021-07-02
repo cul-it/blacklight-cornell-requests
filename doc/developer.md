@@ -9,10 +9,12 @@ Requests runs as a Rails engine. Assuming a working `blacklight-cornell` instanc
 2. In the root-level `.env` file, add the necessary [key-value pairs](envkeys.md).
 Note that some keys are also used by the MyAccount engine.
 
-After restarting the Blacklight server, MyAccount should be accessible at `/myaccount`.
+After restarting the Blacklight server, Requests should be accessible at `/request`.
+
 ## Important files
 
 ## Important external systems
+Requests communicates with FOLIO (to determine whether holds, recalls, and pages can be placed for an item, and to place those types of requests), Borrow Direct, and ILLiad.
 
 ## Authentication and debugging without SAML
 By default, Requests uses SAML authentication to authenticate a user and retrieve a netid (see the `authenticate_user` and `user` methods in `my_account_controller.rb`). Since SAML is a little tricky to get up and running on an individual development machine, there is a workaround. If Blacklight/Rails is running in `development` mode, a special key can be added to the Blacklight `.env` file: `DEBUG_USER=<netid>`. (This has no effect if Rails is running in `production` mode, to prevent bad things from happening. This value can also be used to debug the MyAccount engine.) In that case, SAML authentication is bypassed and Requests loads with the account information for the specified netid.
