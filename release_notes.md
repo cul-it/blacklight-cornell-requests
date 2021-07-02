@@ -1,5 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.0.1
+- Bug fixes for requestable libraries list and BD/ILL patron groups list
+- Make request error messages more user-friendly
+
 ## v4.0
 Extensive rewrite of the code to replace Voyager functionality with FOLIO!
 
