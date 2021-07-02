@@ -29,8 +29,9 @@ module BlacklightCornellRequests
 
     # patron should be a Patron instance
     # work = { :isbn, :title }
+    # make_request: this boolean is "true" when calling request_from_bd from the request controller
     # ISBN is best, but title will work if ISBN isn't available.
-    def initialize(patron, work)
+    def initialize(patron, work, make_request=false)
       @patron = patron
       @work = work
       @credentials = nil
@@ -49,7 +50,7 @@ module BlacklightCornellRequests
       # AID is the AuthenticationId needed to use the Borrow Direct APIs
       @aid = authenticate
 
-      @available = available_in_bd?
+      @available = available_in_bd? if !make_request
     end
 
     # Switch between test and production configuration
@@ -261,10 +262,10 @@ module BlacklightCornellRequests
       response = nil
       # This block can throw timeout errors if BD takes to long to respond
       begin
-        if @work.isbn.present?
+        if params[:isbn].present?
           # Note: [*<variable>] gives us an array if we don't already have one,
           # which we need for the map.
-          response = BorrowDirect::RequestItem.new(@patron.barcode).make_request(params[:pickup_location], {:isbn => [*@work.isbn.map!{|i| i = i.clean_isbn}[0]]}, params[:notes])
+          response = BorrowDirect::RequestItem.new(@patron.barcode).make_request(params[:pickup_location], {:isbn => [*params[:isbn]].map!{|i| i = i.clean_isbn}[0]}, params[:notes])
         end
 
         return response  # response should be the BD request tracking number

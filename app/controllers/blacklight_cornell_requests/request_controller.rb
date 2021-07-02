@@ -478,13 +478,19 @@ module BlacklightCornellRequests
     end
 
     def make_bd_request
-      
       if params[:library_id].blank?
         flash[:error] = "Please select a library pickup location"
       else
         resp, document = search_service.fetch params[:bibid]
         isbn = document[:isbn_display]
-        req = BlacklightCornellRequests::Request.new(params[:bibid])
+        title = document[:title_display]
+        requester = Patron.new(user)
+        work = { :isbn => isbn, :title => title }
+        # Following FOLIO updates, using CULBorrowDirect for now as it has both the request_from_bd method 
+        #and an authenticate method, which is called on initialization. Passing the boolean provides a way 
+        # of distinguishing between the availability check and the call that actually makes the request.
+        make_request = true
+        req = BlacklightCornellRequests::CULBorrowDirect.new(requester, work, make_request)
         resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id], :notes => params[:reqcomments] })
         if resp
           status = 'success'
@@ -500,7 +506,6 @@ module BlacklightCornellRequests
       else
         render :partial => '/shared/flash_msg', :layout => false
       end
-
     end
 
     # AJAX responder used with requests.js.coffee to set the volume
