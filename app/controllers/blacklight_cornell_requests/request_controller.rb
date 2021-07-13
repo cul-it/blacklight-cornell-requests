@@ -26,27 +26,8 @@ module BlacklightCornellRequests
       document
     end
 
-    def params_bibid
-      # allow bibid param to have optional &scan=yes suffix
-      id = params[:bibid]
-      pos1 = id.index('&')
-      id = @id[0,pos1] unless pos1.nil?
-      id
-    end
-
-    def params_scan
-      # return yes if bibid param has optional &scan=yes suffix
-      id = params[:bibid]
-      if id.include? "&scan=yes"
-        "yes"
-      else
-        ""
-      end
-    end
-
     def auth_magic_request target=''
-      @id = params_bibid
-      session[:cuwebauth_return_path] = magic_request_path(@id)
+      session[:cuwebauth_return_path] = magic_request_path(params[:bibid])
 #******************
 save_level = Rails.logger.level; Rails.logger.level = Logger::WARN
 jgr25_context = "#{__FILE__}:#{__LINE__}"
@@ -73,8 +54,6 @@ Rails.logger.level = save_level
         return
       end
 
-      @id = params_bibid
-      @scan = params_scan
 #******************
 save_level = Rails.logger.level; Rails.logger.level = Logger::WARN
 jgr25_context = "#{__FILE__}:#{__LINE__}"
@@ -82,13 +61,12 @@ Rails.logger.warn "jgr25_log\n#{jgr25_context}:"
 msg = [" #{__method__} ".center(60,'Z')]
 msg << jgr25_context
 msg << "params: " + params.inspect
-msg << "@id: " + @id.inspect
-msg << "@scan: " + @scan.inspect
 msg << 'Z' * 60
 msg.each { |x| puts 'ZZZ ' + x.to_yaml }
 Rails.logger.level = save_level
 #binding.pry
 #*******************
+      @id = params[:bibid]
       # added rescue for DISCOVERYACCESS-5863
       begin
         resp, @document = search_service.fetch @id
@@ -140,7 +118,7 @@ Rails.logger.level = save_level
       #Rails.logger.debug "mjc12test: items: #{items}"
       if @document['items_json'].present? && eval(@document['items_json']).size == 1 && items.empty?
         flash[:alert] = "There are no items available to request for this title."
-        redirect_to '/catalog/' + @id
+        redirect_to '/catalog/' + params["bibid"]
         return
       end
 
