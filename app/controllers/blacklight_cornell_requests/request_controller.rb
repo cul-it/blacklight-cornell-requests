@@ -48,14 +48,18 @@ module BlacklightCornellRequests
       @id = params_bibid
       session[:cuwebauth_return_path] = magic_request_path(@id)
 #******************
+save_level = Rails.logger.level; Rails.logger.level = Logger::WARN
+jgr25_context = "#{__FILE__}:#{__LINE__}"
+Rails.logger.warn "jgr25_log\n#{jgr25_context}:"
 msg = [" #{__method__} ".center(60,'Z')]
 msg << jgr25_context
 msg << "session[:cuwebauth_return_path]: " + session[:cuwebauth_return_path].inspect
 msg << 'Z' * 60
 msg.each { |x| puts 'ZZZ ' + x.to_yaml }
+Rails.logger.level = save_level
 #binding.pry
 #*******************
-      Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
+      Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(@id).inspect}"
       if ENV['DEBUG_USER'] && Rails.env.development?
         magic_request target
       else
@@ -71,6 +75,20 @@ msg.each { |x| puts 'ZZZ ' + x.to_yaml }
 
       @id = params_bibid
       @scan = params_scan
+#******************
+save_level = Rails.logger.level; Rails.logger.level = Logger::WARN
+jgr25_context = "#{__FILE__}:#{__LINE__}"
+Rails.logger.warn "jgr25_log\n#{jgr25_context}:"
+msg = [" #{__method__} ".center(60,'Z')]
+msg << jgr25_context
+msg << "params: " + params.inspect
+msg << "@id: " + @id.inspect
+msg << "@scan: " + @scan.inspect
+msg << 'Z' * 60
+msg.each { |x| puts 'ZZZ ' + x.to_yaml }
+Rails.logger.level = save_level
+#binding.pry
+#*******************
       # added rescue for DISCOVERYACCESS-5863
       begin
         resp, @document = search_service.fetch @id
