@@ -129,7 +129,7 @@ Rails.logger.level = save_level
       # else
       #   flash[:alert] = "This title may not be requested because it is available online." if @document['etas_facet'].present?
       #   redirect_to '/catalog/' + params["bibid"]
-      #   return        
+      #   return
       # end
 
 
@@ -441,7 +441,7 @@ Rails.logger.level = save_level
       #   if params[:holding_id] == 'any'
       #     params[:holding_id] = ''
       #   end
-      
+
         # To submit a FOLIO request, we need:
         # 1. Okapi URL
         # 2. Okapi tenant
@@ -531,8 +531,8 @@ Rails.logger.level = save_level
         title = document[:title_display]
         requester = Patron.new(user)
         work = { :isbn => isbn, :title => title }
-        # Following FOLIO updates, using CULBorrowDirect for now as it has both the request_from_bd method 
-        #and an authenticate method, which is called on initialization. Passing the boolean provides a way 
+        # Following FOLIO updates, using CULBorrowDirect for now as it has both the request_from_bd method
+        #and an authenticate method, which is called on initialization. Passing the boolean provides a way
         # of distinguishing between the availability check and the call that actually makes the request.
         make_request = true
         req = BlacklightCornellRequests::CULBorrowDirect.new(requester, work, make_request)
