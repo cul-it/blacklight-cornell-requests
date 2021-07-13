@@ -26,8 +26,27 @@ module BlacklightCornellRequests
       document
     end
 
+    def params_bibid
+      # allow bibid param to have optional &scan=yes suffix
+      id = params[:bibid]
+      pos1 = id.index('&')
+      id = @id[0,pos1] unless pos1.nil?
+      id
+    end
+
+    def params_scan
+      # return yes if bibid param has optional &scan=yes suffix
+      id = params[:bibid]
+      if id.include? "&scan=yes"
+        "yes"
+      else
+        ""
+      end
+    end
+
     def auth_magic_request target=''
-      session[:cuwebauth_return_path] = magic_request_path(params[:bibid])
+      @id = params_bibid
+      session[:cuwebauth_return_path] = magic_request_path(@id)
 #******************
 msg = [" #{__method__} ".center(60,'Z')]
 msg << jgr25_context
@@ -50,7 +69,8 @@ msg.each { |x| puts 'ZZZ ' + x.to_yaml }
         return
       end
 
-      @id = params[:bibid]
+      @id = params_bibid
+      @scan = params_scan
       # added rescue for DISCOVERYACCESS-5863
       begin
         resp, @document = search_service.fetch @id
@@ -63,7 +83,6 @@ msg.each { |x| puts 'ZZZ ' + x.to_yaml }
       end
      # @document = @document
      #Rails.logger.debug "mjc12test: document = #{@document.inspect}"
-      @scan = params[:scan].present? ? params[:scan] : ""
       work_metadata = Work.new(@id, @document)
       # Temporary Covid-19 work around: patrons can only make delivery requests from 5 libraries, use
       # this string to prevent other locations from appearing in the items array.
@@ -103,7 +122,7 @@ msg.each { |x| puts 'ZZZ ' + x.to_yaml }
       #Rails.logger.debug "mjc12test: items: #{items}"
       if @document['items_json'].present? && eval(@document['items_json']).size == 1 && items.empty?
         flash[:alert] = "There are no items available to request for this title."
-        redirect_to '/catalog/' + params["bibid"]
+        redirect_to '/catalog/' + @id
         return
       end
 
