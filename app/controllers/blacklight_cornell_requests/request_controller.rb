@@ -27,7 +27,8 @@ module BlacklightCornellRequests
     end
 
     def auth_magic_request target=''
-      session[:cuwebauth_return_path] = magic_request_path(params[:bibid])
+      id_format = params[:format].present? ? params[:bibid] + '.' + params[:format] : params[:bibid]
+      session[:cuwebauth_return_path] = magic_request_path(id_format)
 #******************
 save_level = Rails.logger.level; Rails.logger.level = Logger::WARN
 jgr25_context = "#{__FILE__}:#{__LINE__}"
@@ -36,12 +37,13 @@ msg = [" #{__method__} ".center(60,'Z')]
 msg << jgr25_context
 msg << "session[:cuwebauth_return_path]: " + session[:cuwebauth_return_path].inspect
 msg << "params: " + params.inspect
+msg << "id_format: " + id_format.inspect
 msg << 'Z' * 60
 msg.each { |x| puts 'ZZZ ' + x.to_yaml }
 Rails.logger.level = save_level
 #binding.pry
 #*******************
-      Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(@id).inspect}"
+      Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(id_format).inspect}"
       if ENV['DEBUG_USER'] && Rails.env.development?
         magic_request target
       else
@@ -80,7 +82,7 @@ Rails.logger.level = save_level
       end
      # @document = @document
      #Rails.logger.debug "mjc12test: document = #{@document.inspect}"
-      @scan = params[:filter].present? && params[:filter] == "scan" ? "yes" : ""
+      @scan = params[:format].present? && params[:format] == "scan" ? "yes" : ""
       work_metadata = Work.new(@id, @document)
       # Temporary Covid-19 work around: patrons can only make delivery requests from 5 libraries, use
       # this string to prevent other locations from appearing in the items array.
