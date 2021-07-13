@@ -35,6 +35,7 @@ Rails.logger.warn "jgr25_log\n#{jgr25_context}:"
 msg = [" #{__method__} ".center(60,'Z')]
 msg << jgr25_context
 msg << "session[:cuwebauth_return_path]: " + session[:cuwebauth_return_path].inspect
+msg << "params: " + params.inspect
 msg << 'Z' * 60
 msg.each { |x| puts 'ZZZ ' + x.to_yaml }
 Rails.logger.level = save_level
@@ -79,6 +80,7 @@ Rails.logger.level = save_level
       end
      # @document = @document
      #Rails.logger.debug "mjc12test: document = #{@document.inspect}"
+      @scan = params[:filter].present? && params[:filter] == "scan" ? "yes" : ""
       work_metadata = Work.new(@id, @document)
       # Temporary Covid-19 work around: patrons can only make delivery requests from 5 libraries, use
       # this string to prevent other locations from appearing in the items array.
