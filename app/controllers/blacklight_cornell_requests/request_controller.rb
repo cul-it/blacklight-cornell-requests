@@ -27,8 +27,9 @@ module BlacklightCornellRequests
     end
 
     def auth_magic_request target=''
-      session[:cuwebauth_return_path] = magic_request_path(params[:bibid])
-      Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(params[:bibid]).inspect}"
+      id_format = params[:format].present? ? params[:bibid] + '.' + params[:format] : params[:bibid]
+      session[:cuwebauth_return_path] = magic_request_path(id_format)
+      Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(id_format).inspect}"
       if ENV['DEBUG_USER'] && Rails.env.development?
         magic_request target
       else
@@ -41,7 +42,7 @@ module BlacklightCornellRequests
         head :no_content
         return
       end
-      
+
       @id = params[:bibid]
       # added rescue for DISCOVERYACCESS-5863
       begin
@@ -55,7 +56,7 @@ module BlacklightCornellRequests
       end
      # @document = @document
      #Rails.logger.debug "mjc12test: document = #{@document.inspect}"
-      @scan = params[:scan].present? ? params[:scan] : ""
+      @scan = params[:format].present? && params[:format] == "scan" ? "yes" : ""
       work_metadata = Work.new(@id, @document)
       # Temporary Covid-19 work around: patrons can only make delivery requests from 5 libraries, use
       # this string to prevent other locations from appearing in the items array.
@@ -84,7 +85,7 @@ module BlacklightCornellRequests
       # else
       #   flash[:alert] = "This title may not be requested because it is available online." if @document['etas_facet'].present?
       #   redirect_to '/catalog/' + params["bibid"]
-      #   return        
+      #   return
       # end
 
 
@@ -125,7 +126,7 @@ module BlacklightCornellRequests
       end
 
       # If this is a multivol item but no volume has been selected, show the appropriate screen
-      if @document['multivol_b'] 
+      if @document['multivol_b']
         @volumes = Volume.volumes(items)
         if params[:volume].blank?
           if @volumes.count > 1
@@ -217,12 +218,12 @@ module BlacklightCornellRequests
       Rails.logger.debug "mjc12test: alternate #{@alternate_methods}"
       # If no other methods are found (i.e., there are no item records to process, such as for
       # an on-order record), ask a librarian
-      fastest_method[:method] ||= AskLibrarian 
+      fastest_method[:method] ||= AskLibrarian
 
       # If target (i.e., a particular delivery method) is specified in the URL, then we
       # have to prefer that method above others (even if others are faster in theory).
       # This code is a bit ugly, but it swaps the fastest method with the appropriate entry
-      # in the alternate_methods array. 
+      # in the alternate_methods array.
       if target.present?
         enabled_request_methods.each do |rm|
           if rm::TemplateName == target
@@ -396,7 +397,7 @@ module BlacklightCornellRequests
       #   if params[:holding_id] == 'any'
       #     params[:holding_id] = ''
       #   end
-      
+
         # To submit a FOLIO request, we need:
         # 1. Okapi URL
         # 2. Okapi tenant
@@ -486,8 +487,8 @@ module BlacklightCornellRequests
         title = document[:title_display]
         requester = Patron.new(user)
         work = { :isbn => isbn, :title => title }
-        # Following FOLIO updates, using CULBorrowDirect for now as it has both the request_from_bd method 
-        #and an authenticate method, which is called on initialization. Passing the boolean provides a way 
+        # Following FOLIO updates, using CULBorrowDirect for now as it has both the request_from_bd method
+        #and an authenticate method, which is called on initialization. Passing the boolean provides a way
         # of distinguishing between the availability check and the call that actually makes the request.
         make_request = true
         req = BlacklightCornellRequests::CULBorrowDirect.new(requester, work, make_request)
