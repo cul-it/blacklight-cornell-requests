@@ -1,7 +1,7 @@
 # Release Notes - blacklight-cornell-requests
 
 ## v4.0.3
-- Change scan part of request url from &scan=yes to .scan (using .:feature) to keep bibid separate - DISCOVERYACCESS-7176
+- Change scan part of request url from &scan=yes to .scan (using .:format) to keep bibid separate - DISCOVERYACCESS-7176
 
 ## v4.0.2
 - Have the make_bd_request method run thrpugh the CULBorrowDirect model.
