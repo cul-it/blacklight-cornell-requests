@@ -62,7 +62,8 @@ module BlacklightCornellRequests
       # to do this. Not the prettiest code....
       res = REQUEST_TYPES_BY_ITEM_STATUS[:"#{item.status}"]
       Rails.logger.debug "mjc12test: RTBYS: #{res}"
-      return result[:request_methods].select { |rm| REQUEST_TYPES_BY_ITEM_STATUS[:"#{item.status}"].include?(rm) }
+      return result[:request_methods].select { |rm| res.include?(rm) } if !res.nil?
+      return [] if res.nil?
     end
 
     def self.description
