@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.0.5
+- Updated delivery location lists
+
 ## v4.0.4
 - Fixed NoMethodError on nil object using include? - DISCOVERYACCESS-7216
 

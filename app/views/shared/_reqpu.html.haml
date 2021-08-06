@@ -4,20 +4,23 @@
   .col-sm-10
     %select#pickup-locations.form-control{:name => 'library_id'}
       %option(value='') -- Select a location --
-      %option{:value => "c4c90014-c8c9-4ade-8f24-b5e313319f4b", 'data-bd-code': 'F'} Africana Center Entrance
-      %option{:value => "b232d619-3441-4fd0-b94c-210002e1fbec", 'data-bd-code': 'G'} Annex Main Entrance Foyer
+      %option{:value => "7c5abc9f-f3d7-4856-b8d7-6712462ca007", 'data-bd-code': 'F'} Africana
+      %option{:value => "b232d619-3441-4fd0-b94c-210002e1fbec", 'data-bd-code': 'G'} Annex Contactless Pickup
+      %option{:value => "91f726ff-cbb1-4d60-821e-543ec1e91cc5", 'data-bd-code': ''} Annex Reading Room Use Only
       -# %option{:value => 'a27d5cda-4810-4b58-874c-1fe1955829e3'} Faculty Department Office
-      -# %option{:value => "86932cca-3b71-4d29-b0e9-0680b1fffabf", 'data-bd-code': 'H'} Fine Arts Circulation
+      %option{:value => "86932cca-3b71-4d29-b0e9-0680b1fffabf", 'data-bd-code': 'H'} Fine Arts
       -# %option{:value => "8eba8e43-90ae-4be5-b786-1282474301b0", 'data-bd-code': 'A'} Geneva Circulation
-      -# %option{:value => "ab1fce49-e832-41a4-8afc-7179a62332e2", 'data-bd-code': 'I'} ILR Circulation
+      %option{:value => "ab1fce49-e832-41a4-8afc-7179a62332e2", 'data-bd-code': 'I'} Industrial Labor and Relations
       %option{:value => "041d6c8d-20a1-4fd7-8588-458286782aea", 'data-bd-code': 'B'} Law Library – Law School community only
       -# %option{:value => "f4b8e9e3-831b-44eb-aafe-20f583c555a1", 'data-bd-code': 'K'} Management Circulation
-      %option{:value => "4752a822-380b-446c-860f-bccf641d7118", 'data-bd-code': 'C'} Mann Lobby
-      -# %option{:value => "d6756e21-b828-4a0f-9346-2a10633c3b7a", 'data-bd-code': 'J'} Math Circulation
-      -# %option{:value => "1eb3510f-c403-44bf-b3ce-cf693b20ba56", 'data-bd-code': 'L'} Music Circulation
-      -# %option{:value => "760beccd-362d-45b6-bfae-639565a877f2", 'data-bd-code': 'D'} Olin Circulation
+      %option{:value => "872beba0-1bdf-4870-95f3-8781baddc02e", 'data-bd-code': 'C'} Mann     
+      %option{:value => "4752a822-380b-446c-860f-bccf641d7118", 'data-bd-code': 'P'} Mann Contactless Pickup
+      %option{:value => "d6756e21-b828-4a0f-9346-2a10633c3b7a", 'data-bd-code': 'J'} Math
+      %option{:value => "1a072083-330f-4e1b-afa6-1ef15e24e3c3", 'data-bd-code': 'Q'} Math Contactless Pickup
+      %option{:value => "1eb3510f-c403-44bf-b3ce-cf693b20ba56", 'data-bd-code': 'L'} Music
+      %option{:value => "760beccd-362d-45b6-bfae-639565a877f2", 'data-bd-code': 'D'} Olin
       -# %option{:value => "debc685c-e905-48d3-9571-bff4742e7249", 'data-bd-code': 'M'} Ornithology Circulation
-      %option{:value => "e2f7ad76-ef2a-454f-8fd4-712caaa0f72b"} Uris Clock Tower
+      %option{:value => "e2f7ad76-ef2a-454f-8fd4-712caaa0f72b", 'data-bd-code': 'O'} Uris Tower Contactless Pickup
       -# %option{:value => "cce94bc5-bb31-4054-96d2-260ba832ef2a"} Uris Clock Tower
       -# %option{:value => "b097fb3b-3323-4812-9bf9-ccd7f2ff973d", 'data-bd-code': 'E'} Veterinary Library (CVM atrium)
       - if special_delivery_options.present?
