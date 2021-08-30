@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.0.7
+- Updated delivery location lists again again
+
 ## v4.0.6
 - Updated delivery location lists again
 
