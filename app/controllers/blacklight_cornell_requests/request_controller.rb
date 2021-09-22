@@ -58,9 +58,6 @@ module BlacklightCornellRequests
      #Rails.logger.debug "mjc12test: document = #{@document.inspect}"
       @scan = params[:format].present? && params[:format] == "scan" ? "yes" : ""
       work_metadata = Work.new(@id, @document)
-      # Temporary Covid-19 work around: patrons can only make delivery requests from 5 libraries, use
-      # this string to prevent other locations from appearing in the items array.
-      requestable_libraries = "Library Annex, Mann Library, Olin Library, Kroch Library Asia, Uris Library, ILR Library, Music Library, Music Library, Africana Library, Fine Arts Library, Veterinary Library, Law Library, Mathematics Library"
       # Create an array of all the item records associated with the bibid
       items = []
 
@@ -78,7 +75,7 @@ module BlacklightCornellRequests
           item_array.each do |i|
             #Rails.logger.debug "mjc12test: document: #{}"
 
-            items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || i["active"]) && (i['location']['name'].present? && requestable_libraries.include?(i['location']['library']))
+            items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || i["active"]) && (i['location']['name'].present?)
             #Rails.logger.debug "mjc12test: added #{items}"
           end
         end
