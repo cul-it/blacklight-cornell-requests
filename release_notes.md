@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.0.8
+- Removed Covid code that defined "requestable" libraries.
+
 ## v4.0.7
 - Updated delivery location lists again again
 
