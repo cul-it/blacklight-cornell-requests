@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.0.10
+- Updated delivery location lists (renaming Vet library)
+
 ## v4.0.9
 - Updated delivery location lists again again again again (reactivating Ornithology locations)
 
