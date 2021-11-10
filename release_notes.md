@@ -3,10 +3,11 @@
 ## v4.1.0
 
 ### New features
-- Pickup location dropdown will default to user's preferred service point (if set in FOLIO user record)
+- Pickup location dropdown will default to user's preferred service point (if set in FOLIO user record) (DISCOVERYACCESS-6478)
 
 ### Bug fixes
-- Fixed a bug causing some Borrow Direct availability checks to return false positives
+- Fixed a bug causing some Borrow Direct availability checks to return false positives (DISCOVERYACCESS-7344)
+- Prevented users from clicking submit button multiple times and creating duplicate requests (DISCOVERYACCESS-7336)
 
 ## v4.0.10
 - Updated delivery location lists (renaming Vet library)
