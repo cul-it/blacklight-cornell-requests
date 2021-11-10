@@ -243,7 +243,7 @@ module BlacklightCornellRequests
       @mann_special_delivery_link = work_metadata.mann_special_delivery_link
       @scanit_link = work_metadata.scanit_link
       @netid = user
-      @patron = BlacklightCornellRequests::Patron.new(@netid).get_folio_record()
+      @patron = BlacklightCornellRequests::Patron.new(@netid).record
 
       @name = "#{@patron['personal']['firstName']} #{@patron['personal']['lastName']}"
 

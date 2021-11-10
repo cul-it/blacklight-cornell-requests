@@ -3,7 +3,7 @@
 ## v4.1.0
 
 ### New features
-- 
+- Pickup location dropdown will default to user's preferred service point (if set in FOLIO user record)
 
 ### Bug fixes
 - Fixed a bug causing some Borrow Direct availability checks to return false positives
