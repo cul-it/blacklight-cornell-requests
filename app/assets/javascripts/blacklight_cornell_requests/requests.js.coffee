@@ -22,6 +22,7 @@ requests =
     # Listener for most types of requests
     $('#request-submit').click ->
       $('#request-loading-spinner').spin('requesting')
+      $('#request-submit').attr('disabled', 'disabled')
       requests.submitForm()
       return false
 
