@@ -1,5 +1,13 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.1.0
+
+### New features
+- 
+
+### Bug fixes
+- Fixed a bug causing some Borrow Direct availability checks to return false positives
+
 ## v4.0.10
 - Updated delivery location lists (renaming Vet library)
 
