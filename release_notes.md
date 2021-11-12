@@ -8,6 +8,7 @@
 ### Bug fixes
 - Fixed a bug causing some Borrow Direct availability checks to return false positives (DISCOVERYACCESS-7344)
 - Prevented users from clicking submit button multiple times and creating duplicate requests (DISCOVERYACCESS-7336)
+- Updated purchase request form email address to use env variable REQUEST_MAILER_EMAIL (DISCOVERYACCESS-7038)
 
 ## v4.0.10
 - Updated delivery location lists (renaming Vet library)
