@@ -206,11 +206,10 @@ module BlacklightCornellRequests
 
       begin
         response = RestClient.post url, body, { content_type: :json }
-
         # Assuming a successful response, the 'FulfillmentType' property should have a value of either
         # CONSORTIUM -- which indicates it's available through BD -- or LOCAL or ILL, which indicate
         # not available from BD.
-        return response.body['FulfillmentType'] == 'CONSORTIUM'
+        return JSON.parse(response.body)['FulfillmentType'] == 'CONSORTIUM'
       rescue RestClient::ExceptionWithResponse => e
         Rails.logger.debug "mjc12test2: error: #{e.response}"
         return false
