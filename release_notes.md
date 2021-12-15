@@ -1,5 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.1.1
+- Add protection against nil values
+- More changes to delivery location lists (thanks, COVID)
+
 ## v4.1.0
 
 ### New features
