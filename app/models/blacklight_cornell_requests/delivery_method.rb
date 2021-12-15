@@ -35,10 +35,10 @@ module BlacklightCornellRequests
       Rails.logger.debug "mjc12test: tenant: #{tenant}"
       Rails.logger.debug "mjc12test: token: #{token[:token]}"
       Rails.logger.debug "mjc12test: patron group: #{patron.record['patronGroup']}"
-      Rails.logger.debug "mjc12test: item type: #{item.type['id']}"
-      Rails.logger.debug "mjc12test: item loan type: #{item.loan_type['id']}"
-      Rails.logger.debug "mjc12test: item location: #{item.location['id']}"
-      Rails.logger.debug "mjc12test: item status: #{item.status}"
+      Rails.logger.debug "mjc12test: item type: #{item.type&.dig('id')}"
+      Rails.logger.debug "mjc12test: item loan type: #{item&.loan_type['id']}"
+      Rails.logger.debug "mjc12test: item location: #{item&.location['id']}"
+      Rails.logger.debug "mjc12test: item status: #{item&.status}"
 
       # TODO: add error handling
       result = CUL::FOLIO::Edge.request_options(
@@ -46,7 +46,7 @@ module BlacklightCornellRequests
         tenant, 
         token[:token],
         patron.record['patronGroup'],
-        item.type['id'],
+        item.type&.dig('id'),
         item.loan_type['id'],
         item.location['id']
       )

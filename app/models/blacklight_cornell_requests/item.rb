@@ -135,7 +135,7 @@ module BlacklightCornellRequests
 
     # Check whether a loan type is non-circulating
     def nocirc_loan?
-      @type['id'] == '2e48e713-17f3-4c13-a9f8-23845bb210a4'
+      @type.present? && @type['id'] == '2e48e713-17f3-4c13-a9f8-23845bb210a4'
     end
 
   end
