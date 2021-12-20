@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## PENDING
+- Fixed crash caused by BD API returning a 404 if search term not found (sigh).
+
 ## v4.1.1
 - Add protection against nil values
 - More changes to delivery location lists (thanks, COVID)
