@@ -1,6 +1,7 @@
 # Release Notes - blacklight-cornell-requests
 
-## PENDING
+## v4.2.0
+- Use FOLIO service point records to dynamically populate pickup location list (DISCOVERYACCESS-7378)
 - Fixed crash caused by BD API returning a 404 if search term not found (sigh).
 
 ## v4.1.1
