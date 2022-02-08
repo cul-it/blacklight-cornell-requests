@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.2.1
+- Re-enable Fine Arts in Borrow Direct location list
+
 ## v4.2.0
 - Use FOLIO service point records to dynamically populate pickup location list (DISCOVERYACCESS-7378)
 - Fixed crash caused by BD API returning a 404 if search term not found (sigh).
