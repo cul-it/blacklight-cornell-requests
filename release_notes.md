@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.2.2
+- Re-enable Olin and Lab of O in Borrow Direct location list
+
 ## v4.2.1
 - Re-enable Fine Arts in Borrow Direct location list
 
