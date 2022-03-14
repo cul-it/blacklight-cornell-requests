@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## CURRENT VERSION
+- Remove the ruby-oci8 gem (no longer needed)
+
 ## v4.2.2
 - Re-enable Olin and Lab of O in Borrow Direct location list
 
