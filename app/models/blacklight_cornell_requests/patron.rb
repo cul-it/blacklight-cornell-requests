@@ -1,4 +1,3 @@
-require 'oci8'
 require 'cul/folio/edge'
 require 'rest-client'
 require 'json'
