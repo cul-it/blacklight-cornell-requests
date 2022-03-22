@@ -57,7 +57,7 @@ Rails.logger.level = save_level
       else
         # Replace redirect_to with redirect_post (from repost gem) to deal with new
         # Omniauth gem requirements
-        redirect_post("#{scheme_host_port}/users/auth/saml", options: {authenticity_token: :auto})
+        redirect_post("#{scheme_host}/users/auth/saml", options: {authenticity_token: :auto})
       end
     end
 
