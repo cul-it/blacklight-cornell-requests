@@ -29,6 +29,20 @@ module BlacklightCornellRequests
 
     def auth_magic_request target=''
       uri = URI(request.original_url)
+#******************
+save_level = Rails.logger.level; Rails.logger.level = Logger::WARN
+msg.each { |x| puts 'ZZZ ' + x.to_yaml }
+jgr25_context = "#{__FILE__}:#{__LINE__}"
+Rails.logger.warn "jgr25_log\n#{jgr25_context}:"
+msg = [" #{__method__} ".center(60,'Z')]
+msg << jgr25_context
+msg << "request.original_url: " + request.original_url.inspect
+msg << "uri: " + uri.inspect
+msg << 'Z' * 60
+msg.each { |x| puts 'ZZZ ' + x.to_yaml }
+Rails.logger.level = save_level
+#binding.pry
+#*******************
       scheme_host = "#{uri.scheme}://#{uri.host}"
       if uri.port.present? && uri.port !=  uri.default_port()
         scheme_host = scheme_host + ':' + uri.port
