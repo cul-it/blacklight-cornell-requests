@@ -29,7 +29,10 @@ module BlacklightCornellRequests
 
     def auth_magic_request target=''
       uri = URI(request.original_url)
-      scheme_host_port = "#{uri.scheme}://#{uri.host}" + (uri.port == 80) ? '' : ':' + uri.port
+      scheme_host = "#{uri.scheme}://#{uri.host}"
+      if uri.port.present? && uri.port !=  uri.default_port()
+        scheme_host = scheme_host + ':' + uri.port
+      end
       id_format = params[:format].present? ? params[:bibid] + '.' + params[:format] : params[:bibid]
       session[:cuwebauth_return_path] = magic_request_path(id_format)
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(id_format).inspect}"
@@ -43,7 +46,7 @@ msg = [" #{__method__} ".center(60,'Z')]
 msg << jgr25_context
 msg << "request.original_url: " + request.original_url.inspect
 msg << "uri: " + uri.inspect
-msg << "scheme_host_port: " + scheme_host_port.inspect
+msg << "scheme_host: " + scheme_host.inspect
 msg << 'Z' * 60
 msg.each { |x| puts 'ZZZ ' + x.to_yaml }
 Rails.logger.level = save_level
