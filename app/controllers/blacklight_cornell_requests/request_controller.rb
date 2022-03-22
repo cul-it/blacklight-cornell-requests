@@ -1,6 +1,7 @@
 require_dependency "blacklight_cornell_requests/application_controller"
 require 'date'
 require 'json'
+require 'repost'
 
 module BlacklightCornellRequests
 
@@ -33,7 +34,9 @@ module BlacklightCornellRequests
       if ENV['DEBUG_USER'] && Rails.env.development?
         magic_request target
       else
-        redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+        # Replace redirect_to with redirect_post (from repost gem) to deal with new
+        # Omniauth gem requirements
+        redirect_post "#{request.protocol}#{request.host_with_port}/users/auth/saml"
       end
     end
 

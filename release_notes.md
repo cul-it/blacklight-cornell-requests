@@ -2,6 +2,7 @@
 
 ## CURRENT VERSION
 - Remove the ruby-oci8 gem (no longer needed)
+- Add repost gem dependency & use it to update auth calls for new Omniauth requirements
 
 ## v4.2.2
 - Re-enable Olin and Lab of O in Borrow Direct location list
