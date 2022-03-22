@@ -28,11 +28,6 @@ module BlacklightCornellRequests
     end
 
     def auth_magic_request target=''
-      uri = URI(request.original_url)
-      scheme_host = "#{uri.scheme}://#{uri.host}"
-      if uri.port.present? && uri.port !=  uri.default_port()
-        scheme_host = scheme_host + ':' + uri.port.to_s
-      end
       id_format = params[:format].present? ? params[:bibid] + '.' + params[:format] : params[:bibid]
       session[:cuwebauth_return_path] = magic_request_path(id_format)
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(id_format).inspect}"
@@ -41,6 +36,11 @@ module BlacklightCornellRequests
       else
         # Replace redirect_to with redirect_post (from repost gem) to deal with new
         # Omniauth gem requirements
+        uri = URI(request.original_url)
+        scheme_host = "#{uri.scheme}://#{uri.host}"
+        if uri.port.present? && uri.port !=  uri.default_port()
+          scheme_host = scheme_host + ':' + uri.port.to_s
+        end
         redirect_post("#{scheme_host}/users/auth/saml", options: {authenticity_token: :auto})
       end
     end
