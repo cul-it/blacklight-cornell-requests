@@ -36,7 +36,7 @@ module BlacklightCornellRequests
       else
         # Replace redirect_to with redirect_post (from repost gem) to deal with new
         # Omniauth gem requirements
-        redirect_post "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+        redirect_post("#{request.protocol}#{request.host_with_port}/users/auth/saml", options: {authenticity_token: :auto})
       end
     end
 
