@@ -31,7 +31,7 @@ module BlacklightCornellRequests
       uri = URI(request.original_url)
       scheme_host_port = "#{uri.scheme}://#{uri.host}" + (uri.port == 80) ? '' : ':' + uri.port
       id_format = params[:format].present? ? params[:bibid] + '.' + params[:format] : params[:bibid]
-      session[:cuwebauth_return_path] = scheme_host_port + magic_request_path(id_format)
+      session[:cuwebauth_return_path] = magic_request_path(id_format)
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(id_format).inspect}"
 #******************
 save_level = Rails.logger.level; Rails.logger.level = Logger::WARN
