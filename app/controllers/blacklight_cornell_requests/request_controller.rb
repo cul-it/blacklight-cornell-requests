@@ -33,8 +33,22 @@ module BlacklightCornellRequests
       id_format = params[:format].present? ? params[:bibid] + '.' + params[:format] : params[:bibid]
       session[:cuwebauth_return_path] = scheme_host_port + magic_request_path(id_format)
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(id_format).inspect}"
-      Rails.logger.debug "jgr25_log #{__FILE__} #{__LINE__}: #{session[:cuwebauth_return_path].inspect}"
-      if ENV['DEBUG_USER'] && Rails.env.development?
+#******************
+save_level = Rails.logger.level; Rails.logger.level = Logger::WARN
+msg.each { |x| puts 'ZZZ ' + x.to_yaml }
+jgr25_context = "#{__FILE__}:#{__LINE__}"
+Rails.logger.warn "jgr25_log\n#{jgr25_context}:"
+msg = [" #{__method__} ".center(60,'Z')]
+msg << jgr25_context
+msg << "request.original_url: " + request.original_url.inspect
+msg << "scheme_host_port: " + scheme_host_port.inspect
+msg << "session[:cuwebauth_return_path]: " + session[:cuwebauth_return_path].inspect
+msg << 'Z' * 60
+msg.each { |x| puts 'ZZZ ' + x.to_yaml }
+Rails.logger.level = save_level
+#binding.pry
+#*******************
+%      if ENV['DEBUG_USER'] && Rails.env.development?
         magic_request target
       else
         # Replace redirect_to with redirect_post (from repost gem) to deal with new
