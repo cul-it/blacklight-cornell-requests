@@ -28,8 +28,8 @@ module BlacklightCornellRequests
     end
 
     def auth_magic_request target=''
-      uri = URI(request.original_url)
-      scheme_host_port = "#{uri.scheme}://#{uri.host}" + (uri.port == 80) ? '' : ':' + uri.port
+      # uri = URI(request.original_url)
+      # scheme_host_port = "#{uri.scheme}://#{uri.host}" + (uri.port == 80) ? '' : ':' + uri.port
       id_format = params[:format].present? ? params[:bibid] + '.' + params[:format] : params[:bibid]
       session[:cuwebauth_return_path] = magic_request_path(id_format)
       Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(id_format).inspect}"
