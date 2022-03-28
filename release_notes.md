@@ -1,6 +1,6 @@
 # Release Notes - blacklight-cornell-requests
 
-## CURRENT VERSION
+## v4.2.3
 - Remove the ruby-oci8 gem (no longer needed)
 - Add repost gem dependency & use it to update auth calls for new Omniauth requirements
 
