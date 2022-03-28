@@ -1,6 +1,6 @@
 require 'dotenv'
 require 'borrow_direct'
-require 'net/http'
+require 'rest-client'
 require 'uri'
 require 'json'
 
@@ -29,8 +29,9 @@ module BlacklightCornellRequests
 
     # patron should be a Patron instance
     # work = { :isbn, :title }
+    # make_request: this boolean is "true" when calling request_from_bd from the request controller
     # ISBN is best, but title will work if ISBN isn't available.
-    def initialize(patron, work)
+    def initialize(patron, work, make_request=false)
       @patron = patron
       @work = work
       @credentials = nil
@@ -49,7 +50,7 @@ module BlacklightCornellRequests
       # AID is the AuthenticationId needed to use the Borrow Direct APIs
       @aid = authenticate
 
-      @available = available_in_bd?
+      @available = available_in_bd? if !make_request
     end
 
     # Switch between test and production configuration
@@ -86,23 +87,22 @@ module BlacklightCornellRequests
 
     # (new APIs)
     # Use the authentication API to get an 'AID' token needed for other API calls
-    # returns the AID, or nil if there is an error
+    # returns the AID, or nil if there is an error.
+    # NOTE: the AuthenticationID that is returned is based in part on User-Agent,
+    # so mixing different request libraries (e.g., Net::HTTPD and RestClient) will
+    # lead to non-obvious authentication failures unless the User-Agent is set to
+    # be consistent!
     def authenticate
-      uri = URI.parse("#{@credentials[:base_url]}/portal-service/user/authentication")
+      url = "#{@credentials[:base_url]}/portal-service/user/authentication"
       body = {
         "LibrarySymbol" => COMMON[:symbol],
         'UserGroup' => COMMON[:group],
         'PartnershipId'=> COMMON[:partnership],
         'ApiKey' => @credentials[:api_key],
         'PatronId' => @patron.barcode
-      }
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-
-      request = Net::HTTP::Post.new(uri.path, {'Content-Type' => 'application/json' })
-      request.body = body.to_json
-      response = http.request(request)
-      Rails.logger.debug("mjc12test: authn response: #{response.code} #{response.body}")
+      }.to_json
+      response = RestClient.post url, body, { content_type: :json }
+      Rails.logger.debug("mjc12test2: authn response: #{response.code} #{response.body}")
 
       if (response.code.to_i == 200)
         return JSON.parse(response.body)['AuthorizationId']
@@ -143,46 +143,6 @@ module BlacklightCornellRequests
         return records ? requestable?(records) : false
      # end
       ############################################
-
-      # old code follows
-
-      # set_mode(ENV['BORROW_DIRECT_URL']) unless @mode.present?
-
-      # Rails.cache.fetch("bd-availability-#{@work.bibid}", :expires_in => 5.minutes) do
-      #   response = nil
-      #   Rails.logger.debug "mjc12test: DOING A FRESH BD CALL #{@work.title}, #{@work.isbn}"
-      #   # This block can throw timeout errors if BD takes to long to respond
-      #   begin
-      #     if @work.isbn.present?
-      #       # Note: [*<variable>] gives us an array if we don't already have one,
-      #       # which we need for the map.
-      #       response = BorrowDirect::FindItem.new.find(:isbn => ([*@work.isbn].map!{|i| i = i.clean_isbn}))
-      #     elsif @work.title.present?
-      #       response = BorrowDirect::FindItem.new.find(:phrase => @work.title)
-      #     end
-
-      #     return response.requestable?
-
-      #   rescue Errno::ECONNREFUSED => e
-      #     #  ExceptionNotifier.notify_exception(e)
-      #     Rails.logger.warn 'Requests: Borrow Direct connection was refused'
-      #     Rails.logger.warn e.message
-      #     Rails.logger.warn e.backtrace.inspect
-      #     return false
-      #   rescue BorrowDirect::HttpTimeoutError => e
-      #     Rails.logger.warn 'Requests: Borrow Direct check timed out'
-      #     Rails.logger.warn e.message
-      #     Rails.logger.warn e.backtrace.inspect
-      #     return false
-      #   rescue BorrowDirect::Error => e
-      #     Rails.logger.warn 'Requests: Borrow Direct gave error.'
-      #     Rails.logger.warn e.message
-      #     Rails.logger.warn e.backtrace.inspect
-      #     Rails.logger.warn response.inspect
-      #     return false
-      #   end
-
-      # end
     end
 
     # Use the Find Item BD API to execute a search. Returns the array of records provided in the response.
@@ -191,23 +151,25 @@ module BlacklightCornellRequests
         # with additional results being updated each time we query the same URL. Unfortunately, we
         # have to keep querying the API until the entire result set is complete, then parse it ourselves
         # to determine whether an item is available locally.
-        uri = URI.parse("#{@credentials[:base_url]}/di/search?query=#{query}&aid=#{@aid}")
+        url = "#{@credentials[:base_url]}/di/search?query=#{query}&aid=#{@aid}"
         query_pending = true
         json_response = {}
 
         while query_pending
-          response = Net::HTTP.get_response(uri)
-          if (response.code.to_i == 200)
-            # The ActiveCatalog parameter in the response indicates how many BD catalogs are being
-            # actively searched. When the search is complete, this number should be 0.
-            json_response = JSON.parse(response.body)
-            query_pending = json_response['ActiveCatalog'] > 0
-          elsif (response.code.to_i == 404)
-            # This indicates "no result"
-            query_pending = false
-            return nil
-          else
-            Rails.logger.warn("Warning: Requests unable to complete an item search in Borrow Direct (response: #{response.code} #{response.body}")
+          begin
+            response = RestClient.get url
+            if (response.code.to_i == 200)
+              # The ActiveCatalog parameter in the response indicates how many BD catalogs are being
+              # actively searched. When the search is complete, this number should be 0.
+              json_response = JSON.parse(response.body)
+              query_pending = json_response['ActiveCatalog'] > 0
+            else
+              Rails.logger.warn("Warning: Requests unable to complete an item search in Borrow Direct (response: #{response.code} #{response.body}")
+              query_pending = false
+              return nil
+            end
+          # BD inexplicably returns a 404 if the search query isn't matched.
+          rescue RestClient::NotFound => e
             query_pending = false
             return nil
           end
@@ -217,41 +179,43 @@ module BlacklightCornellRequests
         return json_response['Record'][0]['Item']
     end
 
-    # Given an array of record items returned from the BD search API, determine whether
-    # the item can be requested from BD as a whole (from Cornell's perspective). For now,
-    # that means that there are no Cornell items that are currently available.
+    # Given an array of record items returned from the BD search API, use the requestability API
+    # to determine whether any of them are available for Cornell users to request.
     def requestable?(records)
       #Rails.logger.debug("mjc12test2: records array main #{records}")
 
-      cornell_records = records.select { |rec| rec['CatalogName'] == 'CORNELL' }
-      # If there are no records from the Cornell catalog, we can say it's requestable via BD
-      # tlw72: this looks like it's not the case. I found an instance where the Cornell item was on order,
-      # and the only other record, was a item that was checked out. That suggests it's possible to have
-      # no Cornell records and no other records that are available. So commenting out the next line.
-      # return true if cornell_records.empty?
-
-      cornell_records.each do |rec|
-        holdings = rec['Holding']
-
-        # If any of the Cornell record holdings is marked Available, then it's not requestable via BD
-        if holdings.present?
-          return false if holdings.any? { |h| h['Availability'] == 'Available' }
-        end
+      # The requestability API is not well-documented, but it essentially needs a body that looks like
+      # the following:
+      #   {
+      #     "Catalog": [
+      #       "CatalogName": "YALE",
+      #       "Holding": [
+      #         { 'holding' object from search API results }
+      #       ]
+      #     ]
+      #   }
+      # So we need to provide a request body that contains each catalog for which there are holdings, and an
+      # array of all the holdings.
+      url = "#{@credentials[:base_url]}/dws/item/requestability?aid=#{@aid}"
+      flattened_records = records.map do |rec|
+        {
+          "CatalogName" => rec['CatalogName'],
+          "Holding" => rec['Holding']
+        }
       end
 
-      # If we've made it this far, it's requestable! tlw72: may not be true. See comment above.
-      # Check the other records to see if any are available, and only return true if there is.
-      non_cornell_records = records.select { |rec| rec['CatalogName'] != 'CORNELL' }
-      non_cornell_records.each do |rec|
-        holdings = rec['Holding']
+      body = { "Catalog" => flattened_records }.to_json
 
-        # If any of the record holdings is marked Available, then it's requestable via BD
-        if holdings.present?
-          return true if holdings.any? { |h| h['Availability'] == 'Available' }
-        end
+      begin
+        response = RestClient.post url, body, { content_type: :json }
+        # Assuming a successful response, the 'FulfillmentType' property should have a value of either
+        # CONSORTIUM -- which indicates it's available through BD -- or LOCAL or ILL, which indicate
+        # not available from BD.
+        return JSON.parse(response.body)['FulfillmentType'] == 'CONSORTIUM'
+      rescue RestClient::ExceptionWithResponse => e
+        Rails.logger.debug "mjc12test2: error: #{e.response}"
+        return false
       end
-      # If we get this far, nothing is available.
-      return false
     end
 
     # Place an item request through the Borrow Direct API
@@ -261,10 +225,10 @@ module BlacklightCornellRequests
       response = nil
       # This block can throw timeout errors if BD takes to long to respond
       begin
-        if @work.isbn.present?
+        if params[:isbn].present?
           # Note: [*<variable>] gives us an array if we don't already have one,
           # which we need for the map.
-          response = BorrowDirect::RequestItem.new(@patron.barcode).make_request(params[:pickup_location], {:isbn => [*@work.isbn.map!{|i| i = i.clean_isbn}[0]]}, params[:notes])
+          response = BorrowDirect::RequestItem.new(@patron.barcode).make_request(params[:pickup_location], {:isbn => [*params[:isbn]].map!{|i| i = i.clean_isbn}[0]}, params[:notes])
         end
 
         return response  # response should be the BD request tracking number

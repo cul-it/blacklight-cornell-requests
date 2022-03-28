@@ -1,6 +1,6 @@
 BlacklightCornellRequests::Engine.routes.draw do
-  
-  get 'hold/:bibid' => 'request#hold', :as =>'request_hold' 
+
+  get 'hold/:bibid' => 'request#hold', :as =>'request_hold'
   get 'hold/:bibid/:volume' => 'request#hold', :as =>'request_hold_vol' , :constraints => { :volume => /.*/ }
   get 'recall/:bibid' => 'request#recall', :as =>'request_recall'
   get 'recall/:bibid/:volume' => 'request#recall', :as =>'request_recall_vol', :constraints => { :volume => /.*/ }
@@ -18,13 +18,13 @@ BlacklightCornellRequests::Engine.routes.draw do
   get 'document_delivery/:bibid/:volume' => 'request#document_delivery', :as => 'request_document_delivery_with_vol', :constraints => { :volume => /.*/ }
   get 'document_delivery/:bibid' => 'request#document_delivery', :as => 'request_document_delivery'
   get 'mann_special/:bibid' => 'request#mann_special', :as => 'request_mann_special'
-  match 'voyager/:bibid' => 'request#make_voyager_request', :as => 'make_voyager_request',  via: [:get, :post]
+  match 'folio/:bibid' => 'request#make_folio_request', :as => 'make_folio_request',  via: [:get, :post]
 
 
-  put '/:bibid' => 'request#magic_request', :as => 'magic_request_bibid'
-  get '/:bibid' => 'request#magic_request', :as => 'magic_request'
-  get 'auth/:bibid' => 'request#auth_magic_request', :as => 'auth_magic_request'
-  #get '/:bibid/:volume' => 'request#magic_request', :as => 'volume_request', :constraints => { :volume => /.*/ } 
+  put '/:bibid(.:format)' => 'request#magic_request', :as => 'magic_request_bibid'
+  get '/:bibid(.:format)' => 'request#magic_request', :as => 'magic_request'
+  get 'auth/:bibid(.:format)' => 'request#auth_magic_request', :as => 'auth_magic_request'
+  #get '/:bibid/:volume' => 'request#magic_request', :as => 'volume_request', :constraints => { :volume => /.*/ }
   get 'volume/set' => 'request#set_volume'#, :as => 'set_volume'
 
 end

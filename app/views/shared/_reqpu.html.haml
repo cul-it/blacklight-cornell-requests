@@ -1,24 +1,15 @@
 - special_delivery_options = parsed_special_delivery(@fod_data)
+-# - if @patron['preferred_service_point'].present?
+- Rails.logger.debug "mjc12test2: options #{pickup_locations}"
 .form-group.row
   %label.col-form-label.col-sm-2{:for => "pickup-locations"} Pick up at:
   .col-sm-10
     %select#pickup-locations.form-control{:name => 'library_id'}
       %option(value='') -- Select a location --
-      %option{:value => "149", 'data-bd-code': 'F'} Africana Center Entrance
-      %option{:value => "151", 'data-bd-code': 'G'} Annex Main Entrance Foyer
-      -# %option{:value => '224'} Faculty Department Office
-      -# %option{:value => "160", 'data-bd-code': 'H'} Fine Arts Circulation
-      -# %option{:value => "162", 'data-bd-code': 'A'} Geneva Circulation
-      -# %option{:value => "167", 'data-bd-code': 'I'} ILR Circulation
-      %option{:value => "171", 'data-bd-code': 'B'} Law Library – Law School community only
-      -# %option{:value => "241", 'data-bd-code': 'K'} Management Circulation
-      %option{:value => "172", 'data-bd-code': 'C'} Mann Lobby
-      -# %option{:value => "176", 'data-bd-code': 'J'} Math Circulation
-      -# %option{:value => "179", 'data-bd-code': 'L'} Music Circulation
-      -# %option{:value => "181", 'data-bd-code': 'D'} Olin Circulation
-      -# %option{:value => "219", 'data-bd-code': 'M'} Ornithology Circulation
-      %option{:value => "188"} Uris Clock Tower
-      -# %option{:value => "189", 'data-bd-code': 'E'} Veterinary Library (CVM atrium)
+      - pickup_locations.each do |p|
+        -# NOTE: Options are now defined in request_helper.rb
+        %option{:value => p[:id], 'data-bd-code': p[:bd_code], :selected => p[:id] == @patron['preferred_service_point']}
+          = p[:name]
       - if special_delivery_options.present?
         - special_delivery_options.each do |special_option|
           %option{:value => special_option[:value], 'data-bd-code': special_option[:bd_value]} #{special_option[:label]}

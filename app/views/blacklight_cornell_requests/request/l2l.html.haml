@@ -1,6 +1,6 @@
 -title = the_vernaculator(@document['title_display'], @document['title_vern_display'])
 -subtitle = the_vernaculator(@document['subtitle_display'], @document['subtitle_vern_display'])
-
+-pickup_locations = pickup_locations
 - Rails.logger.debug "mjc12test: itemstouse - #{@items}"
 - @selected_volume = params[:volume]
 = render :partial => 'shared/back_to_item'
@@ -12,7 +12,7 @@
       =title
     %div.request-author
       = author_display
-    %form#req.l2l-request{:method => 'post', :action => make_voyager_request_path({:bibid =>@id})}
+    %form#req.l2l-request{:method => 'post', :action => make_folio_request_path({:bibid =>@id})}
       -if @volumes.present? && @volumes.count > 1
         .form-group.row
           %label.col-form-label.col-sm-2{:for => "volume-selection"}
@@ -20,7 +20,7 @@
           .delivery-estimate.col-sm-10
             = render :partial =>'shared/volume_select'
       %input(type="hidden" name="bid" value="#{@id}" id="bid")
-      %input(type="hidden" name="request_action" value="callslip" id="request_action")
+      %input(type="hidden" name="request_action" value="Page" id="request_action")
       = render :partial => 'shared/l2lac'
       = render :partial => 'shared/reqpu'
       .form-group.row
@@ -36,6 +36,7 @@
       -if @alternate_methods && @alternate_methods.count > 1
         %div.clearfix
           %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit delivery request")
+          %span{:id => 'request-loading-spinner'}
         = render :partial => 'shared/request_options'
       -else
         %div.clearfix

@@ -11,22 +11,9 @@
 	DUMMY_SOLR_URL=<URL to Solr instance used for 'dummy' test app>
 	DUMMY_VOYAGER_HOLDINGS=<URL to Rick's holdings service used for 'dummy' test app>
 	DUMMY_VOYAGER_GET_HOLDS
-	VOYAGER_DB=<Voyager identifier for Cornell database>
-	VOYAGER_DB_ID=1@#{DB}
-	HOLDINGS_URL=<URL to Rick's holdings service> (no longer used?)
-	HOLDING_ID_DN=<ID for Cornell's LDAP service>
-	HOLDING_PW=<password for Cornell's LDAP service>
 	ILLIAD_URL=<URL to the ILLiad forms directory>
-	LDAP_HOST=<hostname for Cornell's LDAP service>
-	LDAP_PORT=<port number for Cornell's LDAP service>
-	MYACC_URL=<URL to the **Voyager** myaccount service>
 	NETID_URL=<URL to the patron info/netid lookup service>
-	ORACLE_HOST=<Oracle database hostname>
-	ORACLE_RDONLY_PASSWORD=<Oracle password>
-	ORACLE_SID=<Oracle SID>
 	RAILS_ENV=<Rails environment (test, production, etc)>
-	REQUEST_URL=<URL for Voyager request services>
-	REST_URL=<URL to the Voyager REST services URL>
 	TEST_FIRSTNAME=<patron first name used to run tests>
 	TEST_LASTNAME=<patron last name used to run tests>
 	TEST_NETID=<patron netid used to run tests>
@@ -34,8 +21,28 @@
 	TEST_REQ_HOLDS=<URL to Voyager patron request service used to run tests>
 	TEST_USER_BARCODE=<patron barcode used to run tests>
 
+	OKAPI_URL=<URL of a FOLIO *Okapi* interface
+	OKAPI_TENANT=<Okapi tenant ID>
+	OKAPI_USER=<FOLIO username for requests API access>
+	OKAPI_PW=<password for FOLIO user>
+
 ## Optional keys
 `FOD_DB_URL=<URL to special delivery web service> (optional)`
+
+### Deprecated keys (to be removed in future)
+	VOYAGER_DB=<Voyager identifier for Cornell database>
+	VOYAGER_DB_ID=1@#{DB} 
+	HOLDINGS_URL=<URL to Rick's holdings service> (no longer used?)
+	HOLDING_ID_DN=<ID for Cornell's LDAP service>
+	HOLDING_PW=<password for Cornell's LDAP service>
+	LDAP_HOST=<hostname for Cornell's LDAP service>
+	LDAP_PORT=<port number for Cornell's LDAP service>
+	MYACC_URL=<URL to the **Voyager** myaccount service>
+	ORACLE_HOST=<Oracle database hostname>
+	ORACLE_RDONLY_PASSWORD=<Oracle password>
+	ORACLE_SID=<Oracle SID>
+	REQUEST_URL=<URL for Voyager request services>
+	REST_URL=<URL to the Voyager REST services URL>
 
 ### Disabling services
 Most delivery services can be “disabled” (i.e., won’t be offered as choices in the Requests system, though of course this has no effect on the services themselves). This is achieved by adding an appropriate key to the `.env` file. For example, `DISABLE_BORROW_DIRECT=1` will remove Borrow Direct from the equation. The exact key value doesn’t matter so long as it evaluates as `true` using Rails’ `present?` method; thus, it’s best to remove the key-value pair entirely when re-enabling the service.
@@ -52,6 +59,8 @@ The service keys that work at present are:
 * `DISABLE_RECALL`
 
 ### Modifying behavior
+*(NOTE: all of the following will probably be deprecated in the near future; paging limitations are supposedly going away.)*
+
 Library-to-library delivery requests usually are not allowed to be made to the circ desk of the owning library (e.g., books in Olin can't be paged/L2Led to Olin Circ). There are exceptions to this rule (see below), but that's how things normally operate. If for some drastic reason one wants to disable this behavior and allow delivery to own circ desks throughout the entire library system (say, a viral epidemic shutting down normal university life altogether), this can be done by setting the `.env` flag `REQUEST_BYPASS_ROUTING_CHECK=1`. That affects *all* CUL libraries.
 
 Library-to-library paging options can be modified on a case-by-case by adding an especially cryptic key-value pair to the `.env` file. This has the effect of enabling or disabling delivery between specific libraries.
