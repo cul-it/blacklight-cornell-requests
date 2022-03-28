@@ -28,3 +28,5 @@ end
 
 # To use debugger
 # gem 'debugger'
+
+gem 'cul-folio-edge', :path => '/Users/matt/code/cul/d&a/cul-folio-edge'

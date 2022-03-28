@@ -14,7 +14,7 @@ require 'minitest/unit'
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
-require 'voyager_request'
+#require 'voyager_request'
 require 'james_monkeys'
 require 'vcr'
 require 'webmock'

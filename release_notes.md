@@ -1,5 +1,68 @@
 # Release Notes - blacklight-cornell-requests
 
+## CURRENT VERSION
+- Remove the ruby-oci8 gem (no longer needed)
+- Add repost gem dependency & use it to update auth calls for new Omniauth requirements
+
+## v4.2.2
+- Re-enable Olin and Lab of O in Borrow Direct location list
+
+## v4.2.1
+- Re-enable Fine Arts in Borrow Direct location list
+
+## v4.2.0
+- Use FOLIO service point records to dynamically populate pickup location list (DISCOVERYACCESS-7378)
+- Fixed crash caused by BD API returning a 404 if search term not found (sigh).
+
+## v4.1.1
+- Add protection against nil values
+- More changes to delivery location lists (thanks, COVID)
+
+## v4.1.0
+
+### New features
+- Pickup location dropdown will default to user's preferred service point (if set in FOLIO user record) (DISCOVERYACCESS-6478)
+
+### Bug fixes
+- Fixed a bug causing some Borrow Direct availability checks to return false positives (DISCOVERYACCESS-7344)
+- Prevented users from clicking submit button multiple times and creating duplicate requests (DISCOVERYACCESS-7336)
+- Updated purchase request form email address to use env variable REQUEST_MAILER_EMAIL (DISCOVERYACCESS-7038)
+
+## v4.0.10
+- Updated delivery location lists (renaming Vet library)
+
+## v4.0.9
+- Updated delivery location lists again again again again (reactivating Ornithology locations)
+
+## v4.0.8
+- Updated delivery location lists again again again
+- Removed Covid code that defined "requestable" libraries.
+
+## v4.0.7
+- Updated delivery location lists again again
+
+## v4.0.6
+- Updated delivery location lists again
+
+## v4.0.5
+- Updated delivery location lists
+
+## v4.0.4
+- Fixed NoMethodError on nil object using include? - DISCOVERYACCESS-7216
+
+## v4.0.3
+- Change scan part of request url from &scan=yes to .scan (using .:format) to keep bibid separate - DISCOVERYACCESS-7176
+
+## v4.0.2
+- Have the make_bd_request method run thrpugh the CULBorrowDirect model.
+
+## v4.0.1
+- Bug fixes for requestable libraries list and BD/ILL patron groups list
+- Make request error messages more user-friendly
+
+## v4.0
+Extensive rewrite of the code to replace Voyager functionality with FOLIO!
+
 ## v3.4.8
 - Fix indentation on request a purchase form
 
