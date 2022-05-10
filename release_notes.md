@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## CURRENT
+- Fix bug in volume selection that limited choice to one item/copy per volume (DISCOVERYACCESS-7426)
+
 ## v4.2.3
 - Remove the ruby-oci8 gem (no longer needed)
 - Add repost gem dependency & use it to update auth calls for new Omniauth requirements
