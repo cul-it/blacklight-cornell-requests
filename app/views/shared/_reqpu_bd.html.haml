@@ -4,22 +4,22 @@
   .col-sm-10
     %select#pickup-locations.form-control{:name => 'library_id'}
       %option(value='') -- Select a location --
-      %option{:value => "D"} * Olin Library (default)
-      %option{:value => "F"} Africana Library
-      %option{:value => "G"} Annex Contactless Pickup
-      %option{:value => "H"} Fine Arts Library
+      %option{:value => "D"} * Olin (default)
+      %option{:value => "F"} Africana
+      %option{:value => "I"} Catherwood ILR
+      %option{:value => "G"} Contactless Pickup - Annex 
+      %option{:value => "P"} Contactless Pickup - Mann
+      %option{:value => "Q"} Contactless Pickup - Math
+      %option{:value => "O"} Contactless Pickup - Uris Tower
+      %option{:value => "H"} Fine Arts
       -# %option{:value => "A"} Geneva Circulation
-      %option{:value => "I"} ILR Library
-      %option{:value => "B"} Law Library – Law Faculty, Staff, and Students Only
+      %option{:value => "B"} Law – Law Faculty, Staff, and Students Only
       -# %option{:value => "K"} Management Circulation
-      %option{:value => "P"} Mann Contactless Pickup
-      %option{:value => "C"} Mann Library
-      %option{:value => "Q"} Math Contactless Pickup
-      %option{:value => "J"} Math Library
-      %option{:value => "L"} Music Library
+      %option{:value => "C"} Mann
+      %option{:value => "J"} Math
+      %option{:value => "L"} Music
       %option{:value => "M"} Ornithology Circulation Desk
-      %option{:value => "E"} Vet Library
-      %option{:value => "O"} Uris Tower Contactless Pickup
+      %option{:value => "E"} Vet
       - if special_delivery_options.present?
         - special_delivery_options.each do |special_option|
           - if !special_option[:bd_value].empty?
