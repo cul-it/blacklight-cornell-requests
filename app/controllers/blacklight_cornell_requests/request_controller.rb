@@ -62,6 +62,7 @@ module BlacklightCornellRequests
         redirect_to '/catalog'
         return
       end
+  
      # @document = @document
      #Rails.logger.debug "mjc12test: document = #{@document.inspect}"
       @scan = params[:format].present? && params[:format] == "scan" ? "yes" : ""
@@ -150,8 +151,6 @@ module BlacklightCornellRequests
       # TODO: This is a horribly inefficient approach. Make it better
       if @volumes
         @volumes.each do |v|
-          Rails.logger.debug "mjc12test: SELECTING VOLUME, checking #{v}"
-
           if v.select_option == params[:volume]
             items = v.items
             break
@@ -294,7 +293,7 @@ module BlacklightCornellRequests
     def update_options(item, options, patron)
 
       available_folio_methods = DeliveryMethod.available_folio_methods(item, patron)
-      Rails.logger.debug "mjc12test: AFM: #{available_folio_methods}"
+      Rails.logger.debug "mjc12test5: AFM: #{available_folio_methods}"
       # Rails.logger.debug "mjc12test: item is #{item.inspect}"
 
       options[ILL] << item if ILL.available?(item, patron)
@@ -410,6 +409,8 @@ module BlacklightCornellRequests
         # 2. Okapi tenant
         # 3. Okapi auth token
         # 4. item ID
+        # 4a. instance ID
+        # 4b. holdings ID
         # 5. requester ID
         # 6. request type (Hold, Recall, or Page)
         # 7. request date
@@ -419,15 +420,29 @@ module BlacklightCornellRequests
         url = ENV['OKAPI_URL']
         tenant = ENV['OKAPI_TENANT']
         token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])[:token]
-        item_id = params[:holding_id]
+        instance_id = params[:instance_id]
+        item_id = params[:holding_id] # Ugh, why is the item ID named holding_id in the views??
+        holdings_id = holdings_id_from_item_id(item_id, params[:items_json])
         requester_id = Patron.new(user).record['id']
         request_type = params[:request_action]
         request_date = DateTime.now.iso8601
         pickup_location = params[:library_id]
         comments = params[:reqcomments]
 
-        response = CUL::FOLIO::Edge.request_item(url, tenant, token, item_id, requester_id, request_type, request_date, 'Hold Shelf', pickup_location, comments)
-        Rails.logger.debug "mjc12test: got response #{response}"
+        response = CUL::FOLIO::Edge.request_item(
+          url,
+          tenant,
+          token,
+          instance_id,
+          holdings_id,
+          item_id,
+          requester_id,
+          request_type,
+          request_date,
+          'Hold Shelf',
+          pickup_location,
+          comments
+        )
 
       #   response = req.make_voyager_request params
       #   if !response[:error].blank?
@@ -527,6 +542,26 @@ module BlacklightCornellRequests
       end
     end
 
+    # Given an item UUID and a JSON object from the Solr document containing item info, return a holdings UUID
+    # associated with the item. This is slightly tricky because the format of the document
+    # items_json segment is
+    # {
+    #   <holdings ID>: [item 1, item 2, ...],
+    #   <holdings ID 2>: [item 3],
+    #   ...
+    # }
+    # So to do this, we need to iterate over the holdings IDs until we find an item record with the correct
+    # item_id.
+    def holdings_id_from_item_id(item_id, items_json)
+      item_blob = JSON.parse(items_json)
+      result = item_blob.keys.each do |h|
+        items = item_blob[h]
+        items.each do |i|
+          return h if i['id'] == item_id
+        end
+      end
+      return nil
+    end
 
     def user
       netid = nil
