@@ -32,6 +32,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'exception_notification'
   s.add_dependency 'activerecord-oracle_enhanced-adapter'
   s.add_dependency 'repost'
+  s.add_dependency 'rest-client'
 
   s.add_development_dependency "sqlite3"
 

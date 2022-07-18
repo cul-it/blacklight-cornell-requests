@@ -13,6 +13,7 @@ BlacklightCornellRequests::Engine.routes.draw do
   get 'purchase/:bibid' =>'request#purchase', :as =>'request_purchase'
   post 'purchase_request/:bibid' =>'request#make_purchase_request', :as =>'make_purchase_request'
   get 'pda/:bibid' =>'request#pda', :as =>'request_pda'
+  post 'pda_request/:bibid' => 'request#make_pda_request', :as => 'make_pda_request'
   get 'circ/:bibid' =>'request#circ', :as =>'request_circ'
   get 'ask/:bibid' =>'request#ask', :as =>'request_ask'
   get 'document_delivery/:bibid/:volume' => 'request#document_delivery', :as => 'request_document_delivery_with_vol', :constraints => { :volume => /.*/ }

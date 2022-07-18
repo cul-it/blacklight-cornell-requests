@@ -2,7 +2,7 @@
 -subtitle = the_vernaculator(@document['subtitle_display'], @document['subtitle_vern_display'])
 = render :partial => 'shared/back_to_item'
 %h2
-  = "Purchase request for user: #{@netid}"
+  = "Rush purchase request for user: #{@netid}"
 %div.card
   %div.card-body
     %h3.blacklight-title_display.item-title-request
@@ -10,25 +10,33 @@
     %div.request-author
       = author_display
     .clearfix
-      -if @alternate_methods && @alternate_methods.count > 1
-        %a{:href => @iis[:pda][:url], :title =>'Submit Purchase Request',:class => 'btn btn-danger pull-left'}
-          Submit Purchase Request
-        - if !@estimate.blank?
-          A purchase request will take approximately
-          = succeed "." do
-            = delivery_estimate_display @estimate
-        
-        = render :partial => 'shared/request_options'
-      -else
-        .clearfix
-          %a{:href => @iis[:pda][:url], :title =>'Submit Purchase Request',:class => 'btn btn-danger pull-left'}
-            Submit Purchase Request
-          %div.accordion-heading.request-options.pull-left.form-alternative-action
-            or
-            =link_to 'Ask a Librarian','http://www.library.cornell.edu/ask'
-            for help.
-        - if !@estimate.blank?
-          %br
-          A purchase request will take approximately
-          = succeed "." do
-            = delivery_estimate_display @estimate
+      %form#req.form-horizontal{:method => 'post', :action => blacklight_cornell_request.make_pda_request_path}
+        %input(type="hidden" name="bid" value="#{@id}" id="bid")
+        %input(type="hidden" name="netid" value="#{@netid}")
+        %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit rush purchase request")
+      -# %a{:href => blacklight_cornell_request.make_pda_request_path(@netid, @id), :title =>'Submit Purchase Request', :class => 'btn btn-danger pull-left'}
+      -#   Submit Purchase Request
+      %div.accordion-heading.request-options.pull-left.form-alternative-action
+        or
+        =link_to 'Ask a Librarian','http://www.library.cornell.edu/ask'
+        for help.
+    - if !@estimate.blank?
+      %br
+      A purchase request will take approximately
+      = succeed "." do
+        = delivery_estimate_display @estimate
+    -if @alternate_methods && @alternate_methods.count > 1
+      = render :partial => 'shared/request_options'
+      -# -else
+      -#   .clearfix
+      -#     %a{:href => @iis[:pda][:url], :title =>'Submit Purchase Request',:class => 'btn btn-danger pull-left'}
+      -#       Submit Purchase Request
+      -#     %div.accordion-heading.request-options.pull-left.form-alternative-action
+      -#       or
+      -#       =link_to 'Ask a Librarian','http://www.library.cornell.edu/ask'
+      -#       for help.
+      -#   - if !@estimate.blank?
+      -#     %br
+      -#     A purchase request will take approximately
+      -#     = succeed "." do
+      -#       = delivery_estimate_display @estimate
