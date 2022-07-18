@@ -2,6 +2,7 @@ require_dependency "blacklight_cornell_requests/application_controller"
 require 'date'
 require 'json'
 require 'repost'
+require 'rest-client'
 
 module BlacklightCornellRequests
 
@@ -52,6 +53,7 @@ module BlacklightCornellRequests
       end
 
       @id = params[:bibid]
+
       # added rescue for DISCOVERYACCESS-5863
       begin
         resp, @document = search_service.fetch @id
@@ -221,8 +223,8 @@ module BlacklightCornellRequests
         fastest_method = {:method => PDA}.merge(pda_data)
       end
 
-      Rails.logger.debug "mjc12test: fastest #{fastest_method}"
-      Rails.logger.debug "mjc12test: alternate #{@alternate_methods}"
+      Rails.logger.debug "mjc12test8: fastest #{fastest_method}"
+      Rails.logger.debug "mjc12test8: alternate #{@alternate_methods}"
       # If no other methods are found (i.e., there are no item records to process, such as for
       # an on-order record), ask a librarian
       fastest_method[:method] ||= AskLibrarian
@@ -273,6 +275,7 @@ module BlacklightCornellRequests
       if @counter.blank? and session[:search].present?
         @counter = session[:search][:counter]
       end
+      Rails.logger.debug "mjc12test8: #{fastest_method}"
       render fastest_method[:method]::TemplateName
 
     end
@@ -514,6 +517,43 @@ module BlacklightCornellRequests
       else
         render :partial => '/shared/flash_msg', :layout => false
       end
+    end
+
+    # Submit a PDA (Patron-Driven Acquisition) request to the Prefect workflow that does the
+    # actual ordering and updating of catalog records. Requires the requester
+    # netid and the instance HRID/bibid.
+    #
+    # This is based on code supplied by Brandon Kowalski
+    def make_pda_request
+      if params[:netid].present? && params[:bibid].present?
+        url = 'https://api.prefect.io/'
+        headers = {
+          'authorization' => ENV['PREFECT_AUTH_TOKEN'],
+          :content_type => 'application/json; charset=utf-8'
+        }
+        body = "{
+          \"query\": \"mutation{create_flow_run(input:{flow_id:\\\"#{ENV['PREFECT_FLOW_ID']}\\\",parameters:\\\"{\\\\\\\"hrid\\\\\\\": \\\\\\\"#{params[:bibid]}\\\\\\\", \\\\\\\"netid\\\\\\\": \\\\\\\"#{user}\\\\\\\"}\\\"}){id}}\",
+          \"variables\": {}
+        }"
+
+        begin
+          response = RestClient.post(url, body, headers)
+          Rails.logger.debug "mjc12test8: Got response: #{response.body}"
+          flash[:success] = I18n.t('requests.success')
+        rescue StandardError => e
+          Rails.logger.debug "Requests: PDA request failed (#{e})"
+          error_msg = I18n.t('requests.failure')
+          error_msg += ' ' + '(The requestor could not be identified.)' if params[:netid].nil?
+          flash[:error] = error_msg
+        end
+      else
+        error_msg = I18n.t('requests.failure')
+        error_msg += ' ' + '(The requestor could not be identified.)' if params[:netid].nil?
+        flash[:error] = error_msg
+      end
+
+      render :partial => '/shared/flash_msg', :layout => false
+
     end
 
     # AJAX responder used with requests.js.coffee to set the volume
