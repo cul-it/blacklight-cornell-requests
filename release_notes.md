@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.2.4
+- Update the PDA workflow to call new Prefect script (DISCOVERYACCESS-7483)
+
 ## v4.2.3
 - Remove the ruby-oci8 gem (no longer needed)
 - Add repost gem dependency & use it to update auth calls for new Omniauth requirements

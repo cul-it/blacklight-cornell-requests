@@ -32,9 +32,9 @@ Gem::Specification.new do |s|
   s.add_dependency 'exception_notification'
   s.add_dependency 'activerecord-oracle_enhanced-adapter'
   s.add_dependency 'repost'
+  s.add_dependency 'rest-client'
 
   s.add_development_dependency "sqlite3"
-
   s.add_development_dependency "rspec-rails", "~> 2.5"
   s.add_development_dependency "capybara", "2.4.1"
   s.add_development_dependency "guard-spork"
