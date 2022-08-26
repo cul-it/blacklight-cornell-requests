@@ -2,10 +2,7 @@ require_dependency "blacklight_cornell_requests/application_controller"
 require 'date'
 require 'json'
 require 'repost'
-<<<<<<< HEAD
-=======
 require 'rest-client'
->>>>>>> dev
 
 module BlacklightCornellRequests
 
