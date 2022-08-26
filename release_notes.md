@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.2.5
+- Remove Mann Contactless & Uris Contactless options from BD pickup locations (requested by Caitlin)
+
 ## v4.2.4
 - Update the PDA workflow to call new Prefect script (DISCOVERYACCESS-7483)
 
