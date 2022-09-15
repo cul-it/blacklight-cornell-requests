@@ -29,4 +29,4 @@ end
 # To use debugger
 # gem 'debugger'
 
-gem 'cul-folio-edge', :path => '/Users/matt/code/cul/d&a/cul-folio-edge'
+gem 'cul-folio-edge', '2.0', git: 'https://github.com/cul-it/cul-folio-edge'
