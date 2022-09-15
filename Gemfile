@@ -6,7 +6,8 @@ source "http://rubygems.org"
 gem "thor"
 #gem 'zoom', :git => 'https://github.com/bricestacey/ruby-zoom.git'
 #gem 'blacklight', '5.9'
-gem 'rails', '~>4.0'
+gem 'rails', '~>6.0'
+gem 'unf_ext'
 
 gemspec
 
