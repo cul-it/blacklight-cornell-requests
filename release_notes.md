@@ -1,5 +1,12 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.2.7
+- Specify Rails 6.1.
+
+## v4.2.6
+- Specify Rails 6 for Blacklight compatibility.
+- Properly specify cul-folio-edge dependency.
+
 ## v4.2.5
 - Remove Mann Contactless & Uris Contactless options from BD pickup locations (requested by Caitlin)
 
