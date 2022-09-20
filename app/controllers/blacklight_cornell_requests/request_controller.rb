@@ -1,4 +1,4 @@
-require_dependency "blacklight_cornell_requests/application_controller"
+require_dependency 'blacklight_cornell_requests/application_controller'
 require 'date'
 require 'json'
 require 'repost'
@@ -75,37 +75,33 @@ module BlacklightCornellRequests
       # the etas_facet. If it does, bypass everything. This is a temporary Covid-19 change. Note:
       # customized the alert for this situation in the items.empty? block below.
       # if @document['etas_facet'].nil? || @document['etas_facet'].empty?
-        holdings = JSON.parse(@document['items_json'] || '{}')
-        #Rails.logger.debug "mjc12test: holdings: #{holdings}"
+      holdings = JSON.parse(@document['items_json'] || '{}')
+      # Rails.logger.debug "mjc12test: holdings: #{holdings}"
 
-        # Items are keyed by the associated holding record
-        holdings.each do |h, item_array|
+      # Items are keyed by the associated holding record
+      holdings.each do |h, item_array|
+        item_array.each do |i|
+          # Rails.logger.debug "mjc12test: document: #{}"
 
-          item_array.each do |i|
-            #Rails.logger.debug "mjc12test: document: #{}"
-
-            items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || i["active"]) && (i['location']['name'].present?)
-            #Rails.logger.debug "mjc12test: added #{items}"
-          end
+          items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || i["active"]) && (i['location']['name'].present?)
+          # Rails.logger.debug "mjc12test: added #{items}"
         end
+      end
       # else
       #   flash[:alert] = "This title may not be requested because it is available online." if @document['etas_facet'].present?
       #   redirect_to '/catalog/' + params["bibid"]
       #   return
       # end
 
-
-
       # This isn't likely to happen, because the Request item button should be suppressed, but if there's
       # a work with only one item and that item is inactive, we need to redirect because the items array
       # will be empty.
-      #Rails.logger.debug "mjc12test: items: #{items}"
+      # Rails.logger.debug "mjc12test: items: #{items}"
       if @document['items_json'].present? && eval(@document['items_json']).size == 1 && items.empty?
-        flash[:alert] = "There are no items available to request for this title."
-        redirect_to '/catalog/' + params["bibid"]
+        flash[:alert] = 'There are no items available to request for this title.'
+        redirect_to "/catalog/#{params['bibid']}"
         return
       end
-
 
       @ti = work_metadata.title
       @ill_link = work_metadata.ill_link
@@ -184,7 +180,7 @@ module BlacklightCornellRequests
         options[rm] = []
       end
 
-      #Rails.logger.debug "mjc12test: items: #{items}"
+      # Rails.logger.debug "mjc12test: items: #{items}"
       items.each do |i|
         # rp = {}
         # policy_key = "#{i.circ_group}-#{requester.group}-#{i.type['id']}"
@@ -198,7 +194,7 @@ module BlacklightCornellRequests
       end
       options[BD] = [1] if borrow_direct.available
 
-      #Rails.logger.debug "mjc12test: options hash - #{options}"
+      # Rails.logger.debug "mjc12test: options hash - #{options}"
       # At this point, options is a hash with keys being available delivery methods
       # and values being arrays of items deliverable using the keyed method
 
@@ -208,7 +204,7 @@ module BlacklightCornellRequests
       # the case of an item that is both in special collections and regular collections
       # somewhere else?
       if options[MannSpecial]
-        #Rails.logger.debug "mjc12test: MANN SPECIAL OPTIONS CHECK #{}"
+        # Rails.logger.debug "mjc12test: MANN SPECIAL OPTIONS CHECK #{}"
         options[AskCirculation] = []
         # What about L2L?
       end
@@ -267,7 +263,7 @@ module BlacklightCornellRequests
         pda_url = @document[:url_pda_display][0]
         Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}:" + pda_url.inspect
         pda_url, note = pda_url.split('|')
-        @iis = {:pda => { :itemid => 'pda', :url => pda_url, :note => note }}
+        @iis = { :pda => { :itemid => 'pda', :url => pda_url, :note => note } }
       end
 
       @counter = params[:counter]
@@ -397,7 +393,7 @@ module BlacklightCornellRequests
       #   # but validation above expects a non-blank value!
       #   if params[:holding_id] == 'any'
       #     params[:holding_id] = ''
-      #   end
+      #  end
 
         # To submit a FOLIO request, we need:
         # 1. Okapi URL
@@ -430,7 +426,7 @@ module BlacklightCornellRequests
       #     return
       #   end
         if response[:error].nil?
-          # Note: the :flash=>'success' in this case is not setting the actual flash message,
+          # NOTE: the :flash=>'success' in this case is not setting the actual flash message,
           # but instead specifying a URL parameter that acts as a flag in Blacklight's show.html.erb view.
           flash[:error] = nil # Without this, a blank 'error' flash appears beneath the success message in B7 ... for some reason
           render js: "$('#main-flashes').hide(); window.location = '#{Rails.application.routes.url_helpers.solr_document_path(params[:bibid], :flash=>'success')}'"
@@ -449,13 +445,10 @@ module BlacklightCornellRequests
       errors = []
       errors << I18n.t('requests.errors.name.blank') if params[:name].blank?
       errors << I18n.t('requests.errors.email.blank') if params[:email].blank?
-      if params[:reqstatus].blank?
-        errors << I18n.t('requests.errors.status.blank')
-      end
-      if params[:reqtitle].blank?
-        errors << I18n.t('requests.errors.title.blank')
-      end
-      if params[:email].present? and errors.empty?
+      errors << I18n.t('requests.errors.status.blank') if params[:reqstatus].blank?
+      errors << I18n.t('requests.errors.title.blank') if params[:reqtitle].blank?
+
+      if params[:email].present? && errors.empty?
         if params[:email].match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/)
           # Email the form contents to the purchase request staff
           RequestMailer.email_request(user, params)
@@ -466,12 +459,8 @@ module BlacklightCornellRequests
         end
       end
 
-      if errors
-        flash[:error] = errors.join('<br/>').html_safe
-      end
-
+      flash[:error] = errors.join('<br/>').html_safe if errors
       render :partial => '/shared/flash_msg', :layout => false
-
     end
 
     def make_bd_request
@@ -499,7 +488,7 @@ module BlacklightCornellRequests
       end
 
       if status
-        render :partial => 'bd_notification', :layout => false, locals: {:message => status_msg, :status => status}
+        render :partial => 'bd_notification', :layout => false, locals: { :message => status_msg, :status => status }
       else
         render :partial => '/shared/flash_msg', :layout => false
       end
@@ -548,17 +537,16 @@ module BlacklightCornellRequests
       session[:volume] = params[:volume]
       session[:setvol] = 1
       respond_to do |format|
-        format.js {render body: nil}
+        format.js { render body: nil }
       end
     end
-
 
     def user
       netid = nil
       if ENV['DEBUG_USER'] && Rails.env.development?
         netid = ENV['DEBUG_USER']
       else
-        netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
+        netid = request.env['REMOTE_USER'] || session[:cu_authenticated_user]
       end
 
       netid = netid.sub('@CORNELL.EDU', '') unless netid.nil?
@@ -566,7 +554,5 @@ module BlacklightCornellRequests
 
       netid
     end
-
   end
-
 end
