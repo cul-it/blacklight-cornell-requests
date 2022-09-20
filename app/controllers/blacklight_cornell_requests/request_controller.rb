@@ -5,13 +5,12 @@ require 'repost'
 require 'rest-client'
 
 module BlacklightCornellRequests
-
   class RequestDatabaseException < StandardError
     attr_reader :data
 
     def initialize(data)
-     super
-     @data = data
+      super
+      @data = data
     end
   end
 
@@ -19,12 +18,12 @@ module BlacklightCornellRequests
     # Blacklight::Catalog is needed for "fetch", replaces "include SolrHelper".
     # As of B7, it now supplies search_service, and fetch is called as search_service.fetch
     include Blacklight::Catalog
-    #include Cornell::LDAP
+    # include Cornell::LDAP
 
     # This may seem redundant, but it makes it easier to fetch the document from
     # various model classes
-    def get_solr_doc doc_id
-      resp, document = search_service.fetch doc_id
+    def get_solr_doc(doc_id)
+      _, document = search_service.fetch doc_id
       document
     end
 
@@ -46,8 +45,8 @@ module BlacklightCornellRequests
       end
     end
 
-    def magic_request target=''
-      if request.headers["REQUEST_METHOD"] == "HEAD"
+    def magic_request(target = '')
+      if request.headers['REQUEST_METHOD'] == 'HEAD'
         head :no_content
         return
       end
@@ -56,16 +55,16 @@ module BlacklightCornellRequests
 
       # added rescue for DISCOVERYACCESS-5863
       begin
-        resp, @document = search_service.fetch @id
-       # Rails.logger.debug "mjc12test: doc: #{@document.inspect}"
+        _, @document = search_service.fetch @id
+        # Rails.logger.debug "mjc12test: doc: #{@document.inspect}"
       rescue Blacklight::Exceptions::RecordNotFound => e
         Rails.logger.debug("******* " + e.inspect)
         flash[:notice] = I18n.t('blacklight.search.errors.invalid_solr_id')
         redirect_to '/catalog'
         return
       end
-     # @document = @document
-     #Rails.logger.debug "mjc12test: document = #{@document.inspect}"
+      # @document = @document
+      # Rails.logger.debug "mjc12test: document = #{@document.inspect}"
       @scan = params[:format].present? && params[:format] == "scan" ? "yes" : ""
       work_metadata = Work.new(@id, @document)
       # Create an array of all the item records associated with the bibid
@@ -187,7 +186,7 @@ module BlacklightCornellRequests
 
       #Rails.logger.debug "mjc12test: items: #{items}"
       items.each do |i|
-        rp = {}
+        # rp = {}
         # policy_key = "#{i.circ_group}-#{requester.group}-#{i.type['id']}"
         # if policy_hash[policy_key]
         #   rp = policy_hash[policy_key]
@@ -277,7 +276,6 @@ module BlacklightCornellRequests
       end
       Rails.logger.debug "mjc12test8: #{fastest_method}"
       render fastest_method[:method]::TemplateName
-
     end
 
     def l2l_available?(item)
@@ -295,7 +293,6 @@ module BlacklightCornellRequests
     # Update the options hash with methods for a particular item
     # TODO: there's probably a better way to do this!
     def update_options(item, options, patron)
-
       available_folio_methods = DeliveryMethod.available_folio_methods(item, patron)
       Rails.logger.debug "mjc12test: AFM: #{available_folio_methods}"
       # Rails.logger.debug "mjc12test: item is #{item.inspect}"
@@ -310,7 +307,7 @@ module BlacklightCornellRequests
       options[AskCirculation] << item if AskCirculation.available?(item, patron)
       options[MannSpecial] << item if MannSpecial.available?(item, patron)
 
-      return options
+      options
     end
 
     # Get information about FOD/remote prgram delivery eligibility
@@ -322,7 +319,7 @@ module BlacklightCornellRequests
         response = RestClient.get(uri)
         # response = Net::HTTP.get_response(uri)
         JSON.parse(response)
-      rescue OpenURI::HTTPError, Net::ReadTimeout
+      rescue OpenURI::HTTPError, RestClient::Exception
         Rails.logger.warn("Warning: Unable to retrieve FOD/remote program eligibility data (from #{uri})")
         {}
       end
@@ -331,51 +328,51 @@ module BlacklightCornellRequests
     # These one-line service functions simply return the name of the view
     # that should be rendered for each one.
     def l2l
-      return magic_request 'l2l'
+      magic_request 'l2l'
     end
 
     def hold
-      return magic_request 'hold'
+      magic_request 'hold'
     end
 
     def recall
-      return magic_request 'recall'
+      magic_request 'recall'
     end
 
     def bd
-      return magic_request 'bd'
+      magic_request 'bd'
     end
 
     def ill
-      return magic_request 'ill'
+      magic_request 'ill'
     end
 
     def purchase
-      return magic_request 'purchase'
+      magic_request 'purchase'
     end
 
     def pda
-      return magic_request 'pda'
+      magic_request 'pda'
     end
 
     def ask
-      return magic_request 'ask'
+      magic_request 'ask'
     end
 
     def circ
-      return magic_request 'circ'
+      magic_request 'circ'
     end
 
     def document_delivery
-      return magic_request 'document_delivery'
+      magic_request 'document_delivery'
     end
 
     def mann_special
-      return magic_request 'mann_special'
+      magic_request 'mann_special'
     end
 
     def blacklight_solr
-      @solr ||=  RSolr.connect(blacklight_solr_config)
+      @solr ||= RSolr.connect(blacklight_solr_config)
     end
 
     def blacklight_solr_config
@@ -386,16 +383,10 @@ module BlacklightCornellRequests
     def make_folio_request
       # Validate the form data
       errors = []
-      if params[:holding_id].blank?
-        errors << I18n.t('requests.errors.holding_id.blank')
-      end
-      if params[:library_id].blank?
-        errors << I18n.t('requests.errors.library_id.blank')
-      end
+      errors << I18n.t('requests.errors.holding_id.blank') if params[:holding_id].blank?
+      errors << I18n.t('requests.errors.library_id.blank') if params[:library_id].blank?
 
-      if errors
-        flash[:error] = errors.join('<br/>').html_safe
-      end
+      flash[:error] = errors.join('<br/>').html_safe if errors
 
       if errors.blank?
       #   req = BlacklightCornellRequests::Request.new(params[:bibid])
@@ -455,14 +446,9 @@ module BlacklightCornellRequests
     end
 
     def make_purchase_request
-
       errors = []
-      if params[:name].blank?
-        errors << I18n.t('requests.errors.name.blank')
-      end
-      if params[:email].blank?
-        errors << I18n.t('requests.errors.email.blank')
-      end
+      errors << I18n.t('requests.errors.name.blank') if params[:name].blank?
+      errors << I18n.t('requests.errors.email.blank') if params[:email].blank?
       if params[:reqstatus].blank?
         errors << I18n.t('requests.errors.status.blank')
       end
@@ -492,13 +478,13 @@ module BlacklightCornellRequests
       if params[:library_id].blank?
         flash[:error] = "Please select a library pickup location"
       else
-        resp, document = search_service.fetch params[:bibid]
+        _, document = search_service.fetch params[:bibid]
         isbn = document[:isbn_display]
         title = document[:title_display]
         requester = Patron.new(user)
         work = { :isbn => isbn, :title => title }
         # Following FOLIO updates, using CULBorrowDirect for now as it has both the request_from_bd method
-        #and an authenticate method, which is called on initialization. Passing the boolean provides a way
+        # and an authenticate method, which is called on initialization. Passing the boolean provides a way
         # of distinguishing between the availability check and the call that actually makes the request.
         make_request = true
         req = BlacklightCornellRequests::CULBorrowDirect.new(requester, work, make_request)
@@ -508,7 +494,7 @@ module BlacklightCornellRequests
           status_msg = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
         else
           status = 'failure'
-          status_msg = "There was an error when submitting this request to Borrow Direct. Your request could not be completed."
+          status_msg = 'There was an error when submitting this request to Borrow Direct. Your request could not be completed.'
         end
       end
 
@@ -543,12 +529,12 @@ module BlacklightCornellRequests
         rescue StandardError => e
           Rails.logger.debug "Requests: PDA request failed (#{e})"
           error_msg = I18n.t('requests.failure')
-          error_msg += ' ' + '(The requestor could not be identified.)' if params[:netid].nil?
+          error_msg += ' (The requestor could not be identified.)' if params[:netid].nil?
           flash[:error] = error_msg
         end
       else
         error_msg = I18n.t('requests.failure')
-        error_msg += ' ' + '(The requestor could not be identified.)' if params[:netid].nil?
+        error_msg += ' (The requestor could not be identified.)' if params[:netid].nil?
         flash[:error] = error_msg
       end
 
