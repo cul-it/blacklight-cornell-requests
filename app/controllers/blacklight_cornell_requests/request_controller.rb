@@ -4,6 +4,7 @@ require 'date'
 require 'json'
 require 'repost'
 require 'rest-client'
+require 'string' # ISBN extension to String class
 
 module BlacklightCornellRequests
   class RequestDatabaseException < StandardError
@@ -161,7 +162,7 @@ module BlacklightCornellRequests
 
       enabled_request_methods = DeliveryMethod.enabled_methods
       requester = Patron.new(user)
-      borrow_direct = CULBorrowDirect.new(requester, work_metadata)
+      # borrow_direct = CULBorrowDirect.new(requester, work_metadata)
       # We have the following delivery methods to evaluate (at most) for each item:
       # L2L, BD, ILL, Hold, Recall, Patron-driven acquisition, Purchase request
       # ScanIt, Ask a librarian, ask at circ desk
@@ -195,7 +196,18 @@ module BlacklightCornellRequests
         # end
         options = update_options(i, options, requester)
       end
-      options[BD] = [1] if borrow_direct.available
+
+      items_json = JSON.parse(@document['items_json']).values[0]
+      # NOTE: [*<variable>] gives us an array if we don't already have one,
+      # which we need for the map.
+      isbns = ([*work_metadata.isbn].map! { |i| i.clean_isbn })
+      # However, ReShare doesn't appear to support searching by multiple ISBNs,
+      # so we'll take the first one for now.
+      # TODO: is this a safe approach? Will we get false negatives by not checking
+      # all the ISBNs?
+
+      options[BD] = [1] if BD.available?(requester, items_json) &&
+                           borrow_direct_requestable?(isbns[0])
 
       # Rails.logger.debug "mjc12test: options hash - #{options}"
       # At this point, options is a hash with keys being available delivery methods

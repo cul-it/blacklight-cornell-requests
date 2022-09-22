@@ -8,20 +8,18 @@ module Reshare
   def borrow_direct_requestable?(isn)
     records = _search_by_isn(isn)
     Rails.logger.debug "mjc12a: got records #{records}"
-    records.any? { |r| r['lendingStatus'].include?('LOANABLEs') }
+    records.any? { |r| r['lendingStatus'].include?('LOANABLE') }
   end
 
   def _search_by_isn(isn)
-    begin
-      # TODO: guard against missing RESHARE_URL value and missing isn
-      url = "#{ENV['RESHARE_URL']}?type=ISN&lookfor=#{isn}&field[]=id&field[]=lendingStatus"
-      response = RestClient.get(url)
-      # TODO: check that response is in the proper form and there are no returned errors
-      JSON.parse(response)['records']
-    rescue RestClient::Exception
-      # TODO: Provide proper log message here
-      Rails.logger.warn("Warning: Unable to retrieve FOD/remote program eligibility data (from #{uri})")
-      {}
-    end
+    # TODO: guard against missing RESHARE_URL value and missing isn
+    url = "#{ENV['RESHARE_URL']}?type=ISN&lookfor=#{isn}&field[]=id&field[]=lendingStatus"
+    response = RestClient.get(url)
+    # TODO: check that response is in the proper form and there are no returned errors
+    JSON.parse(response)['records']
+  rescue RestClient::Exception
+    # TODO: Provide proper log message here
+    Rails.logger.warn("Warning: Unable to retrieve FOD/remote program eligibility data (from #{uri})")
+    {}
   end
 end

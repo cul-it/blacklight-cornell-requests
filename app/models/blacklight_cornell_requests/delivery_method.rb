@@ -186,7 +186,7 @@ module BlacklightCornellRequests
       [7, 7]
     end
 
-    def self.available?(patron)
+    def self.available?(patron, items)
       # Unfortunately, the rules governing which patron groups are eligible to use BD
       # are not programmatically accessible. Thus, they are hard-coded here for your
       # enjoyment (based on a list provided by Caitlin on 7/1/21). See also
@@ -198,7 +198,10 @@ module BlacklightCornellRequests
         'bdc2b6d4-5ceb-4a12-ab46-249b9a68473e'   # undergraduate
       ]
 
-      bd_patron_group_ids.include? patron.group
+      # BD shouldn't be available if an item is available locally
+      available_locally = items.any? { |i| i['status']['status'] == 'Available' }
+
+      bd_patron_group_ids.include?(patron.group) && !available_locally
     end
   end
 
