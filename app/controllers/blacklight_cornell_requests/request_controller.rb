@@ -1,4 +1,5 @@
 require_dependency 'blacklight_cornell_requests/application_controller'
+
 require 'date'
 require 'json'
 require 'repost'
@@ -18,6 +19,8 @@ module BlacklightCornellRequests
     # Blacklight::Catalog is needed for "fetch", replaces "include SolrHelper".
     # As of B7, it now supplies search_service, and fetch is called as search_service.fetch
     include Blacklight::Catalog
+    # Interface to Project ReShare
+    include Reshare
     # include Cornell::LDAP
 
     # This may seem redundant, but it makes it easier to fetch the document from
