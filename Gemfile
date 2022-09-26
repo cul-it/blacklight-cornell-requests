@@ -6,7 +6,8 @@ source "http://rubygems.org"
 gem "thor"
 #gem 'zoom', :git => 'https://github.com/bricestacey/ruby-zoom.git'
 #gem 'blacklight', '5.9'
-gem 'rails', '~>4.0'
+gem 'rails', '~> 6.1'
+gem 'unf_ext'
 
 gemspec
 
@@ -29,4 +30,4 @@ end
 # To use debugger
 # gem 'debugger'
 
-gem 'cul-folio-edge', :path => '/Users/matt/code/cul/d&a/cul-folio-edge'
+gem 'cul-folio-edge', '2.0', git: 'https://github.com/cul-it/cul-folio-edge'
