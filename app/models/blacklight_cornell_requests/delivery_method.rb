@@ -464,7 +464,7 @@ module BlacklightCornellRequests
     # https://culibrary.atlassian.net/browse/DISCOVERYACCESS-3484
     def self.available?(item, patron)
       return false unless self.enabled?
-      
+
       # Unfortunately, the rules governing which patron groups are eligible to use 
       # are not programmatically accessible. Thus, they are hard-coded here for your
       # enjoyment (based on a table provided by Joanne Leary as of 3/30/18). (Copied
@@ -475,31 +475,27 @@ module BlacklightCornellRequests
       location = item.location['number']
       if location == 251 || location == 252
         Rails.logger.debug "mjc12test: Should be special RQ form #{}"
-        return true
+        true
       elsif location == 77 || location == 78
         holdings = item.holdings_data
         does_not_circulate = false
         special_collections = false
         if holdings[item.holding_id]['notes'].present?
           holdings[item.holding_id]['notes'].each do |note|
-            if note.include? 'DOES NOT CIRCULATE'
-              does_not_circulate = true
-            end
-            if note.include? 'Mann Library Special Collections'
-              special_collections = true
-            end
+            does_not_circulate = true if note.include?('DOES NOT CIRCULATE')
+            special_collections = true if note.include?('Mann Library Special Collections')
           end
         end
         if special_collections || (location == 77 && does_not_circulate)
           Rails.logger.debug "mjc12test: Should be special RQ form #{}"
-          return true
+          true
         elsif item.type['id'] == '2e48e713-17f3-4c13-a9f8-23845bb210a4' # nocirc
           Rails.logger.debug "mjc12test: No request possible #{}"
-          return false
+          false
         else
           # Not special collections and not nocirc, so this is a Hortorium L2L item
           Rails.logger.debug "mjc12test: hortorium L2L #{}"
-          return false
+          false
         end
       end
     end
