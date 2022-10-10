@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
 
   s.files = Dir["{app,config,db,lib}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.md"]
 
-  s.add_dependency "rails", "~> 5.1"
+  s.add_dependency "rails", "~> 6.1"
   s.add_dependency 'protected_attributes_continued'
   # s.add_dependency "jquery-rails"
   s.add_dependency 'haml', ['>= 3.0.0']
@@ -35,7 +35,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'rest-client'
 
   s.add_development_dependency "sqlite3"
-
   s.add_development_dependency "rspec-rails", "~> 2.5"
   s.add_development_dependency "capybara", "2.4.1"
   s.add_development_dependency "guard-spork"
