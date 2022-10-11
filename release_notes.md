@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## IN PROGRESS
+- Fix bug in volume selection caused by update to Haml 6
+
 ## v4.2.7
 - Specify Rails 6.1.
 
