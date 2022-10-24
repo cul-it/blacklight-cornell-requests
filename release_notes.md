@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## PENDING
+- Update Mann Special Collections handling to work with FOLIO
+
 ## v4.2.5
 - Remove Mann Contactless & Uris Contactless options from BD pickup locations (requested by Caitlin)
 
