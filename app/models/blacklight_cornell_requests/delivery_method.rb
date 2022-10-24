@@ -5,7 +5,6 @@ module BlacklightCornellRequests
 
   # Delivery method superclass
   class DeliveryMethod
-
     # TODO: some of these class methods should not be inherited by
     # subclasses ...
 
@@ -42,8 +41,8 @@ module BlacklightCornellRequests
 
       # TODO: add error handling
       result = CUL::FOLIO::Edge.request_options(
-        url, 
-        tenant, 
+        url,
+        tenant,
         token[:token],
         patron.record['patronGroup'],
         item.type&.dig('id'),
@@ -51,19 +50,16 @@ module BlacklightCornellRequests
         item.location['id']
       )
       Rails.logger.debug "mjc12test: AFM lookup results: #{result}"
-      if result[:code] >= 300
-        return []
-      end
-
-
+      return [] if result[:code] >= 300
 
       # The options returned from FOLIO reflect the request policy determined for the item and patron.
       # They do not consider item status, e.g., whether it's available or checked out. So we have
       # to do this. Not the prettiest code....
       res = REQUEST_TYPES_BY_ITEM_STATUS[:"#{item.status}"]
       Rails.logger.debug "mjc12test: RTBYS: #{res}"
-      return result[:request_methods].select { |rm| res.include?(rm) } if !res.nil?
-      return [] if res.nil?
+      return result[:request_methods].select { |rm| res.include?(rm) } unless res.nil?
+
+      []
     end
 
     def self.description
@@ -81,34 +77,32 @@ module BlacklightCornellRequests
     end
 
     # Whether this method can be used for the specified item and requestor
-    def self.available?(item, patron)
-
-    end
+    def self.available?(item, patron); end
 
     # Receive a hash of valid delivery methods (e.g.,
     # { Hold => [item1, item2, item3...], Recall => [item1, item3, ...]})
     # Sort them by delivery time, then return an object in the form
     # { :fastest => {:method => Hold, :items => []}, :alternate => [{methods, items]}
     def self.sorted_methods(options_hash)
-      options_hash = options_hash.keep_if { |key, value| value.length > 0 }
+      options_hash = options_hash.keep_if { |key, value| value.length.positive? }
 
       # Get fastest delivery method
       sorted_keys = options_hash.keys.sort { |x, y| x.time.min <=> y.time.min }
       fastest_method = sorted_keys.shift
       alternate_methods = []
       sorted_keys.each do |k|
-        alternate_methods << { :method => k, :items => options_hash[k] }
+        alternate_methods << { method: k, items: options_hash[k] }
       end
 
       # Document delivery/ScanIt never comes first
-      if fastest_method == DocumentDelivery && alternate_methods.length > 0
+      if fastest_method == DocumentDelivery && alternate_methods.length.positive?
         fastest_method = alternate_methods.shift[:method]
-        alternate_methods.unshift({ :method => DocumentDelivery, :items => options_hash[DocumentDelivery] })
+        alternate_methods.unshift({ method: DocumentDelivery, items: options_hash[DocumentDelivery] })
       end
 
       {
-        :fastest => {:method => fastest_method, :items => options_hash[fastest_method] },
-        :alternate => alternate_methods
+        fastest: { method: fastest_method, items: options_hash[fastest_method] },
+        alternate: alternate_methods
       }
     end
 
@@ -140,13 +134,11 @@ module BlacklightCornellRequests
     # def self.regular_loan?(loan_code)
     #   !nocirc_loan?(loan_code) && !minute_loan?(loan_code) && !day_loan?(loan_code)
     # end
-
   end
 
   ###### Individual delivery method class definitions follow ########
 
   class L2L < DeliveryMethod
-
     TemplateName = 'l2l'
 
     def self.description
@@ -169,7 +161,6 @@ module BlacklightCornellRequests
   end
 
   class BD < DeliveryMethod
-
     TemplateName = 'bd'
 
     def self.description
@@ -203,7 +194,6 @@ module BlacklightCornellRequests
   end
 
   class ILL < DeliveryMethod
-
     TemplateName = 'ill'
 
     def self.description
@@ -215,20 +205,20 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      [7,14]
+      [7, 14]
     end
 
     def self.available?(item, patron, noncirculating = false)
       # ILL is available for CORNELL only under the following conditions:
       # (1) Loan type is regular or day AND
       # (2) Status is charged or missing or lost
-      # OR 
+      # OR
       # (1) Item is nocirc or noncirculating
       # OR
       # (1) Item is at bindery
 
-      return false unless self.enabled?
-      
+      return false unless enabled?
+
       # Unfortunately, the rules governing which patron groups are eligible to use ILL
       # are not programmatically accessible. Thus, they are hard-coded here for your
       # enjoyment (based on a table provided by Caitlin on 7/1/21).
@@ -240,8 +230,9 @@ module BlacklightCornellRequests
       ]
       return false unless ill_patron_group_ids.include? patron.group
 
-      #return true if item.statusCode == STATUSES[:at_bindery]
+      # return true if item.statusCode == STATUSES[:at_bindery]
       return true if noncirculating
+
       if item.regular_loan? || item.day_loan?
         return item.status == 'Checked out' ||
                item.status == 'Aged to lost' ||
@@ -255,12 +246,11 @@ module BlacklightCornellRequests
       else
         return false
       end
-      return false
+      false
     end
   end
 
   class Hold < DeliveryMethod
-
     TemplateName = 'hold'
 
     def self.description
@@ -272,17 +262,15 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      [180,180]
+      [180, 180]
     end
 
     def self.available?(item, patron)
       # Disabled for now - using the hold_available? method in RequestController instead
     end
-
   end
 
   class Recall < DeliveryMethod
-
     TemplateName = 'recall'
 
     def self.description
@@ -294,7 +282,7 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      [15,15]
+      [15, 15]
     end
 
     def self.available?(item, patron)
@@ -303,7 +291,6 @@ module BlacklightCornellRequests
   end
 
   class PDA < DeliveryMethod
-
     TemplateName = 'pda'
 
     def self.description
@@ -314,22 +301,22 @@ module BlacklightCornellRequests
       [5, 5]
     end
 
-    def self.available?(item, patron)
+    def self.available?(item, _)
       item.nil?
     end
 
     def self.pda_data(solrdoc)
       return nil unless solrdoc['url_pda_display']
+
       url, note = solrdoc['url_pda_display'][0].split('|')
       {
-        :url => url,
-        :note => note
+        url: url,
+        note: note
       }
     end
   end
 
   class PurchaseRequest < DeliveryMethod
-
     TemplateName = 'purchase'
 
     def self.description
@@ -337,7 +324,7 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      [10,10]
+      [10, 10]
     end
 
     def self.available?(item, patron)
@@ -354,7 +341,6 @@ module BlacklightCornellRequests
   end
 
   class AskLibrarian < DeliveryMethod
-
     TemplateName = 'ask'
 
     def self.description
@@ -365,13 +351,12 @@ module BlacklightCornellRequests
       [9999, 9999]
     end
 
-    def self.available?(item, patron)
-      return true
+    def self.available?(*)
+      true
     end
   end
 
   class AskCirculation < DeliveryMethod
-
     TemplateName = 'circ'
 
     def self.description
@@ -382,16 +367,15 @@ module BlacklightCornellRequests
       [9998, 9998]
     end
 
-    def self.available?(item, patron)
+    def self.available?(item, _)
       # Items are available for 'ask at circulation' under the following conditions:
       # (1) Loan type is minute, and status is charged or not charged
       # (2) Loan type is nocirc
-      item.noncirculating? || (item.minute_loan? && (item.status == 'Available' || item.status == 'Checked out' ))
+      item.noncirculating? || (item.minute_loan? && (item.status == 'Available' || item.status == 'Checked out'))
     end
   end
 
   class DocumentDelivery < DeliveryMethod
-
     TemplateName = 'document_delivery'
 
     def self.description
@@ -404,7 +388,7 @@ module BlacklightCornellRequests
 
     def self.time(options = {})
       # TODO: add the logic for this
-      return [1,4]
+      return [1, 4]
     end
 
     def self.available?(item, patron)
@@ -425,7 +409,7 @@ module BlacklightCornellRequests
       #                     'Thesis',
       #                     'Newspaper' (20)
       #                     'Microform'] (19)
-      #eligible_formats = [2, 3, 5, 7, 8, 15, 18, 19, 20]
+      # eligible_formats = [2, 3, 5, 7, 8, 15, 18, 19, 20]
 
       eligible_formats = [
         '1a54b431-2e4f-452d-9cae-9cee66c9a892', # Book
