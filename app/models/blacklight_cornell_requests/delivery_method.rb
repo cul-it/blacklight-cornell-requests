@@ -444,7 +444,6 @@ module BlacklightCornellRequests
   end
 
   class MannSpecial < DeliveryMethod
-
     TemplateName = 'mann_special'
 
     def self.description
@@ -456,53 +455,57 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      [1,2]
+      [1, 2]
     end
 
     # For availability here, the patron rules are copied from ILL (a guess?)
     # Item-related rules are taken from the discussion at
     # https://culibrary.atlassian.net/browse/DISCOVERYACCESS-3484
     def self.available?(item, patron)
-      return false unless self.enabled?
-      
-      # Unfortunately, the rules governing which patron groups are eligible to use 
-      # are not programmatically accessible. Thus, they are hard-coded here for your
-      # enjoyment (based on a table provided by Joanne Leary as of 3/30/18). (Copied
-      # from ILL rules)
-      eligibile_patron_group_ids = [1,2,3,4,5,6,7,8,10,17]
-      return false unless eligibile_patron_group_ids.include? patron.group
+      return false unless enabled?
 
-      location = item.location['number']
-      if location == 251 || location == 252
-        Rails.logger.debug "mjc12test: Should be special RQ form #{}"
-        return true
-      elsif location == 77 || location == 78
+      # eligibile_patron_group_ids = [1,2,3,4,5,6,7,8,10,17]
+      # Unfortunately, the rules governing which patron groups are eligible to use ILL
+      # are not programmatically accessible. Thus, they are hard-coded here for your
+      # enjoyment (based on a table provided by Caitlin on 7/1/21).
+      # TODO: Why are there more groups in the Voyager list than in the FOLIO list now being used?
+      eligible_patron_group_ids = [
+        '503a81cd-6c26-400f-b620-14c08943697c',  # faculty
+        'ad0bc554-d5bc-463c-85d1-5562127ae91b',  # graduate
+        '3684a786-6671-4268-8ed0-9db82ebca60b',  # staff
+        'bdc2b6d4-5ceb-4a12-ab46-249b9a68473e'   # undergraduate
+      ]
+      return false unless eligible_patron_group_ids.include? patron.group
+
+      folio_locations = {
+        mnsc: 'a8ce2842-0def-4260-a5ae-3f9a8feeb1eb',      # Mann Special Collections (mnsc)
+        mnsc_anx: '66074f1b-078b-4e46-9677-ac9aa5a9fae8',  # Mann Special Collections, Annex (mnsc,anx)
+        mann_hort: '909a4980-940d-4416-b200-13a8d8e5d35c', # Mann Hortorium (mann,hort)
+        mann_href: 'a82d2c6b-fe17-4fd5-a762-6b1a3ef1f491'  # Mann Hortorium Reference (mann,href)
+      }
+
+      location = item.location['id']
+      if [folio_locations[:mnsc], folio_locations[:mnsc_anx]].include? location
+        true
+      elsif [folio_locations[:mann_hort], folio_locations[:mann_href]].include? location
         holdings = item.holdings_data
         does_not_circulate = false
         special_collections = false
         if holdings[item.holding_id]['notes'].present?
           holdings[item.holding_id]['notes'].each do |note|
-            if note.include? 'DOES NOT CIRCULATE'
-              does_not_circulate = true
-            end
-            if note.include? 'Mann Library Special Collections'
-              special_collections = true
-            end
+            does_not_circulate = true if note.include? 'DOES NOT CIRCULATE'
+            special_collections = true if note.include? 'Mann Library Special Collections'
           end
         end
-        if special_collections || (location == 77 && does_not_circulate)
-          Rails.logger.debug "mjc12test: Should be special RQ form #{}"
-          return true
+        if special_collections || (location == folio_locations[:mann_hort] && does_not_circulate)
+          true
         elsif item.type['id'] == '2e48e713-17f3-4c13-a9f8-23845bb210a4' # nocirc
-          Rails.logger.debug "mjc12test: No request possible #{}"
-          return false
+          false
         else
           # Not special collections and not nocirc, so this is a Hortorium L2L item
-          Rails.logger.debug "mjc12test: hortorium L2L #{}"
-          return false
+          false
         end
       end
     end
   end
-
 end
