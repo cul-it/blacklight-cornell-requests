@@ -206,7 +206,8 @@ module BlacklightCornellRequests
       # TODO: is this a safe approach? Will we get false negatives by not checking
       # all the ISBNs?
 
-      options[BD] = [1] if BD.available?(requester, items_json) &&
+      # BD.available? checks to see whether an item is available locally -- if it is, we can't use BD
+      options[BD] = [1] if BD.available?(requester, holdings&.values[0]) &&
                            borrow_direct_requestable?(isbns[0])
 
       # Rails.logger.debug "mjc12test: options hash - #{options}"
