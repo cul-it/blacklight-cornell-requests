@@ -2,6 +2,7 @@
 
 ## IN PROGRESS
 - Fix bug in volume selection caused by update to Haml 6
+- Update Mann Special Collections handling to work with FOLIO
 
 ## v4.2.7
 - Specify Rails 6.1.
