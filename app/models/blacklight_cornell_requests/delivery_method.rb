@@ -186,7 +186,8 @@ module BlacklightCornellRequests
       [7, 7]
     end
 
-    def self.available?(patron, items)
+    # patron is a Patron instance; holdings is a holdings_json object from the bib record @document
+    def self.available?(patron, holdings)
       # Unfortunately, the rules governing which patron groups are eligible to use BD
       # are not programmatically accessible. Thus, they are hard-coded here for your
       # enjoyment (based on a list provided by Caitlin on 7/1/21). See also
@@ -199,7 +200,7 @@ module BlacklightCornellRequests
       ]
 
       # BD shouldn't be available if an item is available locally
-      available_locally = items.any? { |i| i['status']['status'] == 'Available' }
+      available_locally = holdings.values.any? { |h| h['circ'] && h.dig('items', 'avail').positive? }
 
       bd_patron_group_ids.include?(patron.group) && !available_locally
     end
