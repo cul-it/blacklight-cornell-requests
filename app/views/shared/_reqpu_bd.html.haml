@@ -4,22 +4,22 @@
   .col-sm-10
     %select#pickup-locations.form-control{:name => 'library_id'}
       %option(value='') -- Select a location --
-      %option{:value => "D"} * Olin Library (default)
-      %option{:value => "F"} Africana Library
-      %option{:value => "G"} Annex Contactless Pickup
-      %option{:value => "H"} Fine Arts Library
-      -# %option{:value => "A"} Geneva Circulation
-      %option{:value => "I"} ILR Library
-      %option{:value => "B"} Law Library – Law Faculty, Staff, and Students Only
-      -# %option{:value => "K"} Management Circulation
-      -# %option{:value => "P"} Mann Contactless Pickup
-      %option{:value => "C"} Mann Library
-      %option{:value => "Q"} Math Contactless Pickup
-      %option{:value => "J"} Math Library
-      %option{:value => "L"} Music Library
-      %option{:value => "M"} Ornithology Circulation Desk
-      %option{:value => "E"} Vet Library
-      -# %option{:value => "O"} Uris Tower Contactless Pickup
+      %option{:value => "CORN_olin_circ"} * Olin Library (default)
+      %option{:value => "CORN_afr_circ"} Africana Library
+      %option{:value => "CORN_anx_grab"} Annex Contactless Pickup
+      %option{:value => "CORN_fine_circ"} Fine Arts Library
+      -# %option{:value => "CORN_remote_gnva"} Geneva Circulation
+      %option{:value => "CORN_ilr_circ"} ILR Library
+      %option{:value => "CORN_law_grab"} Law Library – Law Faculty, Staff, and Students Only
+      -# %option{:value => "CORN_jgsm_circ"} Management Circulation
+      -# %option{:value => "CORN_mann_grab"} Mann Contactless Pickup
+      %option{:value => "CORN_mann_circ"} Mann Library
+      %option{:value => "CORN_math_grab"} Math Contactless Pickup
+      %option{:value => "CORN_math_circ"} Math Library
+      %option{:value => "CORN_mus_circ"} Music Library
+      -# %option{:value => "M"} Ornithology Circulation Desk
+      %option{:value => "CORN_vet_circ"} Vet Library
+      -# %option{:value => "CORN_uris_grab"} Uris Tower Contactless Pickup
       - if special_delivery_options.present?
         - special_delivery_options.each do |special_option|
           - if !special_option[:bd_value].empty?
