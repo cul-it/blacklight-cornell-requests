@@ -463,37 +463,6 @@ module BlacklightCornellRequests
       render partial: '/shared/flash_msg', layout: false
     end
 
-    def _make_bd_request
-      if params[:library_id].blank?
-        flash[:error] = "Please select a library pickup location"
-      else
-        _, document = search_service.fetch params[:bibid]
-        isbn = document[:isbn_display]
-        title = document[:title_display]
-        requester = Patron.new(user)
-        work = { :isbn => isbn, :title => title }
-        # Following FOLIO updates, using CULBorrowDirect for now as it has both the request_from_bd method
-        # and an authenticate method, which is called on initialization. Passing the boolean provides a way
-        # of distinguishing between the availability check and the call that actually makes the request.
-        make_request = true
-        #req = BlacklightCornellRequests::CULBorrowDirect.new(requester, work, make_request)
-        #resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id], :notes => params[:reqcomments] })
-        if resp
-          status = 'success'
-          status_msg = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
-        else
-          status = 'failure'
-          status_msg = 'There was an error when submitting this request to Borrow Direct. Your request could not be completed.'
-        end
-      end
-
-      if status
-        render :partial => 'bd_notification', :layout => false, locals: { :message => status_msg, :status => status }
-      else
-        render :partial => '/shared/flash_msg', :layout => false
-      end
-    end
-
     def make_bd_request
       if params[:library_id].blank?
         flash[:error] = 'Please select a library pickup location.'
