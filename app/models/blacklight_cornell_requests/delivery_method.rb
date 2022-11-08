@@ -199,8 +199,9 @@ module BlacklightCornellRequests
         'bdc2b6d4-5ceb-4a12-ab46-249b9a68473e'   # undergraduate
       ]
 
-      # BD shouldn't be available if an item is available locally
-      available_locally = holdings.values.any? { |h| h['circ'] && h.dig('items', 'avail').positive? }
+      # BD shouldn't be available if an item is available locally. The {items: {avail: x}} object is
+      # present if there is a positive value x for number of available items, but absent otherwise.
+      available_locally = holdings.values.any? { |h| h['circ'] && !h.dig('items', 'avail').nil? }
 
       bd_patron_group_ids.include?(patron.group) && !available_locally
     end
