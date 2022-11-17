@@ -16,6 +16,12 @@
 
 ## v4.2.4
 - Update the PDA workflow to call new Prefect script (DISCOVERYACCESS-7483)
+## CURRENT
+- Fix bug in volume selection that limited choice to one item/copy per volume (DISCOVERYACCESS-7426)
+- Make delivery location lists consistent for Borrow Direct and other request types (DISCOVERYACCESS-7399)
+- Update FOLIO requests to work with FOLIO Lotus API changes (and `cul-folio-edge` v2.0) (DISCOVERYACCESS-7480)
+- Add explicit dependency on `cul-folio-edge` v2.0, rather than inheriting it from Blacklight
+- Remove obsolete Request* models from codebase (DISCOVERYACCESS-6484)
 
 ## v4.2.3
 - Remove the ruby-oci8 gem (no longer needed)
