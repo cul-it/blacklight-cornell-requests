@@ -33,6 +33,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'activerecord-oracle_enhanced-adapter'
   s.add_dependency 'repost'
   s.add_dependency 'rest-client'
+  s.add_dependency 'cul-folio-edge', '~> 2.0'
 
   s.add_development_dependency "sqlite3"
   s.add_development_dependency "rspec-rails", "~> 2.5"
