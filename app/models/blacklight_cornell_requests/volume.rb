@@ -7,13 +7,23 @@ module BlacklightCornellRequests
     ####### Class methods #######
 
     # Given an array of Items, return an array of volumes that
-    # include those items. (Currently one item per volume; there may
-    # be duplicate volumes.)
+    # include those items.
     def self.volumes(items)
-      items.map do |i|
+      return_volumes = {}
+
+      items.each do |i|
         enum_parts = i.enum_parts
-        Volume.new(enum_parts[:enum], enum_parts[:chron], enum_parts[:year], [i])
+        v = Volume.new(enum_parts[:enum], enum_parts[:chron], enum_parts[:year], [i])
+        # Keep volumes unique. If a volume already exists, just add the item to its items array.
+        if return_volumes[v.enumeration]
+          return_volumes[v.enumeration].items << i
+        else
+          return_volumes[v.enumeration] = v
+        end
       end
+
+      Rails.logger.debug "mjc12test5: returning volumes #{return_volumes.values}"
+      return_volumes.values
     end
 
     # Make a new volume from a parameter string of the form |enum|chron|year|

@@ -21,6 +21,12 @@
             = render :partial =>'shared/volume_select'
       %input(type="hidden" name="bid" value="#{@id}" id="bid")
       %input(type="hidden" name="request_action" value="Page" id="request_action")
+      %input(type="hidden" name="instance_id" value="#{@document['instance_id']}")
+      -# The following is a hack. We need the holdings record id in order to place a request
+      -# in FOLIO Lotus, but that information is awkward to get because we don't know the
+      -# selected item ID until the user submits this form. Thus, we pass along the items_json
+      -# block as a param and then use that to figure out which holdings ID to use back in the controller.
+      %input(type="hidden" name="items_json" value="#{@document['items_json']}")
       = render :partial => 'shared/l2lac'
       = render :partial => 'shared/reqpu'
       .form-group.row
