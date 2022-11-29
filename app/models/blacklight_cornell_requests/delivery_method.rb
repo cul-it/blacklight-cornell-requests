@@ -179,6 +179,12 @@ module BlacklightCornellRequests
 
     # patron is a Patron instance; holdings is a holdings_json object from the bib record @document
     def self.available?(patron, holdings)
+      # NOTE: In transitioning from the old Borrow Direct system to ReShare, we are eliminating the distinction
+      # between BD and ILL, routing all requests into a single ILL form from which ReShare will figure out how to
+      # fulfill them. The most expedient way to remove the old BD approach from the system is to always return
+      # false for method availability.
+      return false
+
       # Unfortunately, the rules governing which patron groups are eligible to use BD
       # are not programmatically accessible. Thus, they are hard-coded here for your
       # enjoyment (based on a list provided by Caitlin on 7/1/21). See also
