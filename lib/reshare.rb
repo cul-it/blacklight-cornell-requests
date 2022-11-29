@@ -2,12 +2,17 @@
 
 # Interface to Project ReShare APIs
 # APIs are documented here: https://3.basecamp.com/5319802/buckets/26606684/documents/5132521312
+#
+# NOTE: After implementing the availability check and API requesting, we decided to use the ILLiad-to-ReShare
+# workflow instead of direct-to-ReShare. That means that we won't be distinguishing between BD and ILL on the
+# UI side of things; instead, all requests that match our defined criteria for fulfillment via BD *or* ILL
+# will be routed into a single form -- basically the old ILL form. Whether the request gets resolved through BD
+# or ILL will be up to ReShare (and our staff) to decide.
 module Reshare
   require 'rest-client'
 
   def bd_requestable_id(isn)
     records = _search_by_isn(isn)
-    Rails.logger.debug "mjc12a: got records #{records}"
     records.each do |r|
       return r['id'] if r['lendingStatus'].include?('LOANABLE')
     end
