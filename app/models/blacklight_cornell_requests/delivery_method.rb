@@ -216,7 +216,7 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      [7, 14]
+      [4, 14]
     end
 
     def self.available?(item, patron, noncirculating = false)
