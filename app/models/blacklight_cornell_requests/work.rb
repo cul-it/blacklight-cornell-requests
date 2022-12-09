@@ -8,6 +8,7 @@ module BlacklightCornellRequests
       @title = @doc['title_display']
       @author = parse_author(@doc)
       @isbn = @doc['isbn_display']
+      @oclc = solr_document['oclc_id_display']
       @pub_info = parse_pub_info(@doc)
       @ill_link = parse_ill(@doc)
       @mann_special_delivery_link = create_mann_special_delivery_link()
@@ -58,13 +59,9 @@ module BlacklightCornellRequests
 
       ill_link += "&rft.genre=#{solrdoc['format'][0]}" if solrdoc['format'].present?
       ill_link += "&rft.identifier=#{solrdoc['lc_callnum_display'][0]}" if solrdoc['lc_callnum_display'].present?
-      if solrdoc['other_id_display'].present?
-        oclc = solrdoc['other_id_display'].select do |id|
-          match[1] if match = id.match(/#{OCLC_TYPE_ID}([0-9]+)/)
-        end
-
-        ill_link += "&rfe_dat=#{oclc.join(',')}" if oclc.count.positive?
-      end
+      ill_link += "&ESPNumber=#{@oclc.join(', ')}" if @oclc.present?
+      ill_link += "&ISSN=#{@isbn.join(', ')}" if @isbn.present?
+      ill_link += "&CitedIn=Cornell University Library catalog"
 
       ill_link
     end
