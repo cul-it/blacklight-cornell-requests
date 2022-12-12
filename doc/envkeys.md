@@ -2,10 +2,7 @@
 
 (Work in progress)
 ## Required keys
-	BORROW_DIRECT_PROD_API_KEY=<API key for Borrow Direct web services>
-	BORROW_DIRECT_TEST_API_KEY=<API key for Borrow Direct test web services>
-	BORROW_DIRECT_URL=<TEST|PRODUCTION>
-	BORROW_DIRECT_TIMEOUT=<Borrow Direct timeout in seconds>
+
 	COOKIE_STORE=<path to local cookie store>
 	DUMMY_GET_HOLDS=<URL to Voyager holdings service used for 'dummy' test app>
 	DUMMY_SOLR_URL=<URL to Solr instance used for 'dummy' test app>
@@ -43,6 +40,10 @@
 	ORACLE_SID=<Oracle SID>
 	REQUEST_URL=<URL for Voyager request services>
 	REST_URL=<URL to the Voyager REST services URL>
+	BORROW_DIRECT_PROD_API_KEY=<API key for Borrow Direct web services>
+	BORROW_DIRECT_TEST_API_KEY=<API key for Borrow Direct test web services>
+	BORROW_DIRECT_URL=<TEST|PRODUCTION>
+	BORROW_DIRECT_TIMEOUT=<Borrow Direct timeout in seconds>
 
 ### Disabling services
 Most delivery services can be “disabled” (i.e., won’t be offered as choices in the Requests system, though of course this has no effect on the services themselves). This is achieved by adding an appropriate key to the `.env` file. For example, `DISABLE_BORROW_DIRECT=1` will remove Borrow Direct from the equation. The exact key value doesn’t matter so long as it evaluates as `true` using Rails’ `present?` method; thus, it’s best to remove the key-value pair entirely when re-enabling the service.
