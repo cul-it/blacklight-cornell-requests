@@ -41,33 +41,6 @@ module BlacklightCornellRequests
 
     end
 
-    def borrowdirect_url_from_isbn(isbns)
-
-      # For now, just take the first isbn if there are more than one. BD seems to do fine with any.
-      if isbns.length > 0
-        isbn = isbns[0]
-      else
-        isbn = isbns
-      end
-
-      # Chop off any dangling text (e.g., 13409872342X (pbk))
-      isbn = isbn.scan(/[0-9xX]+/)[0]
-      return if isbn.nil?
-
-      link_url = "http://resolver.library.cornell.edu/net/parsebd/?&url_ver=Z39.88-2004&rft_id=urn%3AISBN%3A" + isbn + "&req_id=info:rfa/oclc/institutions/3913"
-
-      link_url
-
-    end
-
-    def borrowdirect_url_from_title(title)
-
-      link_url = "http://resolver.library.cornell.edu/net/parsebd/?&url_ver=Z39.88-2004&rft.btitle=" + title + "&req_id=info:rfa/oclc/institutions/3913"
-
-      link_url
-
-    end
-
     # Provide a list of delivery locations that can be used to build options for a select dropdown
     # Doing it this way to make it easier to mark a default location as selected in HAML....
     def pickup_locations

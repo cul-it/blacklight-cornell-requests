@@ -1,7 +1,5 @@
 module BlacklightCornellRequests
-
   class Work
-
     attr_reader :bibid, :title, :author, :isbn, :pub_info, :ill_link, :scanit_link, :mann_special_delivery_link
 
     def initialize(bibid, solr_document)
@@ -10,6 +8,7 @@ module BlacklightCornellRequests
       @title = @doc['title_display']
       @author = parse_author(@doc)
       @isbn = @doc['isbn_display']
+      @oclc = solr_document['oclc_id_display']
       @pub_info = parse_pub_info(@doc)
       @ill_link = parse_ill(@doc)
       @mann_special_delivery_link = create_mann_special_delivery_link()
@@ -35,15 +34,12 @@ module BlacklightCornellRequests
     end
 
     def parse_ill(solrdoc)
-
-      ill_link = ENV['ILLIAD_URL'] + '?Action=10&Form=21&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu'
+      ill_link = "#{ENV['ILLIAD_URL']}?Action=10&Form=21&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Flibrary.cornell.edu"
       if @isbn
         isbns = @isbn.join(',')
         ill_link += "&LoanIsbn=#{isbns}" + "&rft_id=urn%3AISBN%3A#{isbns}"
       end
-      if @title
-        ill_link += "&LoanTitle=#{CGI.escape(@title)}"
-      end
+      ill_link += "&LoanTitle=#{CGI.escape(@title)}" if @title
       if solrdoc['author_addl_display'].present?
         ill_link += "&LoanAuthor=#{solrdoc['author_addl_display'][0]}"
       else
@@ -61,31 +57,18 @@ module BlacklightCornellRequests
       ill_link += "&LoanPublisher=#{publisher}"
       ill_link += "&LoanDate=#{pub_date}"
 
-      if solrdoc['format'].present?
-        ill_link += "&rft.genre=#{solrdoc['format'][0]}"
-      end
-      if solrdoc['lc_callnum_display'].present?
-        ill_link += "&rft.identifier=#{solrdoc['lc_callnum_display'][0]}"
-      end
-      if solrdoc['other_id_display'].present?
-        oclc = solrdoc['other_id_display'].select do |id|
-          match[1] if match = id.match(/#{OCLC_TYPE_ID}([0-9]+)/)
-        end
-
-        if oclc.count > 0
-          ill_link += "&rfe_dat=#{oclc.join(',')}"
-        end
-      end
+      ill_link += "&rft.genre=#{solrdoc['format'][0]}" if solrdoc['format'].present?
+      ill_link += "&rft.identifier=#{solrdoc['lc_callnum_display'][0]}" if solrdoc['lc_callnum_display'].present?
+      ill_link += "&ESPNumber=#{@oclc.join(', ')}" if @oclc.present?
+      ill_link += "&ISSN=#{@isbn.join(', ')}" if @isbn.present?
+      ill_link += "&CitedIn=Cornell University Library catalog"
 
       ill_link
-
     end
 
     def create_scanit_link(solrdoc)
-      scanit_link = ENV['ILLIAD_URL'] + '?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Fnewcatalog.library.cornell.edu'
-      if @title.present?
-        scanit_link << "&rft.title=#{CGI.escape(@title)}"
-      end
+      scanit_link = "#{ENV['ILLIAD_URL']}?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Fnewcatalog.library.cornell.edu"
+      scanit_link << "&rft.title=#{CGI.escape(@title)}" if @title.present?
       if @isbn.present?
         isbns = @isbn.join(',')
         scanit_link += "&rft.isbn=#{isbns}" + "&rft_id=urn%3AISBN%3A#{isbns}"
@@ -96,7 +79,5 @@ module BlacklightCornellRequests
     def create_mann_special_delivery_link
       'https://cornell.libwizard.com/f/mann-rare-distinctive-collection-registration'
     end
-
   end
-
 end

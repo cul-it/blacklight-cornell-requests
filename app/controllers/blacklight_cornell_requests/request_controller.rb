@@ -1,8 +1,10 @@
 require_dependency 'blacklight_cornell_requests/application_controller'
+
 require 'date'
 require 'json'
 require 'repost'
 require 'rest-client'
+require 'string' # ISBN extension to String class
 
 module BlacklightCornellRequests
   class RequestDatabaseException < StandardError
@@ -18,6 +20,8 @@ module BlacklightCornellRequests
     # Blacklight::Catalog is needed for "fetch", replaces "include SolrHelper".
     # As of B7, it now supplies search_service, and fetch is called as search_service.fetch
     include Blacklight::Catalog
+    # Interface to Project ReShare
+    include Reshare
     # include Cornell::LDAP
 
     # This may seem redundant, but it makes it easier to fetch the document from
@@ -70,28 +74,16 @@ module BlacklightCornellRequests
       # Create an array of all the item records associated with the bibid
       items = []
 
-      # Somehow a user was able to request an ETAS work though no request button appears in the UI
-      # for that work -- hacked the URL perhaps. So adding a check to see if the document includes
-      # the etas_facet. If it does, bypass everything. This is a temporary Covid-19 change. Note:
-      # customized the alert for this situation in the items.empty? block below.
-      # if @document['etas_facet'].nil? || @document['etas_facet'].empty?
-      holdings = JSON.parse(@document['items_json'] || '{}')
-      # Rails.logger.debug "mjc12test: holdings: #{holdings}"
+      holdings = JSON.parse(@document['holdings_json'] || '{}')
 
       # Items are keyed by the associated holding record
-      holdings.each do |h, item_array|
+      JSON.parse(@document['items_json'] || '{}').each do |h, item_array|
         item_array.each do |i|
-          # Rails.logger.debug "mjc12test: document: #{}"
-
-          items << Item.new(h, i, JSON.parse(@document['holdings_json'])) if (i["active"].nil? || i["active"]) && (i['location']['name'].present?)
-          # Rails.logger.debug "mjc12test: added #{items}"
+          if (i['active'].nil? || i['active']) && i['location']['name'].present?
+            items << Item.new(h, i, holdings)
+          end
         end
       end
-      # else
-      #   flash[:alert] = "This title may not be requested because it is available online." if @document['etas_facet'].present?
-      #   redirect_to '/catalog/' + params["bibid"]
-      #   return
-      # end
 
       # This isn't likely to happen, because the Request item button should be suppressed, but if there's
       # a work with only one item and that item is inactive, we need to redirect because the items array
@@ -110,9 +102,7 @@ module BlacklightCornellRequests
       # if the referer is a different path — i.e., /request/*, then we *do* want to
       # preserve the volume selection; this would be the case if the page is reloaded
       # or the user selects an alternate delivery method for the same item.
-      if session[:setvol].nil? && (request.referer && request.referer.exclude?('/request/'))
-        session[:volume] = nil
-      end
+      session[:volume] = nil if session[:setvol].nil? && request&.referer&.exclude?('/request/')
       session[:setvol] = nil
 
       params[:volume] = session[:volume]
@@ -136,7 +126,7 @@ module BlacklightCornellRequests
             return
           elsif @volumes.count == 1
             vol = @volumes[0]
-            redirect_to '/request' + request.env['PATH_INFO'] + "?enum=#{vol.enum}&chron=#{vol.chron}&year=#{vol.year}"
+            redirect_to "/request#{request.env['PATH_INFO']}?enum=#{vol.enum}&chron=#{vol.chron}&year=#{vol.year}"
             return
           end
         end
@@ -144,19 +134,17 @@ module BlacklightCornellRequests
 
       # If a volume is selected, drop the items that don't match that volume -- no need
       # to waste time calculating delivery methods for them
-      # TODO: This is a horribly inefficient approach. Make it better
-      if @volumes
-        @volumes.each do |v|
-          if v.select_option == params[:volume]
-            items = v.items
-            break
-          end
+      # TODO: This is a horribly inefficient approach. Make it better.
+      @volumes&.each do |v|
+        if v.select_option == params[:volume]
+          items = v.items
+          break
         end
       end
 
       enabled_request_methods = DeliveryMethod.enabled_methods
       requester = Patron.new(user)
-      borrow_direct = CULBorrowDirect.new(requester, work_metadata)
+      # borrow_direct = CULBorrowDirect.new(requester, work_metadata)
       # We have the following delivery methods to evaluate (at most) for each item:
       # L2L, BD, ILL, Hold, Recall, Patron-driven acquisition, Purchase request
       # ScanIt, Ask a librarian, ask at circ desk
@@ -190,7 +178,22 @@ module BlacklightCornellRequests
         # end
         options = update_options(i, options, requester)
       end
-      options[BD] = [1] if borrow_direct.available
+
+      items_json = JSON.parse(@document['items_json']).values[0]
+      # NOTE: [*<variable>] gives us an array if we don't already have one,
+      # which we need for the map.
+      isbns = ([*work_metadata.isbn].map! { |i| i.clean_isbn })
+      # However, ReShare doesn't appear to support searching by multiple ISBNs,
+      # so we'll take the first one for now.
+      # TODO: is this a safe approach? Will we get false negatives by not checking
+      # all the ISBNs?
+
+      # BD.available? checks to see whether an item is available locally -- if it is, we can't use BD
+      if BD.available?(requester, holdings)
+        @bd_id = bd_requestable_id(isbns[0])
+        Rails.logger.debug "mjc12a: got bd_id #{@bd_id}"
+        options[BD] << @bd_id
+      end
 
       # Rails.logger.debug "mjc12test: options hash - #{options}"
       # At this point, options is a hash with keys being available delivery methods
@@ -213,7 +216,7 @@ module BlacklightCornellRequests
       pda_data = PDA.pda_data(@document)
       if pda_data.present?
         @alternate_methods.unshift fastest_method
-        fastest_method = {:method => PDA}.merge(pda_data)
+        fastest_method = { method: PDA }.merge(pda_data)
       end
 
       Rails.logger.debug "mjc12test8: fastest #{fastest_method}"
@@ -228,14 +231,14 @@ module BlacklightCornellRequests
       # in the alternate_methods array.
       if target.present?
         enabled_request_methods.each do |rm|
-          if rm::TemplateName == target
-            @alternate_methods.unshift(fastest_method)
-            alt_array_index = @alternate_methods&.index{ |am| am[:method] == rm }
-            fastest_method = {:method => rm, :items => @alternate_methods[alt_array_index][:items]} if alt_array_index.present?
-            @alternate_methods.delete_if{ |am| am[:method] == fastest_method[:method] }
-            flash.now.alert = I18n.t('requests.invalidtarget', target: rm.description) if alt_array_index.nil?
-            break
-          end
+          next unless rm::TemplateName == target
+
+          @alternate_methods.unshift(fastest_method)
+          alt_array_index = @alternate_methods&.index{ |am| am[:method] == rm }
+          fastest_method = { method: rm, items: @alternate_methods[alt_array_index][:items] } if alt_array_index.present?
+          @alternate_methods.delete_if { |am| am[:method] == fastest_method[:method] }
+          flash.now.alert = I18n.t('requests.invalidtarget', target: rm.description) if alt_array_index.nil?
+          break
         end
       end
 
@@ -259,15 +262,12 @@ module BlacklightCornellRequests
       @iis = ActiveSupport::HashWithIndifferentAccess.new
       if !@document[:url_pda_display].blank? && !@document[:url_pda_display][0].blank?
         pda_url = @document[:url_pda_display][0]
-        Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}:" + pda_url.inspect
         pda_url, note = pda_url.split('|')
-        @iis = { :pda => { :itemid => 'pda', :url => pda_url, :note => note } }
+        @iis = { pda: { itemid: 'pda', url: pda_url, note: note } }
       end
 
       @counter = params[:counter]
-      if @counter.blank? and session[:search].present?
-        @counter = session[:search][:counter]
-      end
+      @counter = session[:search][:counter] if @counter.blank? && session[:search].present?
       Rails.logger.debug "mjc12test8: #{fastest_method}"
       render fastest_method[:method]::TemplateName
     end
@@ -391,7 +391,7 @@ module BlacklightCornellRequests
       #   # but validation above expects a non-blank value!
       #   if params[:holding_id] == 'any'
       #     params[:holding_id] = ''
-      #  end
+      #   end
 
         # To submit a FOLIO request, we need:
         # 1. Okapi URL
@@ -447,12 +447,12 @@ module BlacklightCornellRequests
           return
         else
           error = JSON.parse(response[:error])
-          Rails.logger.info "Request: response failed: " + error.to_s
+          Rails.logger.info "Request: response failed: #{error}"
           flash[:error] = "Error: the request could not be completed (#{error['errors'][0]['message']})"
         end
       end
 
-      render :partial => '/shared/flash_msg', :layout => false
+      render partial: '/shared/flash_msg', layout: false
     end
 
     def make_purchase_request
@@ -474,37 +474,24 @@ module BlacklightCornellRequests
       end
 
       flash[:error] = errors.join('<br/>').html_safe if errors
-      render :partial => '/shared/flash_msg', :layout => false
+      render partial: '/shared/flash_msg', layout: false
     end
 
     def make_bd_request
       if params[:library_id].blank?
-        flash[:error] = "Please select a library pickup location"
+        flash[:error] = 'Please select a library pickup location.'
+        render :partial => '/shared/flash_msg', :layout => false
       else
-        _, document = search_service.fetch params[:bibid]
-        isbn = document[:isbn_display]
-        title = document[:title_display]
-        requester = Patron.new(user)
-        work = { :isbn => isbn, :title => title }
-        # Following FOLIO updates, using CULBorrowDirect for now as it has both the request_from_bd method
-        # and an authenticate method, which is called on initialization. Passing the boolean provides a way
-        # of distinguishing between the availability check and the call that actually makes the request.
-        make_request = true
-        req = BlacklightCornellRequests::CULBorrowDirect.new(requester, work, make_request)
-        resp = req.request_from_bd({ :isbn => isbn, :netid => user, :pickup_location => params[:library_id], :notes => params[:reqcomments] })
-        if resp
-          status = 'success'
-          status_msg = I18n.t('requests.success') + " The Borrow Direct request number is #{resp}."
-        else
+        status = nil
+        result = request_from_reshare(patron: user, item: params[:bd_id], pickup_location: params[:library_id], note: params[:reqcomments])
+        if result == :error
           status = 'failure'
           status_msg = 'There was an error when submitting this request to Borrow Direct. Your request could not be completed.'
+        else
+          status = 'success'
+          status_msg = I18n.t('requests.success') + " The Borrow Direct request number is #{result}."
         end
-      end
-
-      if status
         render :partial => 'bd_notification', :layout => false, locals: { :message => status_msg, :status => status }
-      else
-        render :partial => '/shared/flash_msg', :layout => false
       end
     end
 
