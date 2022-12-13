@@ -1,7 +1,5 @@
 module BlacklightCornellRequests
-
   class Volume
-
     attr_reader :items, :enum, :chron, :year
 
     ####### Class methods #######
@@ -28,7 +26,7 @@ module BlacklightCornellRequests
 
     # Make a new volume from a parameter string of the form |enum|chron|year|
     def self.volume_from_params(param_string)
-      rx =/\|(.*?)\|(.*?)\|(.*?)\|/.match(param_string)
+      rx = /\|(.*?)\|(.*?)\|(.*?)\|/.match(param_string)
       rx && Volume.new(rx[1], rx[2], rx[3])
     end
 
@@ -52,6 +50,7 @@ module BlacklightCornellRequests
       "|#{@enum}|#{@chron}|#{@year}|"
     end
 
+    # FIXME
     def add_item(item_id)
       @items << item
     end
@@ -61,12 +60,12 @@ module BlacklightCornellRequests
     end
 
     # Following suggestion from https://stackoverflow.com/questions/1931604/whats-the-right-way-to-implement-equality-in-ruby
-    def ==(o)
-      o.class == self.class && o.state === state
+    def ==(other)
+      other.class == self.class && other.state == state
     end
 
-    def eql?(o)
-      o.class == self.class && o.state === state
+    def eql?(other)
+      other.class == self.class && other.state == state
     end
 
     def state
@@ -76,7 +75,5 @@ module BlacklightCornellRequests
     def hash
       state.hash
     end
-
   end
-
 end

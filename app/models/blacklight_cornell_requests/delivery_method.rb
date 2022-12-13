@@ -177,7 +177,14 @@ module BlacklightCornellRequests
       [7, 7]
     end
 
-    def self.available?(patron)
+    # patron is a Patron instance; holdings is a holdings_json object from the bib record @document
+    def self.available?(patron, holdings)
+      # NOTE: In transitioning from the old Borrow Direct system to ReShare, we are eliminating the distinction
+      # between BD and ILL, routing all requests into a single ILL form from which ReShare will figure out how to
+      # fulfill them. The most expedient way to remove the old BD approach from the system is to always return
+      # false for method availability.
+      return false
+
       # Unfortunately, the rules governing which patron groups are eligible to use BD
       # are not programmatically accessible. Thus, they are hard-coded here for your
       # enjoyment (based on a list provided by Caitlin on 7/1/21). See also
@@ -189,7 +196,11 @@ module BlacklightCornellRequests
         'bdc2b6d4-5ceb-4a12-ab46-249b9a68473e'   # undergraduate
       ]
 
-      bd_patron_group_ids.include? patron.group
+      # BD shouldn't be available if an item is available locally. The {items: {avail: x}} object is
+      # present if there is a positive value x for number of available items, but absent otherwise.
+      available_locally = holdings.values.any? { |h| h['circ'] && !h.dig('items', 'avail').nil? }
+
+      bd_patron_group_ids.include?(patron.group) && !available_locally
     end
   end
 
@@ -205,7 +216,7 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      [7, 14]
+      [4, 14]
     end
 
     def self.available?(item, patron, noncirculating = false)

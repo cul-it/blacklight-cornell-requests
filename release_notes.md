@@ -1,5 +1,11 @@
 # Release Notes - blacklight-cornell-requests
 
+## v4.3 (ReShare update)
+- Combine Borrow Direct and ILL functionality into a single form (effectively the old ILL form).
+- Disable Borrow Direct-specific functionality and remove code for old API.
+- Update Borrow Direct delivery codes to be ReShare-compatible.
+- Add library for ReShare searching and requesting (not currently being used, though).
+
 ## v4.2.8
 - Fix bug in volume selection caused by update to Haml 6
 - Update Mann Special Collections handling to work with FOLIO
