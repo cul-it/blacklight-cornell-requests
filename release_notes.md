@@ -1,5 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
+## IN PROGRESS
+- Update view links to CUL website (DISCOVERYACCESS-7931)
+- Restore old behavior (Ask a librarian) for records with no items attached (DISCOVERYACCESS-7719)
+
 ## v4.3 (ReShare update)
 - Combine Borrow Direct and ILL functionality into a single form (effectively the old ILL form).
 - Disable Borrow Direct-specific functionality and remove code for old API.

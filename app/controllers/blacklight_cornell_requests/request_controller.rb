@@ -84,16 +84,17 @@ module BlacklightCornellRequests
           end
         end
       end
+      items = []
 
       # This isn't likely to happen, because the Request item button should be suppressed, but if there's
       # a work with only one item and that item is inactive, we need to redirect because the items array
       # will be empty.
       # Rails.logger.debug "mjc12test: items: #{items}"
-      if @document['items_json'].present? && eval(@document['items_json']).size == 1 && items.empty?
-        flash[:alert] = 'There are no items available to request for this title.'
-        redirect_to "/catalog/#{params['bibid']}"
-        return
-      end
+      # if @document['items_json'].present? && eval(@document['items_json']).size == 1 && items.empty?
+      #   flash[:alert] = 'There are no items available to request for this title.'
+      #   redirect_to "/catalog/#{params['bibid']}"
+      #   return
+      # end
 
       @ti = work_metadata.title
       @ill_link = work_metadata.ill_link
@@ -514,7 +515,6 @@ module BlacklightCornellRequests
 
         begin
           response = RestClient.post(url, body, headers)
-          Rails.logger.debug "mjc12test8: Got response: #{response.body}"
           flash[:success] = I18n.t('requests.success')
         rescue StandardError => e
           Rails.logger.debug "Requests: PDA request failed (#{e})"
