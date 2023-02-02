@@ -84,7 +84,6 @@ module BlacklightCornellRequests
           end
         end
       end
-      items = []
 
       # This isn't likely to happen, because the Request item button should be suppressed, but if there's
       # a work with only one item and that item is inactive, we need to redirect because the items array
