@@ -1,8 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
-## IN PROGRESS
+## v4.3.1
 - Update view links to CUL website (DISCOVERYACCESS-7931)
 - Restore old behavior (Ask a librarian) for records with no items attached (DISCOVERYACCESS-7719)
+- Update PDA selection to use call number field from Solr record (DISCOVERYACCESS-7944)
 
 ## v4.3 (ReShare update)
 - Combine Borrow Direct and ILL functionality into a single form (effectively the old ILL form).

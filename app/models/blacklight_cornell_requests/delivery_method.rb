@@ -312,19 +312,19 @@ module BlacklightCornellRequests
       [5, 5]
     end
 
-    def self.available?(item, _)
-      item.nil?
+    def self.available?(solrdoc)
+      solrdoc['callnum_sort'] == 'Available for the Library to Purchase'
     end
 
-    def self.pda_data(solrdoc)
-      return nil unless solrdoc['url_pda_display']
+    # def self.pda_data(solrdoc)
+    #   return nil unless solrdoc['url_pda_display']
 
-      url, note = solrdoc['url_pda_display'][0].split('|')
-      {
-        url: url,
-        note: note
-      }
-    end
+    #   url, note = solrdoc['url_pda_display'][0].split('|')
+    #   {
+    #     url: url,
+    #     note: note
+    #   }
+    # end
   end
 
   class PurchaseRequest < DeliveryMethod

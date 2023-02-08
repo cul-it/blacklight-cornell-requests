@@ -213,10 +213,11 @@ module BlacklightCornellRequests
       fastest_method = sorted_methods[:fastest]
       @alternate_methods = sorted_methods[:alternate]
       # Add PDA if appropriate
-      pda_data = PDA.pda_data(@document)
-      if pda_data.present?
-        @alternate_methods.unshift fastest_method
-        fastest_method = { method: PDA }.merge(pda_data)
+      # pda_data = PDA.pda_data(@document)
+      # if pda_data.present?
+      if PDA.available?(@document)
+        @alternate_methods = []
+        fastest_method = { method: PDA }
       end
 
       Rails.logger.debug "mjc12test8: fastest #{fastest_method}"
