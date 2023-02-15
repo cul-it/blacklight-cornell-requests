@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## IN PROGRESS
+- Fix bug causing fatal error with on-order items
+
 ## v4.3.1
 - Update view links to CUL website (DISCOVERYACCESS-7931)
 - Restore old behavior (Ask a librarian) for records with no items attached (DISCOVERYACCESS-7719)

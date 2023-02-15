@@ -179,7 +179,7 @@ module BlacklightCornellRequests
         options = update_options(i, options, requester)
       end
 
-      items_json = JSON.parse(@document['items_json']).values[0]
+      # items_json = JSON.parse(@document['items_json']).values[0]
       # NOTE: [*<variable>] gives us an array if we don't already have one,
       # which we need for the map.
       isbns = ([*work_metadata.isbn].map! { |i| i.clean_isbn })
