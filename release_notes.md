@@ -1,6 +1,6 @@
 # Release Notes - blacklight-cornell-requests
 
-## IN PROGRESS
+## 4.3.2
 - Fix bug causing fatal error with on-order items
 
 ## v4.3.1
