@@ -77,7 +77,7 @@ module BlacklightCornellRequests
     end
 
     def create_mann_special_delivery_link
-      'https://cornell.libwizard.com/f/mann-rare-distinctive-collection-registration'
+      'https://cornell.libwizard.com/f/mann-special-collections-registration'
     end
   end
 end
