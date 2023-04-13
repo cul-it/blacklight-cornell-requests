@@ -1,7 +1,10 @@
 # Release Notes - blacklight-cornell-requests
 
+## 4.3.3
+- Update link to Mann Special Collections registration form.
+
 ## 4.3.2
-- Fix bug causing fatal error with on-order items
+- Fix bug causing fatal error with on-order items.
 
 ## v4.3.1
 - Update view links to CUL website (DISCOVERYACCESS-7931)
