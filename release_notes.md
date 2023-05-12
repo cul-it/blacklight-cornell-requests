@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## 4.4
+- Add special handling for microfiche at Annex with 'acc,anx' location.
+
 ## 4.3.3
 - Update link to Mann Special Collections registration form.
 
