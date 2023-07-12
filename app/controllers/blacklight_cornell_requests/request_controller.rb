@@ -518,7 +518,8 @@ module BlacklightCornellRequests
             'requestor_netid' => user,
             'hrid' => params[:bibid],
             # If is_test = true, request is sent to the Prefect test environment, and Brandon Kowalski receives an email.
-            'is_test' => false
+            # (In practice, an env value of anything other than 'prod' should be regarded as true.)
+            'is_test' => ENV['PREFECT_STATE'] != 'prod'
           }
         }
         body = JSON.dump(props)
