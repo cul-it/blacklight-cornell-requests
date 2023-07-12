@@ -182,8 +182,7 @@ module BlacklightCornellRequests
         end
       end
       annex_microfiche =
-        (!!(holdings_data['call'].match /^micro(fiche|print|card)/i) &&
-        holdings_data&.dig('location', 'code') == 'acc,anx') ||
+        holdings_data&.dig('location', 'code') == 'acc,anx' ||
         matched_item&.dig('location', 'code') == 'acc,anx'
 
       patron = BlacklightCornellRequests::Patron.new(user)
