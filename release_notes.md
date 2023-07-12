@@ -1,5 +1,8 @@
 # Release Notes - blacklight-cornell-requests
 
+## 4.3.4
+- Update PDA code to connect to Prefect 2 (DISCOVERYACCESS-8018)
+
 ## 4.3.3
 - Update link to Mann Special Collections registration form.
 
