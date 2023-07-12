@@ -5,6 +5,7 @@ require 'json'
 require 'repost'
 require 'rest-client'
 require 'string' # ISBN extension to String class
+require 'securerandom'
 
 module BlacklightCornellRequests
   class RequestDatabaseException < StandardError
@@ -503,15 +504,24 @@ module BlacklightCornellRequests
     # This is based on code supplied by Brandon Kowalski
     def make_pda_request
       if params[:netid].present? && params[:bibid].present?
-        url = 'https://api.prefect.io/'
+        url = "https://api.prefect.cloud/api/accounts/#{ENV['PREFECT_ACCOUNT']}/workspaces/#{ENV['PREFECT_WORKSPACE']}/deployments/#{ENV['PREFECT_DEPLOYMENT']}/create_flow_run"
         headers = {
           'authorization' => ENV['PREFECT_AUTH_TOKEN'],
           :content_type => 'application/json; charset=utf-8'
         }
-        body = "{
-          \"query\": \"mutation{create_flow_run(input:{flow_id:\\\"#{ENV['PREFECT_FLOW_ID']}\\\",parameters:\\\"{\\\\\\\"hrid\\\\\\\": \\\\\\\"#{params[:bibid]}\\\\\\\", \\\\\\\"netid\\\\\\\": \\\\\\\"#{user}\\\\\\\"}\\\"}){id}}\",
-          \"variables\": {}
-        }"
+        props = {
+          'state' => {
+            'type' => 'SCHEDULED'
+          },
+          'idempotency_key' => SecureRandom.uuid,
+          'parameters' => {
+            'requestor_netid' => user,
+            'hrid' => params[:bibid],
+            # If is_test = true, request is sent to the Prefect test environment, and Brandon Kowalski receives an email.
+            'is_test' => false
+          }
+        }
+        body = JSON.dump(props)
 
         begin
           response = RestClient.post(url, body, headers)
