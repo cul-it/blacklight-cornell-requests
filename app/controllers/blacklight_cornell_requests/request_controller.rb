@@ -167,6 +167,40 @@ module BlacklightCornellRequests
         options[rm] = []
       end
 
+      ############ TEMPORARY HANDLING CODE FOR MICROFICHE AT ANNEX #############
+      # This should eventually be removed (along with microfiche view)
+      # Look for Annex microfiche
+      hid = holdings.keys[0]
+      holdings_data = holdings[hid]
+      # Get item metadata
+      matched_item = nil
+      JSON.parse(@document['items_json']).each do |h, i|
+        i.each do |item|
+          volume_string = "|#{item['enum']}|#{item['chron']}|#{item['year']}|"
+          if volume_string == params[:volume]
+            matched_item = item
+          end
+        end
+      end
+      annex_microfiche =
+        holdings_data&.dig('location', 'code') == 'acc,anx' ||
+        matched_item&.dig('location', 'code') == 'acc,anx'
+
+      patron = BlacklightCornellRequests::Patron.new(user)
+
+      @microfiche_link = 'https://cornell.libwizard.com/f/annex?'
+      @microfiche_link += "4661140=#{patron.display_name}" # name
+      @microfiche_link += "&4661145=#{user}" # netid or 'visitor'
+      @microfiche_link += "&4661162=#{@document['title_display']}" # title
+      @microfiche_link += "&4661160=#{holdings_data['call']}" # call number
+      @microfiche_link += "&4661164=#{matched_item['enum']}" # volume
+
+      if annex_microfiche
+        render('microfiche')
+        return
+      end
+      ############ END TEMPORARY HANDLING CODE FOR MICROFICHE AT ANNEX #########
+
       # Rails.logger.debug "mjc12test: items: #{items}"
       items.each do |i|
         # rp = {}
@@ -528,7 +562,7 @@ module BlacklightCornellRequests
           response = RestClient.post(url, body, headers)
           flash[:success] = I18n.t('requests.success')
         rescue StandardError => e
-          Rails.logger.debug "Requests: PDA request failed (#{e})"
+          Rails.logger.error "Requests: PDA request failed (#{e})"
           error_msg = I18n.t('requests.failure')
           error_msg += ' (The requestor could not be identified.)' if params[:netid].nil?
           flash[:error] = error_msg
@@ -545,7 +579,6 @@ module BlacklightCornellRequests
     # AJAX responder used with requests.js.coffee to set the volume
     # when the user selects one in the volume drop-down list
     def set_volume
-      Rails.logger.warn "mjc12test: setvol params: #{params}"
       session[:volume] = params[:volume]
       session[:setvol] = 1
       respond_to do |format|
