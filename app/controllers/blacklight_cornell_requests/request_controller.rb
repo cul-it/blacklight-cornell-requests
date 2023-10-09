@@ -528,7 +528,7 @@ module BlacklightCornellRequests
           response = RestClient.post(url, body, headers)
           flash[:success] = I18n.t('requests.success')
         rescue StandardError => e
-          Rails.logger.debug "Requests: PDA request failed (#{e})"
+          Rails.logger.error "Requests: PDA request failed (#{e})"
           error_msg = I18n.t('requests.failure')
           error_msg += ' (The requestor could not be identified.)' if params[:netid].nil?
           flash[:error] = error_msg
