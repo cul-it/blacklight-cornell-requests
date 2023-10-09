@@ -1,7 +1,10 @@
 # Release Notes - blacklight-cornell-requests
 
-## 4.4
+## 4.4 (Microfiche update)
 - Add special handling for microfiche at Annex with 'acc,anx' location.
+
+## 4.3.4
+- Update PDA code to connect to Prefect 2 (DISCOVERYACCESS-8018)
 
 ## 4.3.3
 - Update link to Mann Special Collections registration form.

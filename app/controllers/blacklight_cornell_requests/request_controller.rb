@@ -5,6 +5,7 @@ require 'json'
 require 'repost'
 require 'rest-client'
 require 'string' # ISBN extension to String class
+require 'securerandom'
 
 module BlacklightCornellRequests
   class RequestDatabaseException < StandardError
@@ -537,21 +538,31 @@ module BlacklightCornellRequests
     # This is based on code supplied by Brandon Kowalski
     def make_pda_request
       if params[:netid].present? && params[:bibid].present?
-        url = 'https://api.prefect.io/'
+        url = "https://api.prefect.cloud/api/accounts/#{ENV['PREFECT_ACCOUNT']}/workspaces/#{ENV['PREFECT_WORKSPACE']}/deployments/#{ENV['PREFECT_DEPLOYMENT']}/create_flow_run"
         headers = {
           'authorization' => ENV['PREFECT_AUTH_TOKEN'],
           :content_type => 'application/json; charset=utf-8'
         }
-        body = "{
-          \"query\": \"mutation{create_flow_run(input:{flow_id:\\\"#{ENV['PREFECT_FLOW_ID']}\\\",parameters:\\\"{\\\\\\\"hrid\\\\\\\": \\\\\\\"#{params[:bibid]}\\\\\\\", \\\\\\\"netid\\\\\\\": \\\\\\\"#{user}\\\\\\\"}\\\"}){id}}\",
-          \"variables\": {}
-        }"
+        props = {
+          'state' => {
+            'type' => 'SCHEDULED'
+          },
+          'idempotency_key' => SecureRandom.uuid,
+          'parameters' => {
+            'requestor_netid' => user,
+            'hrid' => params[:bibid],
+            # If is_test = true, request is sent to the Prefect test environment, and Brandon Kowalski receives an email.
+            # (In practice, an env value of anything other than 'prod' should be regarded as true.)
+            'is_test' => ENV['PREFECT_STATE'] != 'prod'
+          }
+        }
+        body = JSON.dump(props)
 
         begin
           response = RestClient.post(url, body, headers)
           flash[:success] = I18n.t('requests.success')
         rescue StandardError => e
-          Rails.logger.debug "Requests: PDA request failed (#{e})"
+          Rails.logger.error "Requests: PDA request failed (#{e})"
           error_msg = I18n.t('requests.failure')
           error_msg += ' (The requestor could not be identified.)' if params[:netid].nil?
           flash[:error] = error_msg
