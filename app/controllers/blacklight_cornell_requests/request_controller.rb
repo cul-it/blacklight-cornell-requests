@@ -174,11 +174,13 @@ module BlacklightCornellRequests
       holdings_data = holdings[hid]
       # Get item metadata
       matched_item = nil
-      JSON.parse(@document['items_json']).each do |h, i|
-        i.each do |item|
-          volume_string = "|#{item['enum']}|#{item['chron']}|#{item['year']}|"
-          if volume_string == params[:volume]
-            matched_item = item
+      if @document['items_json'].present?
+        JSON.parse(@document['items_json']).each do |h, i|
+          i.each do |item|
+            volume_string = "|#{item['enum']}|#{item['chron']}|#{item['year']}|"
+            if volume_string == params[:volume]
+              matched_item = item
+            end
           end
         end
       end
@@ -192,8 +194,8 @@ module BlacklightCornellRequests
       @microfiche_link += "4661140=#{patron.display_name}" # name
       @microfiche_link += "&4661145=#{user}" # netid or 'visitor'
       @microfiche_link += "&4661162=#{@document['title_display']}" # title
-      @microfiche_link += "&4661160=#{holdings_data['call']}" # call number
-      @microfiche_link += "&4661164=#{matched_item['enum']}" # volume
+      @microfiche_link += "&4661160=#{holdings_data['call']}" if holdings_data.present? # call number
+      @microfiche_link += "&4661164=#{matched_item['enum']}" if matched_item.present? # volume
 
       if annex_microfiche
         render('microfiche')
