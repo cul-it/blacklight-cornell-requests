@@ -164,7 +164,7 @@ module BlacklightCornellRequests
     TemplateName = 'bd'
 
     def self.description
-      'Borrow Direct'
+      'BorrowDirect'
     end
 
     def self.enabled?
@@ -179,7 +179,7 @@ module BlacklightCornellRequests
 
     # patron is a Patron instance; holdings is a holdings_json object from the bib record @document
     def self.available?(patron, holdings)
-      # NOTE: In transitioning from the old Borrow Direct system to ReShare, we are eliminating the distinction
+      # NOTE: In transitioning from the old BorrowDirect system to ReShare, we are eliminating the distinction
       # between BD and ILL, routing all requests into a single ILL form from which ReShare will figure out how to
       # fulfill them. The most expedient way to remove the old BD approach from the system is to always return
       # false for method availability.

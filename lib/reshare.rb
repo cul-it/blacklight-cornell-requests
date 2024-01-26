@@ -29,7 +29,7 @@ module Reshare
     {}
   end
 
-  # Use the ReShare APIs to place a Borrow Direct request. Return the created request's ID if successful, :error otherwise.
+  # Use the ReShare APIs to place a BorrowDirect request. Return the created request's ID if successful, :error otherwise.
   def request_from_reshare(patron:, item:, pickup_location:, note:)
     url = "#{ENV['RESHARE_REQUEST_URL']}?svc_id=json&req_id=#{patron}&rft_id=#{item}&svc.pickupLocation=#{pickup_location}&res.org=ISIL%3AUS-NIC"
     url += "&svc.note=" + note.to_s.html_safe if note.present?
