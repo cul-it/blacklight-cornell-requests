@@ -31,7 +31,7 @@ requests =
       requests.submitPurchaseForm()
       return false
 
-    # ... and for Borrow Direct requests
+    # ... and for BorrowDirect requests
     $('#bd-request-submit').click ->
       $.fn.spin.presets.requesting =
         lines: 9,
@@ -78,8 +78,8 @@ requests =
       this.bindPickupEventListeners()
       this.checkForSingleCopy()
 
-  # If this is a borrow direct request, modify the values in the location select
-  # list to use the Borrow Direct location codes instead of CUL codes
+  # If this is a BorrowDirect request, modify the values in the location select
+  # list to use the BorrowDirect location codes instead of CUL codes
   checkForBD: () ->
     if $('form#req.bd-request').length == 1
       options = $('#pickup-locations option')
@@ -151,9 +151,10 @@ requests =
       success: (data) ->
         $('#request-loading-spinner').spin(false)
 
-        # Ugly special condition wrangling for Borrow Direct messages,
+        # Ugly special condition wrangling for BorrowDirect messages,
         # which are _mostly_ not treated as ordinary flash messages!
-        match = data.match(/Borrow Direct/gi)
+        # support matching "Borrow Direct" or "BorrowDirect"
+        match = data.match(/Borrow\s?Direct/gi)
         error = data.match(/error/gi)
         if (source == 'bd' && match)
           $('#request-message-well').html(data)

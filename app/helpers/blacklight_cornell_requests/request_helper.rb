@@ -44,7 +44,7 @@ module BlacklightCornellRequests
     # Provide a list of delivery locations that can be used to build options for a select dropdown
     # Doing it this way to make it easier to mark a default location as selected in HAML....
     def pickup_locations
-      # Borrow Direct requests need to provide a library-specific BD code, provided here
+      # BorrowDirect requests need to provide a library-specific BD code, provided here
       bd_codes = {
         '7c5abc9f-f3d7-4856-b8d7-6712462ca007' => 'F', # Africana
         'ab1fce49-e832-41a4-8afc-7179a62332e2' => 'I', # Catherwood ILR

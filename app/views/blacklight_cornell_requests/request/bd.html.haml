@@ -3,7 +3,7 @@
 - @selected_volume = params[:volume]
 = render :partial => 'shared/back_to_item'
 %h2
-  = "Borrow Direct Request for #{@netid}"
+  = "BorrowDirect Request for #{@netid}"
 %div.card
   %div.card-body
     %h3.item-title-request.blacklight-title_display
@@ -31,13 +31,13 @@
             %textarea(name="reqcomments" id="reqcomments" class="form-control")
         %input(type="hidden" name="bd_id" value="#{@bd_id}" id="bd_id")
         %div.clearfix
-          %input#bd-request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit Borrow Direct request")
+          %input#bd-request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="Submit BorrowDirect request")
           %span{:id => 'request-loading-spinner'}
         %div#request-message-well
 
     - else
-      %p To request this item, search Borrow Direct  and place a request.
-      = link_to 'Search Borrow Direct', borrowdirect_url_from_title(@ti), :class => 'btn btn-danger pull-left'
+      %p To request this item, search BorrowDirect  and place a request.
+      = link_to 'Search BorrowDirect', borrowdirect_url_from_title(@ti), :class => 'btn btn-danger pull-left'
 
     -if @alternate_methods && @alternate_methods.count > 1
       = render :partial => 'shared/request_options'
