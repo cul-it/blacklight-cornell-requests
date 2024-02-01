@@ -245,15 +245,19 @@ module BlacklightCornellRequests
       return true if noncirculating
 
       if item.regular_loan? || item.day_loan?
-        return item.status == 'Checked out' ||
-               item.status == 'Aged to lost' ||
-               item.status == 'In transit' ||
-               item.status == 'Claimed returned' ||
-               item.status == 'Declared lost' ||
-               item.status == 'Long missing' ||
-               item.status == 'Lost and paid' ||
-               item.status == 'Missing' ||
-               item.status == 'Unavailable'
+        allowed_statuses = [
+          'Aged to lost',
+          'Checked out',
+          'Claimed returned',
+          'Declared lost',
+          'In transit',
+          'Long missing',
+          'Lost and paid',
+          'Missing',
+          'Paged',
+          'Unavailable'
+        ]
+        return allowed_statuses.include?(item.status)
       else
         return false
       end
