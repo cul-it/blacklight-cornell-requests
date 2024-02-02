@@ -40,13 +40,13 @@
 	ORACLE_SID=<Oracle SID>
 	REQUEST_URL=<URL for Voyager request services>
 	REST_URL=<URL to the Voyager REST services URL>
-	BORROW_DIRECT_PROD_API_KEY=<API key for Borrow Direct web services>
-	BORROW_DIRECT_TEST_API_KEY=<API key for Borrow Direct test web services>
+	BORROW_DIRECT_PROD_API_KEY=<API key for BorrowDirect web services>
+	BORROW_DIRECT_TEST_API_KEY=<API key for BorrowDirect test web services>
 	BORROW_DIRECT_URL=<TEST|PRODUCTION>
-	BORROW_DIRECT_TIMEOUT=<Borrow Direct timeout in seconds>
+	BORROW_DIRECT_TIMEOUT=<BorrowDirect timeout in seconds>
 
 ### Disabling services
-Most delivery services can be “disabled” (i.e., won’t be offered as choices in the Requests system, though of course this has no effect on the services themselves). This is achieved by adding an appropriate key to the `.env` file. For example, `DISABLE_BORROW_DIRECT=1` will remove Borrow Direct from the equation. The exact key value doesn’t matter so long as it evaluates as `true` using Rails’ `present?` method; thus, it’s best to remove the key-value pair entirely when re-enabling the service.
+Most delivery services can be “disabled” (i.e., won’t be offered as choices in the Requests system, though of course this has no effect on the services themselves). This is achieved by adding an appropriate key to the `.env` file. For example, `DISABLE_BORROW_DIRECT=1` will remove BorrowDirect from the equation. The exact key value doesn’t matter so long as it evaluates as `true` using Rails’ `present?` method; thus, it’s best to remove the key-value pair entirely when re-enabling the service.
 
 This feature can be used, for example, if Voyager services should be made temporarily unavailable during a system upgrade.
 

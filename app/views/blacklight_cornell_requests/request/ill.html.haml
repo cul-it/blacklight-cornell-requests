@@ -1,5 +1,5 @@
 = render :partial => 'shared/back_to_item'
-%h2 Borrow Direct & Interlibrary Loan
+%h2 BorrowDirect & Interlibrary Loan
 %div.card
   %div.card-body
     %h3.item-title-request.blacklight-title_display
@@ -11,16 +11,16 @@
     %div.request-author=@au
     %p
       %strong
-        Borrow Direct and interlibrary loan requests have been combined. Your request will be fulfilled using the fastest method available.
+        BorrowDirect and Interlibrary Loan requests have been combined. Your request will be fulfilled using the fastest method available.
     %p
-      To request this item, complete the interlibrary loan form by clicking the button below.
+      To request this item, complete the Interlibrary Loan form by clicking the button below.
     %p
       - if !@estimate.blank?
         Delivery time: 
         = delivery_estimate_display @estimate
     .clearfix
       %a{:href => @ill_link, :class => 'btn btn-danger pull-left'}
-        Go to the Borrow Direct/Interlibrary Loan Form
+        Go to the BorrowDirect/Interlibrary Loan Form
     -if @alternate_methods && @alternate_methods.count > 1
       = render :partial => 'shared/request_options'
     -else

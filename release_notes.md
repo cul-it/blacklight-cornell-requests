@@ -1,5 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
+## 4.4.1
+- Change references from Borrow Direct to BorrowDirect (DACCESS-179)
+- Enable ILL requests for Paged items (DACCESS-202)
+
 ## 4.4 (Microfiche update)
 - Add special handling for microfiche at Annex with 'acc,anx' location.
 

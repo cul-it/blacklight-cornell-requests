@@ -524,10 +524,10 @@ module BlacklightCornellRequests
         result = request_from_reshare(patron: user, item: params[:bd_id], pickup_location: params[:library_id], note: params[:reqcomments])
         if result == :error
           status = 'failure'
-          status_msg = 'There was an error when submitting this request to Borrow Direct. Your request could not be completed.'
+          status_msg = 'There was an error when submitting this request to BorrowDirect. Your request could not be completed.'
         else
           status = 'success'
-          status_msg = I18n.t('requests.success') + " The Borrow Direct request number is #{result}."
+          status_msg = I18n.t('requests.success') + " The BorrowDirect request number is #{result}."
         end
         render :partial => 'bd_notification', :layout => false, locals: { :message => status_msg, :status => status }
       end

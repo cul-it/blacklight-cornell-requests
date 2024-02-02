@@ -164,7 +164,7 @@ module BlacklightCornellRequests
     TemplateName = 'bd'
 
     def self.description
-      'Borrow Direct'
+      'BorrowDirect'
     end
 
     def self.enabled?
@@ -179,7 +179,7 @@ module BlacklightCornellRequests
 
     # patron is a Patron instance; holdings is a holdings_json object from the bib record @document
     def self.available?(patron, holdings)
-      # NOTE: In transitioning from the old Borrow Direct system to ReShare, we are eliminating the distinction
+      # NOTE: In transitioning from the old BorrowDirect system to ReShare, we are eliminating the distinction
       # between BD and ILL, routing all requests into a single ILL form from which ReShare will figure out how to
       # fulfill them. The most expedient way to remove the old BD approach from the system is to always return
       # false for method availability.
@@ -245,15 +245,19 @@ module BlacklightCornellRequests
       return true if noncirculating
 
       if item.regular_loan? || item.day_loan?
-        return item.status == 'Checked out' ||
-               item.status == 'Aged to lost' ||
-               item.status == 'In transit' ||
-               item.status == 'Claimed returned' ||
-               item.status == 'Declared lost' ||
-               item.status == 'Long missing' ||
-               item.status == 'Lost and paid' ||
-               item.status == 'Missing' ||
-               item.status == 'Unavailable'
+        allowed_statuses = [
+          'Aged to lost',
+          'Checked out',
+          'Claimed returned',
+          'Declared lost',
+          'In transit',
+          'Long missing',
+          'Lost and paid',
+          'Missing',
+          'Paged',
+          'Unavailable'
+        ]
+        return allowed_statuses.include?(item.status)
       else
         return false
       end
