@@ -11,7 +11,7 @@ gemspec
 # Git. Remember to move these dependencies to your gemspec before releasing
 # your gem to rubygems.org.
 
-gem 'cul-folio-edge', '2.0', git: 'https://github.com/cul-it/cul-folio-edge'
+gem 'cul-folio-edge', '~> 3.0', git: 'https://github.com/cul-it/cul-folio-edge'
 
 # To use debugger
 # gem 'debugger'
