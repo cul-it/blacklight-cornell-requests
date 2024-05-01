@@ -1,5 +1,11 @@
 # Release Notes - blacklight-cornell-requests
 
+## [5.0] - 2024-05-01
+
+### Changed
+- Require v3.0 of `cul-folio-edge` for placing FOLIO requests
+- Clean up Gemfile and gemspec
+
 ## 4.4.1
 - Change references from Borrow Direct to BorrowDirect (DACCESS-179)
 - Enable ILL requests for Paged items (DACCESS-202)
