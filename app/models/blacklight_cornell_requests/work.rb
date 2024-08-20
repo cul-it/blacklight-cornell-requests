@@ -67,7 +67,7 @@ module BlacklightCornellRequests
     end
 
     def create_scanit_link(solrdoc)
-      scanit_link = "#{ENV['ILLIAD_URL']}?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Fnewcatalog.library.cornell.edu"
+      scanit_link = "#{ENV['ILLIAD_URL']}?Action=10&Form=30&url_ver=Z39.88-2004&rfr_id=info%3Asid%2Fcatalog.library.cornell.edu"
       scanit_link << "&rft.title=#{CGI.escape(@title)}" if @title.present?
       if @isbn.present?
         isbns = @isbn.join(',')
