@@ -71,7 +71,7 @@ http_interactions:
       - keep-alive
     body:
       encoding: UTF-8
-      string: '{"Available":false,"SearchTerm":"isbn=1","RequestLink":{"ButtonLink":"http://newcatalog.library.cornell.edu/catalog/89018","ButtonLabel":"View
+      string: '{"Available":false,"SearchTerm":"isbn=1","RequestLink":{"ButtonLink":"http://catalog.library.cornell.edu/catalog/89018","ButtonLabel":"View
         in the CORNELL Library Catalog.","RequestMessage":"This item is available
         locally."},"NumberOfRecords":313}'
     http_version: 
