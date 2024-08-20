@@ -1,4 +1,4 @@
-source "http://rubygems.org"
+source 'http://rubygems.org'
 
 # Declare your gem's dependencies in blacklight_cornell_requests.gemspec.
 # Bundler will treat runtime dependencies like base dependencies, and
@@ -11,7 +11,7 @@ gemspec
 # Git. Remember to move these dependencies to your gemspec before releasing
 # your gem to rubygems.org.
 
-gem 'cul-folio-edge', '~> 3.0', git: 'https://github.com/cul-it/cul-folio-edge'
+gem 'cul-folio-edge', '~> 3.1', git: 'https://github.com/cul-it/cul-folio-edge'
 
 # To use debugger
 # gem 'debugger'

@@ -1,5 +1,11 @@
 # Release Notes - blacklight-cornell-requests
 
+## [5.1] - 2024-08-12
+
+### Changed
+- Require v3.1 of `cul-folio-edge` to use new authentication tokens (DACCESS-261)
+- Update references to 'newcatalog' to use 'catalog'
+
 ## [5.0] - 2024-05-01
 
 ### Changed
