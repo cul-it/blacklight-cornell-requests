@@ -156,7 +156,7 @@ module BlacklightCornellRequests
     end
 
     def self.available?(item, patron)
-      # Disabled for now - using the l2l_available? method in RequestController instead
+      # Disabled for now - using the available_folio_methods method instead
     end
   end
 
