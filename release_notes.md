@@ -1,6 +1,11 @@
 # Release Notes - blacklight-cornell-requests
 
-## [5.1] - 2024-08-12
+## IN PROCESS
+
+## Changed
+- Eliminate hold, recall, and ScanIt as options for in-process and on-order items (default to ILL/ReShare) (DACCESS-248)
+
+## [5.1] - 2024-08-20
 
 ### Changed
 - Require v3.1 of `cul-folio-edge` to use new authentication tokens (DACCESS-261)

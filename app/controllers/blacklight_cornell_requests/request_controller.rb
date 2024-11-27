@@ -315,6 +315,7 @@ module BlacklightCornellRequests
     end
 
     def hold_available?(item, policy)
+      return false if ['On order', 'In process'].include?(item.status)
       Hold.enabled? && policy && policy[:hold] && !item.available?
     end
 
