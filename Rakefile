@@ -20,26 +20,16 @@ RDoc::Task.new(:rdoc) do |rdoc|
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
 
-
-require 'rake/testtask'
-Rake::TestTask.new(:test) do |test|
-  test.libs << 'lib' << 'test' << 'lib/blacklight_cornell_requests'
-  test.pattern = 'test/**/test_*.rb'
-  test.verbose = true
-end
-
+require 'rspec/core'
 require 'rspec/core/rake_task'
-
-RSpec::Core::RakeTask.new(:spec)
+desc "Run all specs in spec directory (excluding plugin specs)"
+RSpec::Core::RakeTask.new(:spec => 'app:db:test:prepare')
 
 task :default => :spec
 
-require 'ci/reporter/rake/minitest'
 
 APP_RAKEFILE = File.expand_path("../spec/dummy/Rakefile", __FILE__)
 load 'rails/tasks/engine.rake'
-
-task :test => ["ci:setup:minitest"] 
 
 Bundler::GemHelper.install_tasks
 
