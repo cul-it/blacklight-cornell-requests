@@ -14,7 +14,8 @@ ENV['RAILS_ENV'] ||= 'test'
 #   Dir[File.join(ENGINE_RAILS_ROOT, "spec/support/**/*.rb")].each {|f| require f }
 
 #ENGINE_RAILS_ROOT=File.join(File.dirname(__FILE__), '../')
-Dir[File.join(ENGINE_RAILS_ROOT, "spec/support/**/*.rb")].each {|f| require f }
+Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
+
 
 RSpec.configure do |config|
   # config.fixture_path = "#{::Rails.root}/spec/fixtures"

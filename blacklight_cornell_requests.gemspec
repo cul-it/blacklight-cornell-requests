@@ -23,7 +23,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'net-ldap'
   s.add_dependency 'blacklight'
   s.add_dependency 'i18n'
-  s.add_dependency 'nokogiri'
   s.add_dependency 'dotenv'
   s.add_dependency 'dotenv-rails'
   s.add_dependency 'dotenv-deployment'
@@ -40,5 +39,4 @@ Gem::Specification.new do |s|
   s.add_development_dependency "guard-rspec"
   s.add_development_dependency "webmock"
   s.add_development_dependency "vcr"
-  s.add_development_dependency 'factory_girl_rails'
 end
