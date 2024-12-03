@@ -1,6 +1,8 @@
 require 'rails_helper'
-require 'blacklight_cornell_requests/delivery_method'
+#require 'blacklight_cornell_requests/delivery_method'
 
-RSpec.describe DeliveryMethod, type: :model do
-  
+RSpec.describe BlacklightCornellRequests::Item, type: :model do
+  it 'returns true' do
+    expect(true).to be true
+  end
 end

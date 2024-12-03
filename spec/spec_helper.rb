@@ -1,3 +1,4 @@
+# require 'rspec/autorun'
 require 'rubygems'
 require 'webmock/rspec'
 require 'vcr'
@@ -5,11 +6,11 @@ require 'blacklight'
 require 'dotenv'
 Dotenv.load
 
-ENV['RAILS_ENV'] ||= 'test'
+# ENV['RAILS_ENV'] ||= 'test'
 
 
 
-# require 'rspec/autorun'
+
 
 #   Dir[File.join(ENGINE_RAILS_ROOT, "spec/support/**/*.rb")].each {|f| require f }
 
