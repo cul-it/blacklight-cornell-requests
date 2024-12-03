@@ -34,8 +34,8 @@ Gem::Specification.new do |s|
   # s.add_dependency 'cul-folio-edge', '~> 2.0'
 
   s.add_development_dependency "sqlite3"
-  s.add_development_dependency "rspec-rails", "~> 2.5"
-  s.add_development_dependency "capybara", "2.4.1"
+  s.add_development_dependency "rspec-rails", "~> 6.0"
+  s.add_development_dependency "capybara"
   s.add_development_dependency "guard-rspec"
   s.add_development_dependency "webmock"
   s.add_development_dependency "vcr"
