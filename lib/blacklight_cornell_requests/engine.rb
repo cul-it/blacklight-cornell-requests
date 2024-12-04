@@ -12,6 +12,14 @@ module BlacklightCornellRequests
     initializer :append_migrations do |app|
       app.config.paths['db/migrate'] << config.paths['db/migrate'].expanded[0] unless app.root.to_s.match root.to_s
     end
+
+    # Automatically generate test files when new resources are generated
+    # (Following https://rderik.com/blog/how-to-add-rspec-to-an-existing-engine/)
+    config.generators do |g|
+      g.test_framework :rspec
+      g.assets false
+      g.helper false
+    end
   end
 
   def self.config(&block)
