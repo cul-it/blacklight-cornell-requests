@@ -34,7 +34,7 @@ module BlacklightCornellRequests
         let(:result) { { code: 200, request_methods: [:hold, :recall] } }
 
         it 'returns hold and recall' do
-          expect(DeliveryMethod.available_folio_methods(item, patron)).to eq([:holdy, :recall])
+          expect(DeliveryMethod.available_folio_methods(item, patron)).to eq([:hold, :recall])
         end
       end
 
