@@ -1,5 +1,10 @@
 # Release Notes - blacklight-cornell-requests
 
+## IN PROGRESS - 2024-12-04
+
+### Changed
+- h1 to h2 elements and added the class to the stylesheet
+
 ## [5.1] - 2024-08-20
 
 ### Changed

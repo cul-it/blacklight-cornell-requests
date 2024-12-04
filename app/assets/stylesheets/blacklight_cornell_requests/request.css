@@ -9,3 +9,9 @@
 	width: 2em;
 	height: 2em;
 }
+
+h2.request-type 
+{
+	padding: 10px 0 8px;
+    font-size: 1.6em;
+}
