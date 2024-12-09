@@ -1,13 +1,12 @@
 # Release Notes - blacklight-cornell-requests
 
 
-## IN PROGRESS - 2024-12-04
+## [5.2] - 2024-12-09
 
 ### Changed
 - h1 to h2 elements and added the class to the stylesheet
 - Update RSpec testing infrastructure
 - Eliminate hold, recall, and ScanIt as options for in-process and on-order items (default to ILL/ReShare) (DACCESS-248)
-
 
 ## [5.1] - 2024-08-20
 
