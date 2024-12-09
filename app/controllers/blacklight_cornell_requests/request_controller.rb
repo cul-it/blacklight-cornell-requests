@@ -310,18 +310,6 @@ module BlacklightCornellRequests
       render fastest_method[:method]::TemplateName
     end
 
-    def l2l_available?(item)
-      L2L.enabled? && policy && policy[:l2l] && item.available? && !item.noncirculating?
-    end
-
-    def hold_available?(item, policy)
-      Hold.enabled? && policy && policy[:hold] && !item.available?
-    end
-
-    def recall_available?(item, policy)
-      Recall.enabled? && policy && policy[:recall] && !item.available?
-    end
-
     # Update the options hash with methods for a particular item
     # TODO: there's probably a better way to do this!
     def update_options(item, options, patron)

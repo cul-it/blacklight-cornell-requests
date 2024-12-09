@@ -156,7 +156,7 @@ module BlacklightCornellRequests
     end
 
     def self.available?(item, patron)
-      # Disabled for now - using the l2l_available? method in RequestController instead
+      # Disabled for now - using the available_folio_methods method instead
     end
   end
 
@@ -250,10 +250,12 @@ module BlacklightCornellRequests
           'Checked out',
           'Claimed returned',
           'Declared lost',
+          'In process',
           'In transit',
           'Long missing',
           'Lost and paid',
           'Missing',
+          'On order',
           'Paged',
           'Unavailable'
         ]
@@ -281,7 +283,7 @@ module BlacklightCornellRequests
     end
 
     def self.available?(item, patron)
-      # Disabled for now - using the hold_available? method in RequestController instead
+      # Disabled for now - using the available_folio_methods method instead
     end
   end
 
@@ -301,7 +303,7 @@ module BlacklightCornellRequests
     end
 
     def self.available?(item, patron)
-      # Disabled for now - using the recall_available? method in RequestController instead
+      # Disabled for now - using the available_folio_methods method instead
     end
   end
 
@@ -425,6 +427,7 @@ module BlacklightCornellRequests
       #                     'Newspaper' (20)
       #                     'Microform'] (19)
       # eligible_formats = [2, 3, 5, 7, 8, 15, 18, 19, 20]
+      # 4. Item is not on order or in process (see https://culibrary.atlassian.net/browse/DACCESS-248)
 
       eligible_formats = [
         '1a54b431-2e4f-452d-9cae-9cee66c9a892', # Book
@@ -438,6 +441,7 @@ module BlacklightCornellRequests
         'dd0bf600-dbd9-44ab-9ff2-e2a61a6539f1', # Soundrec
       ]
 
+      return false if ['On order', 'In process'].include? item.status
       return self.enabled? && eligible_formats.include?(item.type['id'])
     end
   end

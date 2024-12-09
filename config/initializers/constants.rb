@@ -34,8 +34,11 @@ module BlacklightCornellRequests
     'In transit': [:hold, :recall],
     'Missing': [:hold],
     'Paged': [:hold, :recall],
-    'On order': [:hold, :recall],
-    'In process': [:hold, :recall]
+    # NOTE: 'On order' and 'In process' are intended to include [:hold, :recall], but this has been removed
+    # so that the user will not see the option to place a hold or recall on an item that is not yet available.
+    # See https://culibrary.atlassian.net/browse/DACCESS-248 for details.
+    'On order': [],
+    'In process': []
   }
   
   # STATUSES = {
