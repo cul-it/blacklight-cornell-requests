@@ -127,6 +127,7 @@ requests =
   # Clear flash message
   clearValidation: () ->
     $('.flash_messages').empty()
+    $('#request-submit').removeAttr('disabled')
 
   # Get initial data for form
   formSetup: () ->
