@@ -1,5 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
+## IN PROGRESS
+
+## Fixed
+- Fixed bug that kept submit button disabled after error (DACCESS-206)
 
 ## [5.2] - 2024-12-09
 
