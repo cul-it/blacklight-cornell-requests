@@ -2,6 +2,12 @@
 
 ## IN PROGRESS
 
+## [6.0] - 2025-08-14
+
+### Changed
+- migrate the PDA request from Prefect to Temporal 
+- requires adding and removing environment variables
+
 ## Fixed
 - Fixed bug that kept submit button disabled after error (DACCESS-206)
 

@@ -521,32 +521,29 @@ module BlacklightCornellRequests
       end
     end
 
-    # Submit a PDA (Patron-Driven Acquisition) request to the Prefect workflow that does the
-    # actual ordering and updating of catalog records. Requires the requester
-    # netid and the instance HRID/bibid.
+    # Submit a PDA (Patron-Driven Acquisition) request to the Temporal workflow that does the
+    # actual ordering and updating of catalog records. 
+    # Requires: the requester netid and the instance HRID/bibid.
     #
     # This is based on code supplied by Brandon Kowalski
     def make_pda_request
       if params[:netid].present? && params[:bibid].present?
-        url = "https://api.prefect.cloud/api/accounts/#{ENV['PREFECT_ACCOUNT']}/workspaces/#{ENV['PREFECT_WORKSPACE']}/deployments/#{ENV['PREFECT_DEPLOYMENT']}/create_flow_run"
+        url = ENV['TEMPORAL_API_URL']
         headers = {
-          'authorization' => ENV['PREFECT_AUTH_TOKEN'],
-          :content_type => 'application/json; charset=utf-8'
+          "Authorization" => ENV['TEMPORAL_BEARER_TOKEN'],
+          "Content-Type" => "application/json; charset=utf-8"
         }
-        props = {
-          'state' => {
-            'type' => 'SCHEDULED'
-          },
-          'idempotency_key' => SecureRandom.uuid,
-          'parameters' => {
-            'requestor_netid' => user,
-            'hrid' => params[:bibid],
-            # If is_test = true, request is sent to the Prefect test environment, and Brandon Kowalski receives an email.
-            # (In practice, an env value of anything other than 'prod' should be regarded as true.)
-            'is_test' => ENV['PREFECT_STATE'] != 'prod'
-          }
-        }
-        body = JSON.dump(props)
+        body = {
+          "queue" => "automation-lts-worker-python",
+          "parameters" => [
+            {
+              "requestor_netid" => params[:netid],
+              "hrid" => params[:bibid],
+              "dry_run" => ENV['TEMPORAL_STATE'] != 'prod'
+            }
+          ],
+          "workflow" => "PDAOrderRequestWorkflow"
+        }.to_json
 
         begin
           response = RestClient.post(url, body, headers)
