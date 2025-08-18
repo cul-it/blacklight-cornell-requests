@@ -2,7 +2,7 @@
 
 ## IN PROGRESS
 
-## [6.0] - 2025-08-14
+## [5.3] - 2025-08-18
 
 ### Changed
 - migrate the PDA request from Prefect to Temporal 
