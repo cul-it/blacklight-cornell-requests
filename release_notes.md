@@ -1,11 +1,10 @@
 # Release Notes - blacklight-cornell-requests
 
-## IN PROGRESS
 
 ## [5.3] - 2025-08-18
 
 ### Changed
-- migrate the PDA request from Prefect to Temporal 
+- migrate the PDA request from Prefect to Temporal (DACCESS-616)
 - requires adding and removing environment variables
 
 ## Fixed
