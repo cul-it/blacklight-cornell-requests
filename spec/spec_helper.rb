@@ -1,8 +1,8 @@
 # require 'rspec/autorun'
+require 'rails_helper'
 require 'rubygems'
 require 'webmock/rspec'
 require 'vcr'
-require 'blacklight'
 require 'dotenv'
 Dotenv.load
 
