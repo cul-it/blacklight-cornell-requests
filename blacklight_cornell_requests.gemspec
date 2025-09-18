@@ -38,6 +38,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "capybara"
   s.add_development_dependency "guard-rspec"
   s.add_development_dependency "rails-controller-testing"
+  s.add_development_dependency "rsolr"
   s.add_development_dependency "webmock"
   s.add_development_dependency "vcr"
 
