@@ -1,6 +1,7 @@
 # require 'rspec/autorun'
 require 'rails_helper'
 require 'rubygems'
+require 'blacklight'
 require 'webmock/rspec'
 require 'vcr'
 require 'dotenv'
