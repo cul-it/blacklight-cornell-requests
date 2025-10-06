@@ -5,7 +5,10 @@ require 'blacklight'
 require 'webmock/rspec'
 require 'vcr'
 require 'dotenv'
+require 'simplecov'
+
 Dotenv.load
+SimpleCov.start
 
 # ENV['RAILS_ENV'] ||= 'test'
 
