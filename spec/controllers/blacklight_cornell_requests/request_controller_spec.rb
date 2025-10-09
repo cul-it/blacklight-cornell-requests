@@ -113,7 +113,10 @@ module BlacklightCornellRequests
               'type' => { 'id' => 'book' },
               'status' => { 'status' => 'Available' }
             }
-          ] }.to_json
+          ] }.to_json,
+          :url_pda_display => [
+            'http://example.com/pda|Sample note'
+          ],
         }
       end
 
@@ -178,6 +181,12 @@ module BlacklightCornellRequests
       it 'renders the fastest_method template' do
         get :magic_request, params: { bibid: bibid }
         expect(response).to render_template(L2L::TemplateName)
+      end
+
+      it 'sets the PDA url and note if present in document' do
+        allow(PDA).to receive(:available?).and_return(true)
+        get :magic_request, params: { bibid: bibid }
+        expect(assigns(:iis)).to eq({ pda: { itemid: 'pda', url: 'http://example.com/pda', note: 'Sample note' } })
       end
     end
 
