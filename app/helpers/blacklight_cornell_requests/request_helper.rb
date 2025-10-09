@@ -98,6 +98,7 @@ module BlacklightCornellRequests
           Rails.logger.debug "mjc12test6: results: #{result}"
           return result
         end
+        []
       rescue RestClient::ExceptionWithResponse => err
         Rails.logger.debug "Requests: Couldn't retrieve list of service points (#{err})"
         return []
