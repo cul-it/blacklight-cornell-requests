@@ -16,6 +16,7 @@ module Reshare
     records.each do |r|
       return r['id'] if r['lendingStatus'].include?('LOANABLE')
     end
+    nil
   end
 
   def _search_by_isn(isn)
