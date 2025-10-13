@@ -1,5 +1,11 @@
 # Release Notes - blacklight-cornell-requests
 
+## [5.4]
+### Added
+- RSpec tests to improve code coverage (DACCESS-97) 
+
+### Changed
+- Update Rails dependency to v7.0 (DACCESS-640)
 
 ## [5.3] - 2025-08-18
 
