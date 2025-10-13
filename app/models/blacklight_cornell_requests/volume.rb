@@ -50,9 +50,8 @@ module BlacklightCornellRequests
       "|#{@enum}|#{@chron}|#{@year}|"
     end
 
-    # FIXME
     def add_item(item_id)
-      @items << item
+      @items << item_id
     end
 
     def remove_item(item_id)
