@@ -190,6 +190,87 @@ module BlacklightCornellRequests
       end
     end
 
+    describe '#make_purchase_request' do
+      before do
+        allow(I18n).to receive(:t).with('requests.errors.name.blank').and_return('Name required')
+        allow(I18n).to receive(:t).with('requests.errors.email.blank').and_return('Email required')
+        allow(I18n).to receive(:t).with('requests.errors.status.blank').and_return('Status required')
+        allow(I18n).to receive(:t).with('requests.errors.title.blank').and_return('Title required')
+        allow(I18n).to receive(:t).with('requests.errors.email.invalid').and_return('Invalid email')
+        allow(I18n).to receive(:t).with('requests.success').and_return('Success!')
+      end
+
+      it 'sets flash[:error] for missing required fields' do
+        post :make_purchase_request, params: { bibid: '', name: '', email: '', reqstatus: '', reqtitle: '' }
+        expect(flash[:error]).to include('Name required')
+        expect(flash[:error]).to include('Email required')
+        expect(flash[:error]).to include('Status required')
+        expect(flash[:error]).to include('Title required')
+        expect(response).to render_template('shared/_flash_msg')
+      end
+
+      it 'sets flash[:error] for invalid email format' do
+        post :make_purchase_request, params: { bibid: '123', name: 'Test', email: 'bademail', reqstatus: 'Faculty', reqtitle: 'Book Title' }
+        expect(flash[:error]).to include('Invalid email')
+        expect(response).to render_template('shared/_flash_msg')
+      end
+
+      it 'sets flash[:success] for valid submission and calls mailer' do
+        mailer = double('RequestMailer')
+        allow(RequestMailer).to receive(:email_request).and_return(mailer)
+        allow(mailer).to receive(:deliver_now)
+        post :make_purchase_request, params: { bibid: '123', name: 'Test', email: 'test@cornell.edu', reqstatus: 'Faculty', reqtitle: 'Book Title' }
+        expect(flash[:success]).to eq('Success!')
+        expect(response).to render_template('shared/_flash_msg')
+      end
+    end
+
+    describe '#make_bd_request' do
+      before do
+        allow(I18n).to receive(:t).with('requests.success').and_return('Success!')
+      end
+
+      it 'sets flash[:error] and renders flash_msg partial if library_id is blank' do
+        post :make_bd_request, params: { bibid: '123', library_id: '', bd_id: '123' }
+        expect(flash[:error]).to eq('Please select a library pickup location.')
+        expect(response).to render_template('shared/_flash_msg')
+      end
+    end
+
+    describe '#make_pda_request' do
+      before do
+        allow(ENV).to receive(:[]).and_call_original
+        allow(ENV).to receive(:[]).with('TEMPORAL_API_URL').and_return('http://temporal.example.com')
+        allow(ENV).to receive(:[]).with('TEMPORAL_BEARER_TOKEN').and_return('Bearer token')
+        allow(ENV).to receive(:[]).with('TEMPORAL_STATE').and_return('prod')
+        allow(ENV).to receive(:[]).with(anything).and_return(nil) # <-- Add this line
+        allow(I18n).to receive(:t).with('requests.success').and_return('Success!')
+        allow(I18n).to receive(:t).with('requests.failure').and_return('Failure!')
+      end
+
+      let(:valid_params) { { netid: 'abc123', bibid: 'bib456' } }
+
+      it 'sets flash[:success] and renders flash_msg partial on success' do
+        expect(RestClient).to receive(:post).and_return(double)
+        post :make_pda_request, params: valid_params
+        expect(flash[:success]).to eq('Success!')
+        expect(response).to render_template(/flash_msg/)
+      end
+
+      it 'sets flash[:error] and renders flash_msg partial on RestClient error' do
+        allow(RestClient).to receive(:post).and_raise(StandardError.new('fail'))
+        post :make_pda_request, params: valid_params
+        expect(flash[:error]).to include('Failure!')
+        expect(response).to render_template(/flash_msg/)
+      end
+
+      it 'sets flash[:error] if netid or bibid is missing' do
+        post :make_pda_request, params: { netid: '', bibid: '' }
+        expect(flash[:error]).to include('Failure!')
+        expect(response).to render_template(/flash_msg/)
+      end
+    end
+
     describe '#make_folio_request' do
       it 'renders flash error if holding_id is blank' do
         post :make_folio_request, params: { bibid: 'someid', holding_id: '', library_id: 'lib' }
@@ -204,6 +285,46 @@ module BlacklightCornellRequests
       end
     end
 
+    describe '#set_volume' do
+      it 'sets session[:volume] and session[:setvol] and renders JS with no body' do
+        post :set_volume, params: { volume: '|v.1|Spring|2020|' }, format: :js
+        expect(session[:volume]).to eq('|v.1|Spring|2020|')
+        expect(session[:setvol]).to eq(1)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to be_blank
+        expect(response.content_type).to eq('text/javascript; charset=utf-8')
+      end
+    end
+
+    describe '#holdings_id_from_item_id' do
+      let(:items_json) {
+        {
+          "hold1" => [
+            { "id" => "itemA" },
+            { "id" => "itemB" }
+          ],
+          "hold2" => [
+            { "id" => "itemC" }
+          ]
+        }.to_json
+      }
+
+      it 'returns the correct holdings id for a matching item' do
+        controller = described_class.new
+        expect(controller.holdings_id_from_item_id("itemB", items_json)).to eq("hold1")
+        expect(controller.holdings_id_from_item_id("itemC", items_json)).to eq("hold2")
+      end
+
+      it 'returns nil if item id is not found' do
+        controller = described_class.new
+        expect(controller.holdings_id_from_item_id("itemX", items_json)).to be_nil
+      end
+
+      it 'returns nil for empty items_json' do
+        controller = described_class.new
+        expect(controller.holdings_id_from_item_id("itemA", "{}")).to be_nil
+      end
+    end
 
   end
 end
