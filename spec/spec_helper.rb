@@ -1,10 +1,14 @@
 # require 'rspec/autorun'
+require 'rails_helper'
 require 'rubygems'
+require 'blacklight'
 require 'webmock/rspec'
 require 'vcr'
-require 'blacklight'
 require 'dotenv'
+require 'simplecov'
+
 Dotenv.load
+SimpleCov.start
 
 # ENV['RAILS_ENV'] ||= 'test'
 
