@@ -243,7 +243,7 @@ module BlacklightCornellRequests
         allow(ENV).to receive(:[]).with('TEMPORAL_API_URL').and_return('http://temporal.example.com')
         allow(ENV).to receive(:[]).with('TEMPORAL_BEARER_TOKEN').and_return('Bearer token')
         allow(ENV).to receive(:[]).with('TEMPORAL_STATE').and_return('prod')
-        allow(ENV).to receive(:[]).with(anything).and_return(nil) # <-- Add this line
+        allow(ENV).to receive(:[]).with(anything).and_return(nil)
         allow(I18n).to receive(:t).with('requests.success').and_return('Success!')
         allow(I18n).to receive(:t).with('requests.failure').and_return('Failure!')
       end
