@@ -11,6 +11,13 @@ module BlacklightCornellRequests
     # @param item_data [hash] A JSON object containing data for a single item record
     # @param holdings_data [hash] A JSON object containing data for a single holdings record
     def initialize(holding_id, item_data, holdings_data = nil)
+      # TODO: This return statement is wrong. "Returning nil from initialize does not prevent object creation."
+      # But this has worked, more or less, for years, so I'm not sure what effect "fixing" this might have! Has
+      # to be done carefully.
+      # 
+      # "Recommended fix:
+      #    "Raise an error in initialize if arguments are invalid:"
+      #       raise ArgumentError, "holding_id and item_data required" if holding_id.nil? || item_data.nil?
       return nil if holding_id.nil? || item_data.nil?
 
       @holding_id = holding_id

@@ -56,6 +56,64 @@ module BlacklightCornellRequests
         end
       end
     end
+
+    describe '.enabled_methods' do
+      before do
+        stub_const('BlacklightCornellRequests::DELIVERY_METHODS', %w[L2L BD ILL])
+        allow(BlacklightCornellRequests::L2L).to receive(:enabled?).and_return(true)
+        allow(BlacklightCornellRequests::BD).to receive(:enabled?).and_return(false)
+        allow(BlacklightCornellRequests::ILL).to receive(:enabled?).and_return(true)
+      end
+
+      it 'returns only enabled methods' do
+        expect(DeliveryMethod.enabled_methods).to contain_exactly(BlacklightCornellRequests::L2L, BlacklightCornellRequests::ILL)
+      end
+    end
+
+    describe '.sorted_methods' do
+      let(:hold) { BlacklightCornellRequests::Hold }
+      let(:recall) { BlacklightCornellRequests::Recall }
+      let(:docdel) { BlacklightCornellRequests::DocumentDelivery }
+
+      before do
+        allow(hold).to receive(:time).and_return([2, 2])
+        allow(recall).to receive(:time).and_return([15, 15])
+        allow(docdel).to receive(:time).and_return([1, 4])
+      end
+
+      it 'returns fastest and alternate methods sorted by time' do
+        options = { hold => [1], recall => [2], docdel => [3] }
+        result = DeliveryMethod.sorted_methods(options)
+        expect(result[:fastest][:method]).to eq(hold)
+        expect(result[:alternate].map { |a| a[:method] }).to include(docdel, recall)
+      end
+
+      it 'never returns DocumentDelivery as fastest if alternates exist' do
+        options = { docdel => [1], hold => [2] }
+        result = DeliveryMethod.sorted_methods(options)
+        expect(result[:fastest][:method]).to eq(hold)
+        expect(result[:alternate].first[:method]).to eq(docdel)
+      end
+
+      it 'removes methods with no items' do
+        options = { hold => [], recall => [1] }
+        result = DeliveryMethod.sorted_methods(options)
+        expect(result[:fastest][:method]).to eq(recall)
+        expect(result[:alternate].map { |a| a[:method] }).not_to include(hold)
+      end
+    end
+
+    describe '.description' do
+      it 'returns a description string' do
+        expect(DeliveryMethod.description).to eq('An item delivery method')
+      end
+    end
+
+    describe '.enabled?' do
+      it 'returns true by default' do
+        expect(DeliveryMethod.enabled?).to be true
+      end
+    end
   end
 
 end
