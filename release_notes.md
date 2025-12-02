@@ -7,6 +7,9 @@
 ### Changed
 - Update Rails dependency to v7.0 (DACCESS-640)
 
+### Removed
+- Obsolete circ policy DB table and migrations
+
 ## [5.3] - 2025-08-18
 
 ### Changed
