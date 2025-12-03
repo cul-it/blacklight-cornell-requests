@@ -7,6 +7,11 @@
 ### Changed
 - Update Rails dependency to v7.0 (DACCESS-640)
 
+### Removed
+- Remove unused circ_policy table
+- Remove unused unit tests
+- Remove protected_attributes_continued dependency
+
 ## [5.3] - 2025-08-18
 
 ### Changed
