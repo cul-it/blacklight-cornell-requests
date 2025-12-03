@@ -9,6 +9,7 @@
 
 ### Removed
 - Remove unused circ_policy table
+- Remove unused unit tests
 
 ## [5.3] - 2025-08-18
 
