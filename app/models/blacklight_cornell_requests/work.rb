@@ -1,6 +1,6 @@
 module BlacklightCornellRequests
   class Work
-    attr_reader :bibid, :title, :author, :isbn, :pub_info, :ill_link, :scanit_link, :mann_special_delivery_link
+    attr_reader :bibid, :title, :author, :isbn, :pub_info, :ill_link, :scanit_link
 
     def initialize(bibid, solr_document)
       @bibid = bibid
@@ -11,8 +11,11 @@ module BlacklightCornellRequests
       @oclc = solr_document['oclc_id_display']
       @pub_info = parse_pub_info(@doc)
       @ill_link = parse_ill(@doc)
-      @mann_special_delivery_link = create_mann_special_delivery_link()
       @scanit_link = create_scanit_link(@doc)
+    end
+
+    def call_number(solrdoc = @doc)
+      solrdoc['callnumber_display']&.first || ''
     end
 
     def parse_author(solrdoc)
@@ -58,7 +61,7 @@ module BlacklightCornellRequests
       ill_link += "&LoanDate=#{pub_date}"
 
       ill_link += "&rft.genre=#{solrdoc['format'][0]}" if solrdoc['format'].present?
-      ill_link += "&rft.identifier=#{solrdoc['lc_callnum_display'][0]}" if solrdoc['lc_callnum_display'].present?
+      ill_link += "&rft.identifier=#{call_number()}"
       ill_link += "&ESPNumber=#{@oclc.join(', ')}" if @oclc.present?
       ill_link += "&ISSN=#{@isbn.join(', ')}" if @isbn.present?
       ill_link += "&CitedIn=Cornell University Library catalog"
@@ -74,10 +77,6 @@ module BlacklightCornellRequests
         scanit_link += "&rft.isbn=#{isbns}" + "&rft_id=urn%3AISBN%3A#{isbns}"
       end
       @scanit_link = scanit_link
-    end
-
-    def create_mann_special_delivery_link
-      'https://cornell.libwizard.com/f/mann-special-collections-registration'
     end
   end
 end
