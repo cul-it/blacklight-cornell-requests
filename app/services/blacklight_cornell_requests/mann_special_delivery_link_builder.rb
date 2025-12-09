@@ -38,6 +38,8 @@ module BlacklightCornellRequests
         link += "&local_phone=#{CGI.escape(patron_record.dig("personal", "phone").to_s)}"
         link += "&department=#{CGI.escape(patron_record.dig("customFields", "department").to_s)}"
       end
+
+      link
     end
   end
 end
