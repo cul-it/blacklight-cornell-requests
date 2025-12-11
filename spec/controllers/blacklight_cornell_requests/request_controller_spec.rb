@@ -121,7 +121,7 @@ module BlacklightCornellRequests
       end
 
       let(:patron_record) { { 'personal' => { 'firstName' => 'Test', 'lastName' => 'User' }, 'id' => 'patronid', 'group' => 'test_group' } }
-      let(:patron_double) { double(display_name: 'Test User', record: patron_record, group: 'test_group') }
+      let(:patron_double) { double(display_name: 'Test User', record: patron_record, group: 'test_group', get_folio_record: patron_record) }
 
       before do
         allow_any_instance_of(RequestController)
@@ -136,7 +136,7 @@ module BlacklightCornellRequests
         allow(MannSpecial).to receive(:available?).and_return(false)
         allow(AskLibrarian).to receive(:available?).and_return(true)
         allow_any_instance_of(RequestController).to receive(:user).and_return('testuser')
-        allow(Work).to receive(:new).and_return(double(title: 'Test Title', author: 'Test Author', isbn: ['1234567890'], pub_info: 'Test Pub', ill_link: nil, mann_special_delivery_link: nil, scanit_link: nil))
+        allow(Work).to receive(:new).and_return(double(title: 'Test Title', author: 'Test Author', isbn: ['1234567890'], pub_info: 'Test Pub', ill_link: nil, call_number: nil, scanit_link: nil))
         allow(Item).to receive(:new).and_return(
           double(
             circ_group: 'circ',
