@@ -2,7 +2,8 @@
 
 ## [5.4]
 ### Added
-- RSpec tests to improve code coverage (DACCESS-97) 
+- RSpec tests to improve code coverage (DACCESS-97)
+- Prepopulate fields in Mann Special Collections form link (DACCESS-92)
 
 ### Changed
 - Update Rails dependency to v7.0 (DACCESS-640)
@@ -10,7 +11,7 @@
 ### Removed
 - Remove unused circ_policy table
 - Remove unused unit tests
-- Remove protected_attributes_continued dependency
+- Remove protected_attributes_continued dependency (DACCESS-640)
 
 ## [5.3] - 2025-08-18
 

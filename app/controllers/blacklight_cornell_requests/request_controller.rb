@@ -286,7 +286,7 @@ module BlacklightCornellRequests
       @isbn = work_metadata.isbn
       @pub_info = work_metadata.pub_info
       @ill_link = work_metadata.ill_link
-      @mann_special_delivery_link = work_metadata.mann_special_delivery_link
+      @mann_special_delivery_link = MannSpecialDeliveryLinkBuilder.build(work_metadata, requester)
       @scanit_link = work_metadata.scanit_link
       @netid = user
       @patron = BlacklightCornellRequests::Patron.new(@netid).record
