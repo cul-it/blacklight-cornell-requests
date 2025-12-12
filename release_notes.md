@@ -1,6 +1,6 @@
 # Release Notes - blacklight-cornell-requests
 
-## [5.4]
+## [5.4] - 2025-12-12
 ### Added
 - RSpec tests to improve code coverage (DACCESS-97)
 - Prepopulate fields in Mann Special Collections form link (DACCESS-92)
