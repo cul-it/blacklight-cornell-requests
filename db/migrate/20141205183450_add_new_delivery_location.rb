@@ -1,6 +1,7 @@
 class AddNewDeliveryLocation < ActiveRecord::Migration[5.2]
   def change
-    # Add new row for NYC-CFEM program
-    BlacklightCornellRequests::Circ_policy_locs.create :circ_group_id => 1, :location_id => 250, :pickup_location => 'Y'
+    # This space intentionally left blank
+    # (Keeping the migration so that schema versions stay consistent, but eliminating references to the 
+    # defunc Circ_policy_locs model)
   end
 end
