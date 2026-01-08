@@ -75,8 +75,8 @@ module BlacklightCornellRequests
 
       it 'uses the first address' do
         link = described_class.build(work, patron)
-        expect(link).to include(CGI.escape('3859679='))
-        expect(link).to include(CGI.escape('456 Main St'))
+        expect(link).to include('3859679=')
+        expect(link).to include('456 Main St')
         expect(link).to include(CGI.escape('Ithaca'))
         expect(link).to include(CGI.escape('NY'))
         expect(link).to include(CGI.escape('14850'))
