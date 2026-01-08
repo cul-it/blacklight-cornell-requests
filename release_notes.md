@@ -1,5 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
+## [IN PROGRESS]
+### Fixed
+- Fix bug throwing an error when users have an address listed in FOLIO but no 'primary' address
+
 ## [5.4] - 2025-12-12
 ### Added
 - RSpec tests to improve code coverage (DACCESS-97)

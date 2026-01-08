@@ -24,6 +24,8 @@ module BlacklightCornellRequests
           # form for Mann Special Collections requires both a local address and home address, so we can
           # populate the local address field from the primaryAddress and hope that that's right most of the time.
           address_record = patron_record['personal']['addresses'].find { |addr| addr['primaryAddress'] == true }
+          # Weirdly, patrons can have an address but no primary address. In that case, just use the first address.
+          address_record ||= patron_record['personal']['addresses'].first
           address = [
             address_record['addressLine1'], 
             address_record['addressLine2'], 
