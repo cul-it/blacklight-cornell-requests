@@ -73,9 +73,13 @@ module BlacklightCornellRequests
         record
       end
 
-      it 'omits the address field' do
+      it 'uses the first address' do
         link = described_class.build(work, patron)
-        expect(link).not_to include('3859679=')
+        expect(link).to include(CGI.escape('3859679='))
+        expect(link).to include(CGI.escape('456 Main St'))
+        expect(link).to include(CGI.escape('Ithaca'))
+        expect(link).to include(CGI.escape('NY'))
+        expect(link).to include(CGI.escape('14850'))
         expect(link).to include(CGI.escape('Test User'))
       end 
     end
