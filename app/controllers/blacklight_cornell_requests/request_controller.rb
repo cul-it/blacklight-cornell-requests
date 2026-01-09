@@ -31,6 +31,14 @@ module BlacklightCornellRequests
       _, document = search_service.fetch doc_id
       document
     end
+    
+    before_action :initialize_search_fields
+ 
+    # DACCESS-763 the search_fields are configured in blacklight-cornell CatalogController
+    # we need to copy them over to this controller so the search fields drop down can be populated
+    def initialize_search_fields
+      self.blacklight_config.search_fields = CatalogController.blacklight_config.search_fields
+    end
 
     def auth_magic_request target=''
       id_format = params[:format].present? ? params[:bibid] + '.' + params[:format] : params[:bibid]
