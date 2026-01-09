@@ -37,7 +37,12 @@ module BlacklightCornellRequests
     # DACCESS-763 the search_fields are configured in blacklight-cornell CatalogController
     # we need to copy them over to this controller so the search fields drop down can be populated
     def initialize_search_fields
-      self.blacklight_config.search_fields = CatalogController.blacklight_config.search_fields
+      if CatalogController.blacklight_config&.search_fields.present?
+        self.blacklight_config.search_fields = CatalogController.blacklight_config.search_fields
+      else
+        Rails.logger.warn "Warning: search_fields are not configured in the CatalogController"
+        self.blacklight_config.search_fields = {}
+      end
     end
 
     def auth_magic_request target=''
