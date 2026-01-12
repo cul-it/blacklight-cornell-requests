@@ -25,17 +25,15 @@ module BlacklightCornellRequests
     include Reshare
     # include Cornell::LDAP
 
+    # DACCESS-763 the search_fields are configured in blacklight-cornell CatalogController
+    # use that configuration so that search fields drop down can be populated
+    copy_blacklight_config_from(CatalogController)
+
     # This may seem redundant, but it makes it easier to fetch the document from
     # various model classes
     def get_solr_doc(doc_id)
       _, document = search_service.fetch doc_id
       document
-    end
- 
-    # DACCESS-763 the search_fields are configured in blacklight-cornell CatalogController
-    # use that configuration so that search fields drop down can be populated
-    def self.blacklight_config
-      CatalogController.blacklight_config
     end
 
     def auth_magic_request target=''
