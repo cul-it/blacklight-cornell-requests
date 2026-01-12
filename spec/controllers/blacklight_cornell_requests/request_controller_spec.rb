@@ -326,20 +326,5 @@ module BlacklightCornellRequests
       end
     end
 
-    describe '#initialize_search)fields' do
-      it 'initializes the search_fields from the CatalogController' do
-        mock_search_fields = ["all_fields", "title", "author"]
-        allow(CatalogController).to receive_message_chain(:blacklight_config, :search_fields).and_return(mock_search_fields)
-        controller.initialize_search_fields
-        expect(controller.blacklight_config.search_fields).to eq(mock_search_fields)
-      end
-
-      it 'sets search_fields to an empty hash if CatalogController has no search_fields' do
-        allow(CatalogController).to receive(:blacklight_config).and_return(nil)
-        controller.initialize_search_fields
-        expect(controller.blacklight_config.search_fields).to be_empty
-      end
-    end
-
   end
 end
