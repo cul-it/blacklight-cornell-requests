@@ -3,6 +3,7 @@
 ## [IN PROGRESS]
 ### Fixed
 - Fix bug throwing an error when users have an address listed in FOLIO but no 'primary' address
+- Fix missing search fields drop down in search bar (DACCESS-763)
 
 ## [5.4] - 2025-12-12
 ### Added
