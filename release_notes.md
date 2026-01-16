@@ -1,6 +1,6 @@
 # Release Notes - blacklight-cornell-requests
 
-## [IN PROGRESS]
+## [5.4.1] - 2026-01-16
 ### Changed
 - Remove reference to obsolete env key from documentation
 
