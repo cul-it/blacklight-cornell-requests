@@ -58,6 +58,32 @@ module BlacklightCornellRequests
       end
     end
 
+    context 'with no primary address' do
+      let(:patron_record) do
+        record = patron_record_base.dup
+        record['personal']['addresses'] = [
+          {
+            'primaryAddress' => false,
+            'addressLine1' => '456 Main St',
+            'city' => 'Ithaca',
+            'region' => 'NY',
+            'postalCode' => '14850'
+          }
+        ]
+        record
+      end
+
+      it 'uses the first address' do
+        link = described_class.build(work, patron)
+        expect(link).to include('3859679=')
+        expect(link).to include('456 Main St')
+        expect(link).to include(CGI.escape('Ithaca'))
+        expect(link).to include(CGI.escape('NY'))
+        expect(link).to include(CGI.escape('14850'))
+        expect(link).to include(CGI.escape('Test User'))
+      end 
+    end
+
     context 'without address' do
       let(:patron_record) do
         record = patron_record_base.dup

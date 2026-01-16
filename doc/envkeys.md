@@ -9,7 +9,6 @@
 	DUMMY_VOYAGER_HOLDINGS=<URL to Rick's holdings service used for 'dummy' test app>
 	DUMMY_VOYAGER_GET_HOLDS
 	ILLIAD_URL=<URL to the ILLiad forms directory>
-	NETID_URL=<URL to the patron info/netid lookup service>
 	RAILS_ENV=<Rails environment (test, production, etc)>
 	TEST_FIRSTNAME=<patron first name used to run tests>
 	TEST_LASTNAME=<patron last name used to run tests>

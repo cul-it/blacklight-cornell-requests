@@ -1,5 +1,13 @@
 # Release Notes - blacklight-cornell-requests
 
+## [5.4.1] - 2026-01-16
+### Changed
+- Remove reference to obsolete env key from documentation
+
+### Fixed
+- Fix bug throwing an error when users have an address listed in FOLIO but no 'primary' address (DACCESS-800)
+- Fix missing search fields drop down in search bar (DACCESS-763)
+
 ## [5.4] - 2025-12-12
 ### Added
 - RSpec tests to improve code coverage (DACCESS-97)
