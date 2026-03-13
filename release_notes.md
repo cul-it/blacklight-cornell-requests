@@ -1,5 +1,10 @@
 # Release Notes - blacklight-cornell-requests
 
+## [5.4.2] - 2026-03-13
+
+### Added
+- Exclude Weill service points from list of pickup locations (DACCESS-849)
+
 ## [5.4.1] - 2026-01-16
 ### Changed
 - Remove reference to obsolete env key from documentation
