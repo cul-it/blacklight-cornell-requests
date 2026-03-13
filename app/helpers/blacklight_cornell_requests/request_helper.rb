@@ -83,10 +83,13 @@ module BlacklightCornellRequests
           #   1. pickupLocation == true
           #   2. discoveryDisplayName != 'Staff Use Only' (used to indicate internal SPs for request routing)
           #   3. discoveryDisplayName doesn't start with 'Special Program Delivery'
+          # New for March 2026 as per Tom Trutt: exclude new Weill service points from our display.
+          #   4. code doesn't include 'weill'
           points.select! do |p|
             p['pickupLocation'] &&
             p['discoveryDisplayName'] != 'Staff Use Only' &&
-            !(p['discoveryDisplayName'] =~ /^Special Program Delivery/)
+            !(p['discoveryDisplayName'] =~ /^Special Program Delivery/) &&
+            !(p['code'] =~ /weill/)
           end
           result = points.map do |p|
             {
