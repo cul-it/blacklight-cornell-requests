@@ -81,11 +81,12 @@ module BlacklightCornellRequests
     describe '#pickup_locations' do
       let(:servicepoints) do
         [
-          { 'discoveryDisplayName' => 'Africana', 'id' => '7c5abc9f-f3d7-4856-b8d7-6712462ca007', 'pickupLocation' => true },
-          { 'discoveryDisplayName' => 'Staff Use Only', 'id' => 'x', 'pickupLocation' => true },
+          { 'discoveryDisplayName' => 'Africana', 'id' => '7c5abc9f-f3d7-4856-b8d7-6712462ca007', 'code' => 'afr,circ', 'pickupLocation' => true },
+          { 'discoveryDisplayName' => 'Staff Use Only', 'id' => 'x', 'code' => 'olin,circ', 'pickupLocation' => true },
           { 'discoveryDisplayName' => 'Special Program Delivery: Something', 'id' => 'y', 'pickupLocation' => true },
           { 'discoveryDisplayName' => 'Catherwood ILR', 'id' => 'ab1fce49-e832-41a4-8afc-7179a62332e2', 'pickupLocation' => true },
-          { 'discoveryDisplayName' => 'No Pickup', 'id' => 'z', 'pickupLocation' => false }
+          { 'discoveryDisplayName' => 'No Pickup', 'id' => 'z', 'pickupLocation' => false },
+          { 'discoveryDisplayName' => 'Weill', 'id' => '760beccd-362d-45b6-bfae-639565a877f2', 'code' => 'weill,circ', 'pickupLocation' => true }
         ]
       end
 
@@ -112,6 +113,11 @@ module BlacklightCornellRequests
         expect(result.any? { |r| r[:name] == 'Staff Use Only' }).to be_falsey
         expect(result.any? { |r| r[:name].start_with?('Special Program Delivery') }).to be_falsey
         expect(result.any? { |r| r[:name] == 'No Pickup' }).to be_falsey
+      end
+
+      it 'excludes Weill service points' do
+        result = helper.pickup_locations
+        expect(result.any? { |r| r[:name] == 'Weill' }).to be_falsey
       end
 
       it 'returns an empty array if RestClient raises an exception' do
