@@ -184,23 +184,6 @@ module BlacklightCornellRequests
       # fulfill them. The most expedient way to remove the old BD approach from the system is to always return
       # false for method availability.
       return false
-
-      # Unfortunately, the rules governing which patron groups are eligible to use BD
-      # are not programmatically accessible. Thus, they are hard-coded here for your
-      # enjoyment (based on a list provided by Caitlin on 7/1/21). See also
-      # the logic for ILL below. TODO: unify these two in a separate function. They're the same
-      bd_patron_group_ids = [
-        '503a81cd-6c26-400f-b620-14c08943697c',  # faculty
-        'ad0bc554-d5bc-463c-85d1-5562127ae91b',  # graduate
-        '3684a786-6671-4268-8ed0-9db82ebca60b',  # staff
-        'bdc2b6d4-5ceb-4a12-ab46-249b9a68473e'   # undergraduate
-      ]
-
-      # BD shouldn't be available if an item is available locally. The {items: {avail: x}} object is
-      # present if there is a positive value x for number of available items, but absent otherwise.
-      available_locally = holdings.values.any? { |h| h['circ'] && !h.dig('items', 'avail').nil? }
-
-      bd_patron_group_ids.include?(patron.group) && !available_locally
     end
   end
 
@@ -247,6 +230,7 @@ module BlacklightCornellRequests
       if item.regular_loan? || item.day_loan?
         allowed_statuses = [
           'Aged to lost',
+          'Awaiting pickup',
           'Checked out',
           'Claimed returned',
           'Declared lost',
