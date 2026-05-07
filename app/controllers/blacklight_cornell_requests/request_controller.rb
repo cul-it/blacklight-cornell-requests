@@ -65,15 +65,12 @@ module BlacklightCornellRequests
       # added rescue for DISCOVERYACCESS-5863
       begin
         _, @document = search_service.fetch @id
-        # Rails.logger.debug "mjc12test: doc: #{@document.inspect}"
       rescue Blacklight::Exceptions::RecordNotFound => e
         Rails.logger.debug("******* " + e.inspect)
         flash[:notice] = I18n.t('blacklight.search.errors.invalid_solr_id')
         redirect_to '/catalog'
         return
       end
-      # @document = @document
-      # Rails.logger.debug "mjc12test: document = #{@document.inspect}"
       @scan = params[:format].present? && params[:format] == "scan" ? "yes" : ""
       work_metadata = Work.new(@id, @document)
       # Create an array of all the item records associated with the bibid
@@ -89,16 +86,6 @@ module BlacklightCornellRequests
           end
         end
       end
-
-      # This isn't likely to happen, because the Request item button should be suppressed, but if there's
-      # a work with only one item and that item is inactive, we need to redirect because the items array
-      # will be empty.
-      # Rails.logger.debug "mjc12test: items: #{items}"
-      # if @document['items_json'].present? && eval(@document['items_json']).size == 1 && items.empty?
-      #   flash[:alert] = 'There are no items available to request for this title.'
-      #   redirect_to "/catalog/#{params['bibid']}"
-      #   return
-      # end
 
       @ti = work_metadata.title
       @ill_link = work_metadata.ill_link
@@ -149,18 +136,6 @@ module BlacklightCornellRequests
 
       enabled_request_methods = DeliveryMethod.enabled_methods
       requester = Patron.new(user)
-      # borrow_direct = CULBorrowDirect.new(requester, work_metadata)
-      # We have the following delivery methods to evaluate (at most) for each item:
-      # L2L, BD, ILL, Hold, Recall, Patron-driven acquisition, Purchase request
-      # ScanIt, Ask a librarian, ask at circ desk
-      #
-      # For the FOLIO methods (L2L, Hold, Recall), we can use the cul-folio-edge
-      # gem to determine if they can be used (based on patron group, material type,
-      # loan type, and location)
-      #
-      # For BD, do a single call to the BD API for the bib-level ISBN (NOT for each item)
-      #
-      # For PDA?
 
       # The options hash has the following structure:
       # options = { DeliveryMethod => [items] }
@@ -207,16 +182,7 @@ module BlacklightCornellRequests
       end
       ############ END TEMPORARY HANDLING CODE FOR MICROFICHE AT ANNEX #########
 
-      # Rails.logger.debug "mjc12test: items: #{items}"
       items.each do |i|
-        # rp = {}
-        # policy_key = "#{i.circ_group}-#{requester.group}-#{i.type['id']}"
-        # if policy_hash[policy_key]
-        #   rp = policy_hash[policy_key]
-        # else
-        #   rp = RequestPolicy.policy(i.circ_group, requester.group, i.type['id'])
-        #   policy_hash[policy_key] = rp
-        # end
         options = update_options(i, options, requester)
       end
 
@@ -319,8 +285,6 @@ module BlacklightCornellRequests
     def update_options(item, options, patron)
       available_folio_methods = DeliveryMethod.available_folio_methods(item, patron)
       Rails.logger.debug "mjc12test5: AFM: #{available_folio_methods}"
-      # Rails.logger.debug "mjc12test: item is #{item.inspect}"
-
       options[ILL] << item if ILL.available?(item, patron)
       options[L2L] << item if L2L.enabled? && available_folio_methods.include?(:l2l)
       options[Hold].push(item) if Hold.enabled? && available_folio_methods.include?(:hold)
@@ -413,16 +377,6 @@ module BlacklightCornellRequests
       flash[:error] = errors.join('<br/>').html_safe if errors
 
       if errors.blank?
-      #   req = BlacklightCornellRequests::Request.new(params[:bibid])
-      #   # req.netid = request.env['REMOTE_USER']
-      #   # req.netid.sub! '@CORNELL.EDU', ''
-      #   req.netid = user
-      #   # If the holding_id = 'any', then set to blank. Voyager expects an empty value for 'any copy',
-      #   # but validation above expects a non-blank value!
-      #   if params[:holding_id] == 'any'
-      #     params[:holding_id] = ''
-      #   end
-
         # To submit a FOLIO request, we need:
         # 1. Okapi URL
         # 2. Okapi tenant
@@ -463,12 +417,6 @@ module BlacklightCornellRequests
           comments
         )
 
-      #   response = req.make_voyager_request params
-      #   if !response[:error].blank?
-      #     flash[:error] = response[:error]
-      #     render :partial => '/shared/flash_msg', :layout => false
-      #     return
-      #   end
         if response[:error].nil?
           # NOTE: the :flash=>'success' in this case is not setting the actual flash message,
           # but instead specifying a URL parameter that acts as a flag in Blacklight's show.html.erb view.
