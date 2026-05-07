@@ -150,9 +150,7 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      # temporary covid change
-      # options[:annex] ? [1, 2] : [2, 2]
-      [2, 4]
+      options[:annex] ? [1, 2] : [2, 2]
     end
 
     def self.available?(item, patron)
@@ -172,9 +170,7 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      # temporary covid change
-      # [3,5]
-      [7, 7]
+      [3,5]
     end
 
     # patron is a Patron instance; holdings is a holdings_json object from the bib record @document
