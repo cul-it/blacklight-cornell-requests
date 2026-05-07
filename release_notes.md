@@ -9,6 +9,7 @@
 ### Changed
 - Update Rails dependency to v8.x (DACCESS-741)
 - Allow versions of `cul-folio-edge` higher than 3.x
+- Revert delivery time estimates to pre-COVID values (DACCESS-29)
 
 ## [5.4.1] - 2026-01-16
 ### Changed
