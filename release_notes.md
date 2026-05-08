@@ -1,7 +1,6 @@
 # Release Notes - blacklight-cornell-requests
 
-## [IN PROGRESS]
-
+## [5.5] - 2026-05-08
 ### Added
 - Exclude Weill service points from list of pickup locations (DACCESS-849)
 - Allow BD/ILL requests for items with 'Awaiting pickup' status (DACCESS-651)

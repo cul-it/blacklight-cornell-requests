@@ -1,3 +1,3 @@
 module BlacklightCornellRequests
-  VERSION = '5.4.2'
+  VERSION = '5.5'
 end
