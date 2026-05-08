@@ -105,35 +105,6 @@ module BlacklightCornellRequests
         alternate: alternate_methods
       }
     end
-
-    # def self.loan_type(type_code)
-    #   return LOAN_TYPES[:nocirc] if nocirc_loan? type_code
-    #   return LOAN_TYPES[:day]    if day_loan? type_code
-    #   return LOAN_TYPES[:minute] if minute_loan? type_code
-    #   return LOAN_TYPES[:regular]
-    # end
-    #
-    # # Check whether a loan type is non-circulating
-    # def self.nocirc_loan?(loan_code)
-    #   [9].include? loan_code.to_i
-    # end
-    #
-    # def self.day_loan?(loan_code)
-    #   [1, 5, 6, 7, 8, 10, 11, 13, 14, 15, 17, 18, 19, 20, 21, 23, 24, 25, 28, 33].include? loan_code.to_i
-    # end
-    #
-    # def self.no_l2l_day_loan_types?(loan_code)
-    #   [10, 17, 23, 24].include? loan_code.to_i
-    # end
-    #
-    # # Check whether a loan type is a "minute" loan
-    # def self.minute_loan?(loan_code)
-    #   [12, 16, 22, 26, 27, 29, 30, 31, 32, 34, 35, 36, 37].include? loan_code.to_i
-    # end
-    #
-    # def self.regular_loan?(loan_code)
-    #   !nocirc_loan?(loan_code) && !minute_loan?(loan_code) && !day_loan?(loan_code)
-    # end
   end
 
   ###### Individual delivery method class definitions follow ########
@@ -150,9 +121,7 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      # temporary covid change
-      # options[:annex] ? [1, 2] : [2, 2]
-      [2, 4]
+      options[:annex] ? [1, 2] : [2, 2]
     end
 
     def self.available?(item, patron)
@@ -172,9 +141,7 @@ module BlacklightCornellRequests
     end
 
     def self.time(options = {})
-      # temporary covid change
-      # [3,5]
-      [7, 7]
+      [3,5]
     end
 
     # patron is a Patron instance; holdings is a holdings_json object from the bib record @document
@@ -184,23 +151,6 @@ module BlacklightCornellRequests
       # fulfill them. The most expedient way to remove the old BD approach from the system is to always return
       # false for method availability.
       return false
-
-      # Unfortunately, the rules governing which patron groups are eligible to use BD
-      # are not programmatically accessible. Thus, they are hard-coded here for your
-      # enjoyment (based on a list provided by Caitlin on 7/1/21). See also
-      # the logic for ILL below. TODO: unify these two in a separate function. They're the same
-      bd_patron_group_ids = [
-        '503a81cd-6c26-400f-b620-14c08943697c',  # faculty
-        'ad0bc554-d5bc-463c-85d1-5562127ae91b',  # graduate
-        '3684a786-6671-4268-8ed0-9db82ebca60b',  # staff
-        'bdc2b6d4-5ceb-4a12-ab46-249b9a68473e'   # undergraduate
-      ]
-
-      # BD shouldn't be available if an item is available locally. The {items: {avail: x}} object is
-      # present if there is a positive value x for number of available items, but absent otherwise.
-      available_locally = holdings.values.any? { |h| h['circ'] && !h.dig('items', 'avail').nil? }
-
-      bd_patron_group_ids.include?(patron.group) && !available_locally
     end
   end
 
@@ -247,6 +197,7 @@ module BlacklightCornellRequests
       if item.regular_loan? || item.day_loan?
         allowed_statuses = [
           'Aged to lost',
+          'Awaiting pickup',
           'Checked out',
           'Claimed returned',
           'Declared lost',

@@ -1,5 +1,15 @@
 # Release Notes - blacklight-cornell-requests
 
+## [5.5] - 2026-05-08
+### Added
+- Exclude Weill service points from list of pickup locations (DACCESS-849)
+- Allow BD/ILL requests for items with 'Awaiting pickup' status (DACCESS-651)
+
+### Changed
+- Update Rails dependency to v8.x (DACCESS-741)
+- Allow versions of `cul-folio-edge` higher than 3.x
+- Revert delivery time estimates to pre-COVID values (DACCESS-29)
+
 ## [5.4.1] - 2026-01-16
 ### Changed
 - Remove reference to obsolete env key from documentation
