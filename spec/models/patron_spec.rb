@@ -37,7 +37,6 @@ RSpec.describe BlacklightCornellRequests::Patron do
       expect(patron.netid).to eq(netid)
       expect(patron.record['id']).to eq('user-uuid')
       expect(patron.preferred_service_point).to eq('sp-uuid')
-      expect(patron.record['preferred_service_point']).to eq('sp-uuid')
     end
   end
 

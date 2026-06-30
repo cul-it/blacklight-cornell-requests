@@ -16,7 +16,6 @@ module BlacklightCornellRequests
       # @barcode = get_barcode(netid)
       # @group = patron_group
       @preferred_service_point = get_service_point
-      @record['preferred_service_point'] = @preferred_service_point
     end
 
     def get_folio_record
@@ -28,16 +27,12 @@ module BlacklightCornellRequests
 
       # TODO: add error handling
       CUL::FOLIO::Edge.patron_record(url, tenant, @token[:token], @netid)[:user]
-      # Rails.logger.debug "mjc12test: patron record for #{@netid}, #{url}, #{tenant}: #{account}"
-
-      # Rails.logger.debug("mjc12test: Got FOLIO account #{account.inspect}")
-      # render json: account
-      # account
     end
 
     # Use the FOLIO /service-points-users API to retrieve the patron's default service point ID,
     # if any
     def get_service_point
+      return nil unless @record
       url = "#{ENV['OKAPI_URL']}/service-points-users?query=userId==#{@record['id']}"
       Rails.logger.debug "mjc12test2: Using URL #{url}"
       headers = {
@@ -46,15 +41,13 @@ module BlacklightCornellRequests
         :accept => 'application/json',
       }
 
-      begin
-        response = RestClient.get(url, headers)
-        Rails.logger.debug "mjc12test: got PSP response #{JSON.parse(response.body)}"
-        JSON.parse(response.body).dig('servicePointsUsers', 0, 'defaultServicePointId')
-      rescue RestClient::ExceptionWithResponse => e
-        Rails.logger.debug "mjc12test: error #{e.response.code}"
-        Rails.logger.debug "mjc12test: error #{e.response.body}"
-        nil
-      end
+      response = RestClient.get(url, headers)
+      Rails.logger.debug "mjc12test: got PSP response #{JSON.parse(response.body)}"
+      JSON.parse(response.body).dig('servicePointsUsers', 0, 'defaultServicePointId')
+    rescue RestClient::ExceptionWithResponse => e
+      Rails.logger.debug "mjc12test: error #{e.response.code}"
+      Rails.logger.debug "mjc12test: error #{e.response.body}"
+      nil
     end
 
     def barcode
@@ -62,12 +55,12 @@ module BlacklightCornellRequests
     end
 
     def group
-      @record['patronGroup']
+      @record && @record['patronGroup']
     end
 
     def display_name
-      personal_name = @record['personal']
-      if personal_name.present?
+      personal_name = @record && @record['personal']
+      if personal_name
         [personal_name['firstName'], personal_name['lastName']].join(' ').strip
       else
         ''

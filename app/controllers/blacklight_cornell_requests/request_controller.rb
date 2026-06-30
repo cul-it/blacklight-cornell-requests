@@ -259,9 +259,9 @@ module BlacklightCornellRequests
       @mann_special_delivery_link = MannSpecialDeliveryLinkBuilder.build(work_metadata, requester)
       @scanit_link = work_metadata.scanit_link
       @netid = user
-      @patron = BlacklightCornellRequests::Patron.new(@netid).record
+      @patron = BlacklightCornellRequests::Patron.new(@netid)
 
-      @name = "#{@patron['personal']['firstName']} #{@patron['personal']['lastName']}"
+      @name = @patron.display_name()
 
       @volume = params[:volume]
       @fod_data = get_fod_data user

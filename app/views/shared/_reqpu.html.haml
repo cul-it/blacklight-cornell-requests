@@ -6,7 +6,7 @@
       %option(value='') -- Select a location --
       - pickup_locations.each do |p|
         -# NOTE: Options are now defined in request_helper.rb
-        %option{:value => p[:id], 'data-bd-code': p[:bd_code], :selected => p[:id] == @patron['preferred_service_point']}
+        %option{:value => p[:id], 'data-bd-code': p[:bd_code], :selected => p[:id] == @patron.preferred_service_point}
           = p[:name]
       - special_delivery_options.each do |special_option|
         %option{:value => special_option[:value], 'data-bd-code': special_option[:bd_value]} #{special_option[:label]}
