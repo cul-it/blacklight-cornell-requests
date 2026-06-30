@@ -53,8 +53,10 @@ module BlacklightCornellRequests
       response = RestClient.get(url, headers)
       JSON.parse(response.body).dig('servicePointsUsers', 0, 'defaultServicePointId')
     rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.debug "mjc12test: error #{e.response.code}"
-      Rails.logger.debug "mjc12test: error #{e.response.body}"
+      Rails.logger.error "Requests: Failed to retrieve default service point for user #{@netid} (#{e.response&.code})"
+      nil
+    rescue StandardError => e
+      Rails.logger.error "Requests: Unexpected error retrieving default service point for user #{@netid} (#{e.class}: #{e.message})"
       nil
     end
 
