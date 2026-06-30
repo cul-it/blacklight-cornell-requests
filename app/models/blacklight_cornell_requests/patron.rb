@@ -13,8 +13,6 @@ module BlacklightCornellRequests
     def initialize(netid)
       @netid = netid
       @record = get_folio_record
-      # @barcode = get_barcode(netid)
-      # @group = patron_group
       @preferred_service_point = get_service_point
     end
 
@@ -23,10 +21,21 @@ module BlacklightCornellRequests
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
       @token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
-      # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
 
-      # TODO: add error handling
-      CUL::FOLIO::Edge.patron_record(url, tenant, @token[:token], @netid)[:user]
+      response = CUL::FOLIO::Edge.patron_record(url, tenant, @token[:token], 'zvbxrpl')
+      user_record = response && response[:user]
+      unless user_record
+        Rails.logger.warn "Requests: No FOLIO patron record found for netid #{@netid}"
+        return nil
+      end
+
+      user_record
+    rescue RestClient::ExceptionWithResponse => e
+      Rails.logger.error "Requests: Failed to retrieve FOLIO patron record for netid #{@netid} (#{e.response&.code})"
+      nil
+    rescue StandardError => e
+      Rails.logger.error "Requests: Unexpected error retrieving FOLIO patron record for netid #{@netid} (#{e.class}: #{e.message})"
+      nil
     end
 
     # Use the FOLIO /service-points-users API to retrieve the patron's default service point ID,
@@ -34,7 +43,7 @@ module BlacklightCornellRequests
     def get_service_point
       return nil unless @record
       url = "#{ENV['OKAPI_URL']}/service-points-users?query=userId==#{@record['id']}"
-      Rails.logger.debug "mjc12test2: Using URL #{url}"
+
       headers = {
         'X-Okapi-Tenant' => ENV['OKAPI_TENANT'],
         'x-okapi-token' => @token[:token],
@@ -42,7 +51,6 @@ module BlacklightCornellRequests
       }
 
       response = RestClient.get(url, headers)
-      Rails.logger.debug "mjc12test: got PSP response #{JSON.parse(response.body)}"
       JSON.parse(response.body).dig('servicePointsUsers', 0, 'defaultServicePointId')
     rescue RestClient::ExceptionWithResponse => e
       Rails.logger.debug "mjc12test: error #{e.response.code}"
