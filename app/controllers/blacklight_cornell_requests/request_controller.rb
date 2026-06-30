@@ -135,7 +135,7 @@ module BlacklightCornellRequests
       end
 
       enabled_request_methods = DeliveryMethod.enabled_methods
-      requester = Patron.new(user)
+      @patron = Patron.new(user)
 
       # The options hash has the following structure:
       # options = { DeliveryMethod => [items] }
@@ -167,10 +167,8 @@ module BlacklightCornellRequests
         holdings_data&.dig('location', 'code') == 'acc,anx' ||
         matched_item&.dig('location', 'code') == 'acc,anx'
 
-      patron = BlacklightCornellRequests::Patron.new(user)
-
       @microfiche_link = 'https://cornell.libwizard.com/f/annex?'
-      @microfiche_link += "4661140=#{patron.display_name}" # name
+      @microfiche_link += "4661140=#{@patron.display_name}" # name
       @microfiche_link += "&4661145=#{user}" # netid or 'visitor'
       @microfiche_link += "&4661162=#{@document['title_display']}" # title
       @microfiche_link += "&4661160=#{holdings_data['call']}" if holdings_data.present? # call number
@@ -183,7 +181,7 @@ module BlacklightCornellRequests
       ############ END TEMPORARY HANDLING CODE FOR MICROFICHE AT ANNEX #########
 
       items.each do |i|
-        options = update_options(i, options, requester)
+        options = update_options(i, options, @patron)
       end
 
       # items_json = JSON.parse(@document['items_json']).values[0]
@@ -196,7 +194,7 @@ module BlacklightCornellRequests
       # all the ISBNs?
 
       # BD.available? checks to see whether an item is available locally -- if it is, we can't use BD
-      if BD.available?(requester, holdings)
+      if BD.available?(@patron, holdings)
         @bd_id = bd_requestable_id(isbns[0])
         Rails.logger.debug "mjc12a: got bd_id #{@bd_id}"
         options[BD] << @bd_id
@@ -256,10 +254,9 @@ module BlacklightCornellRequests
       @isbn = work_metadata.isbn
       @pub_info = work_metadata.pub_info
       @ill_link = work_metadata.ill_link
-      @mann_special_delivery_link = MannSpecialDeliveryLinkBuilder.build(work_metadata, requester)
+      @mann_special_delivery_link = MannSpecialDeliveryLinkBuilder.build(work_metadata, @patron)
       @scanit_link = work_metadata.scanit_link
       @netid = user
-      @patron = BlacklightCornellRequests::Patron.new(@netid)
 
       @name = @patron.display_name()
 
