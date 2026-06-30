@@ -22,7 +22,7 @@ module BlacklightCornellRequests
       tenant = ENV['OKAPI_TENANT']
       @token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
 
-      response = CUL::FOLIO::Edge.patron_record(url, tenant, @token[:token], 'zvbxrpl')
+      response = CUL::FOLIO::Edge.patron_record(url, tenant, @token[:token], @netid)
       user_record = response && response[:user]
       unless user_record
         Rails.logger.warn "Requests: No FOLIO patron record found for netid #{@netid}"
