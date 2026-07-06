@@ -1,6 +1,6 @@
 # Release Notes - blacklight-cornell-requests
 
-## [IN PROGRESS]
+## [5.5.1] - 2026-07-06
 ### Fixed
 - Code will gracefully fail if user does not have a FOLIO account (DACCESS-523)
 
