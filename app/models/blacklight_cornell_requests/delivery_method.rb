@@ -25,19 +25,12 @@ module BlacklightCornellRequests
     # Use the cul-folio-edge gem to determine which FOLIO delivery methods are available for the
     # item/patron combo specified
     def self.available_folio_methods(item, patron)
+      return [] unless item && patron.record
+
       # Get a FOLIO Okapi token for further requests
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
       token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
-
-      Rails.logger.debug "mjc12test: Trying to get AFM options ..."
-      Rails.logger.debug "mjc12test: tenant: #{tenant}"
-      Rails.logger.debug "mjc12test: token: #{token[:token]}"
-      Rails.logger.debug "mjc12test: patron group: #{patron.record['patronGroup']}"
-      Rails.logger.debug "mjc12test: item type: #{item.type&.dig('id')}"
-      Rails.logger.debug "mjc12test: item loan type: #{item&.loan_type['id']}"
-      Rails.logger.debug "mjc12test: item location: #{item&.location['id']}"
-      Rails.logger.debug "mjc12test: item status: #{item&.status}"
 
       # TODO: add error handling
       result = CUL::FOLIO::Edge.request_options(

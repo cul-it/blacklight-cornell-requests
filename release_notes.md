@@ -1,5 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
+## [IN PROGRESS]
+### Fixed
+- Code will gracefully fail if user does not have a FOLIO account (DACCESS-523)
+
 ## [5.5] - 2026-05-08
 ### Added
 - Exclude Weill service points from list of pickup locations (DACCESS-849)
