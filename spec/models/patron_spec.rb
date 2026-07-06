@@ -37,7 +37,6 @@ RSpec.describe BlacklightCornellRequests::Patron do
       expect(patron.netid).to eq(netid)
       expect(patron.record['id']).to eq('user-uuid')
       expect(patron.preferred_service_point).to eq('sp-uuid')
-      expect(patron.record['preferred_service_point']).to eq('sp-uuid')
     end
   end
 
@@ -69,10 +68,63 @@ RSpec.describe BlacklightCornellRequests::Patron do
   end
 
   describe '#get_service_point' do
-    it 'returns nil if RestClient raises an exception' do
-      allow(RestClient).to receive(:get).and_raise(RestClient::ExceptionWithResponse.new(double(code: 500, body: 'error')))
+    it 'returns nil when no default service point is found' do
+      allow(RestClient).to receive(:get).and_return(double(body: { 'servicePointsUsers' => [{}] }.to_json))
+
       patron = described_class.new(netid)
-      expect(patron.get_service_point).to be_nil
+      expect(patron.preferred_service_point).to be_nil
+    end
+
+    it 'returns nil if RestClient raises an exception' do
+      response = double(code: 500)
+      allow(RestClient).to receive(:get).and_raise(RestClient::ExceptionWithResponse.new(response))
+
+      expect(Rails.logger).to receive(:error).with(/Failed to retrieve default service point for user #{netid} \(500\)/)
+
+      patron = described_class.new(netid)
+      expect(patron.preferred_service_point).to be_nil
+    end
+
+    it 'logs an error and returns nil on unexpected exceptions' do
+      allow(RestClient).to receive(:get).and_raise(StandardError, 'boom')
+
+      expect(Rails.logger).to receive(:error).with(/Unexpected error retrieving default service point for user #{netid} \(StandardError: boom\)/)
+
+      patron = described_class.new(netid)
+      expect(patron.preferred_service_point).to be_nil
+    end
+  end
+
+  describe '#get_folio_record' do
+    it 'logs a warning and returns nil when no patron record is found' do
+      allow(CUL::FOLIO::Edge).to receive(:patron_record).and_return({})
+
+      expect(Rails.logger).to receive(:warn).with(/No FOLIO patron record found for netid #{netid}/)
+
+      patron = described_class.new(netid)
+      expect(patron.record).to be_nil
+      expect(patron.preferred_service_point).to be_nil
+    end
+
+    it 'logs an error and returns nil when the API request fails' do
+      response = double(code: 500)
+      allow(CUL::FOLIO::Edge).to receive(:patron_record).and_raise(RestClient::ExceptionWithResponse.new(response))
+
+      expect(Rails.logger).to receive(:error).with(/Failed to retrieve FOLIO patron record for netid #{netid} \(500\)/)
+
+      patron = described_class.new(netid)
+      expect(patron.record).to be_nil
+      expect(patron.preferred_service_point).to be_nil
+    end
+
+    it 'logs an error and returns nil on unexpected exceptions' do
+      allow(CUL::FOLIO::Edge).to receive(:patron_record).and_raise(StandardError, 'boom')
+
+      expect(Rails.logger).to receive(:error).with(/Unexpected error retrieving FOLIO patron record for netid #{netid} \(StandardError: boom\)/)
+
+      patron = described_class.new(netid)
+      expect(patron.record).to be_nil
+      expect(patron.preferred_service_point).to be_nil
     end
   end
 end

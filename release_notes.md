@@ -1,5 +1,12 @@
 # Release Notes - blacklight-cornell-requests
 
+## [5.5.1] - 2026-07-06
+### Fixed
+- Code will gracefully fail if user does not have a FOLIO account (DACCESS-523)
+
+### Changed
+- sqlite3 library version updated for Rails 8 support in RSpec tests
+
 ## [5.5] - 2026-05-08
 ### Added
 - Exclude Weill service points from list of pickup locations (DACCESS-849)

@@ -1,6 +1,4 @@
 - special_delivery_options = parsed_special_delivery(@fod_data)
--# - if @patron['preferred_service_point'].present?
-- Rails.logger.debug "mjc12test2: options #{pickup_locations}"
 .form-group.row
   %label.col-form-label.col-sm-2{:for => "pickup-locations"} Pick up at:
   .col-sm-10
@@ -8,11 +6,10 @@
       %option(value='') -- Select a location --
       - pickup_locations.each do |p|
         -# NOTE: Options are now defined in request_helper.rb
-        %option{:value => p[:id], 'data-bd-code': p[:bd_code], :selected => p[:id] == @patron['preferred_service_point']}
+        %option{:value => p[:id], 'data-bd-code': p[:bd_code], :selected => p[:id] == @patron.preferred_service_point}
           = p[:name]
-      - if special_delivery_options.present?
-        - special_delivery_options.each do |special_option|
-          %option{:value => special_option[:value], 'data-bd-code': special_option[:bd_value]} #{special_option[:label]}
+      - special_delivery_options.each do |special_option|
+        %option{:value => special_option[:value], 'data-bd-code': special_option[:bd_value]} #{special_option[:label]}
 - if special_delivery_options.present?
   %p NOTE: You are eligible for one or more special program delivery options. Select one of the 'Special Program Delivery' choices from the list above.
 = render :partial => 'shared/more_info'
