@@ -3,6 +3,7 @@ require_dependency 'blacklight_cornell_requests/application_controller'
 require 'date'
 require 'json'
 require 'repost'
+require 'reshare'
 require 'rest-client'
 require 'string' # ISBN extension to String class
 require 'securerandom'
