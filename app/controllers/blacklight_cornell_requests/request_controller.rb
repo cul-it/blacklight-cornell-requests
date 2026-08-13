@@ -33,14 +33,12 @@ module BlacklightCornellRequests
     # This may seem redundant, but it makes it easier to fetch the document from
     # various model classes
     def get_solr_doc(doc_id)
-      _, document = search_service.fetch doc_id
-      document
+      search_service.fetch(doc_id)
     end
 
     def auth_magic_request target=''
       id_format = params[:format].present? ? params[:bibid] + '.' + params[:format] : params[:bibid]
       session[:cuwebauth_return_path] = magic_request_path(id_format)
-      Rails.logger.debug "es287_log #{__FILE__} #{__LINE__}: #{magic_request_path(id_format).inspect}"
       if ENV['DEBUG_USER'] && Rails.env.development?
         magic_request target
       else
@@ -65,7 +63,7 @@ module BlacklightCornellRequests
 
       # added rescue for DISCOVERYACCESS-5863
       begin
-        _, @document = search_service.fetch @id
+        @document = search_service.fetch(@id)
       rescue Blacklight::Exceptions::RecordNotFound => e
         Rails.logger.debug("******* " + e.inspect)
         flash[:notice] = I18n.t('blacklight.search.errors.invalid_solr_id')
@@ -76,6 +74,7 @@ module BlacklightCornellRequests
       work_metadata = Work.new(@id, @document)
       # Create an array of all the item records associated with the bibid
       items = []
+
 
       holdings = JSON.parse(@document['holdings_json'] || '{}')
 
