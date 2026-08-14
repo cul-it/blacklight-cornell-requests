@@ -1,6 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
 ## [IN PROGRESS]
+### Changed
+- Support Blacklight 8 (breaks compatibility with Blacklight 7) (DACCESS-944)
+
 ### Fixed
 - Code properly handles eager loading of libraries (DACCESS-953)
 
