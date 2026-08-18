@@ -49,7 +49,7 @@ module BlacklightCornellRequests
         allow(controller).to receive(:search_state).and_return(double(to_h: {}, params: {}))
         allow_any_instance_of(RequestController)
           .to receive_message_chain(:search_service, :fetch)
-          .and_return([nil, { 'title_display' => 'Test Title' }]) # or a more complete document hash if needed
+          .and_return({ 'title_display' => 'Test Title' })
 
         head :magic_request, params: { bibid: bibid }
         expect(response).to have_http_status(:no_content)
@@ -62,7 +62,7 @@ module BlacklightCornellRequests
 
         allow_any_instance_of(RequestController)
           .to receive_message_chain(:search_service, :fetch)
-          .and_return([nil, doc])
+          .and_return(doc)
         get :magic_request, params: { bibid: bibid }
         expect(response).to render_template('microfiche')
       end
@@ -73,7 +73,7 @@ module BlacklightCornellRequests
         doc = document.merge('multivol_b' => true)
         allow_any_instance_of(RequestController)
           .to receive_message_chain(:search_service, :fetch)
-          .and_return([nil, doc])
+          .and_return(doc)
         allow(Volume).to receive(:volumes).and_return([
           double(enum: 'v.1', chron: '', year: '', select_option: nil, items: []),
           double(enum: 'v.2', chron: '', year: '', select_option: nil, items: [])
@@ -86,7 +86,7 @@ module BlacklightCornellRequests
         doc = document.merge('multivol_b' => true)
         allow_any_instance_of(RequestController)
           .to receive_message_chain(:search_service, :fetch)
-          .and_return([nil, doc])
+          .and_return(doc)
         # Stub Volume.volumes to return only one volume
         volumes = [
           double(enum: 'v.1', chron: '', year: '', select_option: nil, items: [])
@@ -126,7 +126,7 @@ module BlacklightCornellRequests
       before do
         allow_any_instance_of(RequestController)
           .to receive_message_chain(:search_service, :fetch)
-          .and_return([nil, document])
+          .and_return(document)
         allow(BlacklightCornellRequests::Patron).to receive(:new).and_return(patron_double)
         allow(DeliveryMethod).to receive(:enabled_methods).and_return([L2L, BD, MannSpecial, PDA, AskLibrarian])
         allow(DeliveryMethod).to receive(:sorted_methods).and_return({ fastest: { method: L2L, items: ['item1'] }, alternate: [{ method: BD, items: ['item2'] }] })
