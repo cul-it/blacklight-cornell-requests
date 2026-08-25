@@ -21,7 +21,7 @@ requests =
 
     # Listener for most types of requests
     $('#request-submit').click ->
-      $('#request-loading-spinner').spin('requesting')
+      $('#request-loading-spinner').removeClass('d-none')
       $('#request-submit').attr('disabled', 'disabled')
       requests.submitForm()
       return false
@@ -38,7 +38,7 @@ requests =
         length: 3,
         width: 2,
         radius: 6,
-      $('#request-loading-spinner').spin('requesting')
+      $('#request-loading-spinner').removeClass('d-none')
       requests.submitForm('bd')
       return false
 
@@ -150,7 +150,7 @@ requests =
       data: $('#req').serialize(),
       url:hu,
       success: (data) ->
-        $('#request-loading-spinner').spin(false)
+        $('#request-loading-spinner').addClass('d-none')
 
         # Ugly special condition wrangling for BorrowDirect messages,
         # which are _mostly_ not treated as ordinary flash messages!
