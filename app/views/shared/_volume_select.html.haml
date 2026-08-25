@@ -19,7 +19,9 @@
               Select volume
             %select#volume-selection.form-select{:name => "volume-selection", :data => {:request_path => magic_request_path(@id)}}
               = options_for_select({'Choose a volume...' => ''}.merge(@volumes.map { |v| [v.enumeration, v.select_option] }.to_h), @selected_volume)
-            %span{:id => 'request-loading-spinner', 'aria-hidden' => 'true'}
+            %span.spinner-border.text-danger.d-none.ms-2{:id => 'request-loading-spinner', :role => "status"}
+              %span.visually-hidden.sr-only
+                Loading...
         %div.col-sm-3.ill-link
           %p
             %strong

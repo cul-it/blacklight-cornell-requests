@@ -49,7 +49,7 @@ requests =
         length: 3,
         width: 2,
         radius: 6,
-      $('#request-loading-spinner').spin('requesting')
+      $('#request-loading-spinner').removeClass('d-none')
       requestPath = $(this).data('request-path')
       requests.redirectVolume($(this).val(), requestPath)
       return false
