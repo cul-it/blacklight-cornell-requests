@@ -5,6 +5,7 @@
 - Support Blacklight 8 (breaks compatibility with Blacklight 7) (DACCESS-944)
 - Refactored FOLIO request views to use a common template
 - Support for Bootstrap 5 (DACCESS-961)
+- Replaced old progress spinners with Boostrap 5 spinners (DACCESS-963)
 
 ### Fixed
 - Code properly handles eager loading of libraries (DACCESS-953)
