@@ -3,7 +3,7 @@
 -## the difference between it and L2L?)
 - Rails.logger.debug "mjc12test: itemstouse - #{@items}"
 -if (@items.present? && @items.length > 0)
-  .form-group.row
+  .row.mb-3
     .col-form-label.col-sm-2
       -if (@items.length > 1)
         Select a copy:
@@ -11,12 +11,12 @@
         This copy:
     .col-sm-10
       -@items.each do |i|
-        .radio
-          %label{ :for => "copy-#{i.id}"}
-            -if (@items.length == 1)
-              %input(id="copy-#{i.id}" class="copy-select" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="#{i.excluded_locations}" checked)
-            -else
-              %input(id="copy-#{i.id}" class="copy-select" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="#{i.excluded_locations}")
+        .form-check
+          -if (@items.length == 1)
+            %input.form-check-input.copy-select(id="copy-#{i.id}" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="#{i.excluded_locations}" checked)
+          -else
+            %input.form-check-input.copy-select(id="copy-#{i.id}" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="#{i.excluded_locations}")
+          %label.form-check-label{ :for => "copy-#{i.id}"}
             = "#{i.location['name']} #{i.enumeration} "
             - if i.copy_number
               = "c. #{i.copy_number} "

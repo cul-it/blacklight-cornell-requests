@@ -16,7 +16,7 @@
         Delivery time: 
         = delivery_estimate_display @estimate
     .clearfix
-      %a{:href => @microfiche_link, :class => 'btn btn-danger pull-left'}
+      %a{:href => @microfiche_link, :class => 'btn btn-danger float-start'}
         Go to the Annex microfiche request form
     -if @alternate_methods && @alternate_methods.count > 1
       = render :partial => 'shared/request_options'
@@ -24,4 +24,4 @@
       .form-alternative-action
         = succeed "." do
           If you need further help, please
-          =link_to 'Ask a Librarian','http://www.library.cornell.edu/get-help/ask'
+          =link_to 'Ask a Librarian','https://www.library.cornell.edu/get-help/ask'

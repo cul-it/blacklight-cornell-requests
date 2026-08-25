@@ -1,8 +1,8 @@
 - special_delivery_options = parsed_special_delivery(@fod_data)
-.form-group.row
+.row.mb-3
   %label.col-form-label.col-sm-2{:for => "pickup-locations"} Pick up at:
   .col-sm-10
-    %select#pickup-locations.form-control{:name => 'library_id'}
+    %select#pickup-locations.form-select{:name => 'library_id', 'aria-describedby': ('special-delivery-hint' if special_delivery_options.present?)}
       %option(value='') -- Select a location --
       - pickup_locations.each do |p|
         -# NOTE: Options are now defined in request_helper.rb
@@ -10,6 +10,7 @@
           = p[:name]
       - special_delivery_options.each do |special_option|
         %option{:value => special_option[:value], 'data-bd-code': special_option[:bd_value]} #{special_option[:label]}
-- if special_delivery_options.present?
-  %p NOTE: You are eligible for one or more special program delivery options. Select one of the 'Special Program Delivery' choices from the list above.
-= render :partial => 'shared/more_info'
+    - if special_delivery_options.present?
+      .form-text#special-delivery-hint
+        %div You are eligible for 'Special Program Delivery' - see choices from the list above.
+        %div= render :partial => 'shared/more_info'
