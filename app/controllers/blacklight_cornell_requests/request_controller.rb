@@ -261,6 +261,7 @@ module BlacklightCornellRequests
       @name = @patron.display_name()
 
       @volume = params[:volume]
+      session[:volume] = @volume
       @fod_data = get_fod_data user
       @items = fastest_method[:items]
 

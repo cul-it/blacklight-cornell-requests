@@ -1,9 +1,9 @@
 %div.form-alternative-action
   %h3
     Other delivery options
-  %div.col-sm-6.pl-0
-    %table.table.table-striped.table-bordered.request-options{:summary => "Other delivery options for requesting this item, with standard delivery times"}
-      %caption.sr-only
+  %div.col-sm-6.ps-0
+    %table.table.table-striped.table-bordered.request-options
+      %caption.visually-hidden
         Other delivery options for requesting this item, with standard delivery times
       %thead
         %tr
@@ -12,46 +12,45 @@
           %th{:scope => "col"}
             Delivery time
       - if @alternate_methods
-        - session[:volume] = @volume
         - @alternate_methods.each do |option|
           - if option[:method] == BlacklightCornellRequests::L2L
             %tr
               %td
-                = link_to request_l2l_path(@id), {:title => @ti} do
-                  %i.fa.fa-arrow-circle-right
+                = link_to request_l2l_path(@id) do
+                  %i.fa.fa-arrow-circle-right{'aria-hidden' => 'true'}
                   Cornell library to library
               %td
                 = delivery_estimate_display BlacklightCornellRequests::L2L.time
           - elsif option[:method] == BlacklightCornellRequests::BD
             %tr
               %td
-                = link_to request_bd_path(@id), {:title => @ti} do
-                  %i.fa.fa-arrow-circle-right
+                = link_to request_bd_path(@id) do
+                  %i.fa.fa-arrow-circle-right{'aria-hidden' => 'true'}
                   BorrowDirect
-              %td 
-                approximately 
+              %td
+                approximately
                 = delivery_estimate_display BlacklightCornellRequests::BD.time
           - elsif option[:method] == BlacklightCornellRequests::Hold
             %tr
               %td
-                = link_to request_hold_path(@id), {:title => @ti} do
-                  %i.fa.fa-arrow-circle-right
+                = link_to request_hold_path(@id) do
+                  %i.fa.fa-arrow-circle-right{'aria-hidden' => 'true'}
                   Hold
               %td
                 = delivery_estimate_display BlacklightCornellRequests::Hold.time
           - elsif option[:method] == BlacklightCornellRequests::Recall
             %tr
               %td
-                = link_to request_recall_path(@id), {:title => @ti} do
-                  %i.fa.fa-arrow-circle-right
+                = link_to request_recall_path(@id) do
+                  %i.fa.fa-arrow-circle-right{'aria-hidden' => 'true'}
                   Recall
               %td
                 = delivery_estimate_display BlacklightCornellRequests::Recall.time
           - elsif option[:method] == BlacklightCornellRequests::PurchaseRequest
             %tr
               %td
-                = link_to request_purchase_path(@id), {:title => @ti} do
-                  %i.fa.fa-arrow-circle-right
+                = link_to request_purchase_path(@id) do
+                  %i.fa.fa-arrow-circle-right{'aria-hidden' => 'true'}
                   Purchase request
               %td
                 = delivery_estimate_display BlacklightCornellRequests::PurchaseRequest.time
@@ -59,16 +58,16 @@
             - link = option[:ill_link] || request_ill_path(:bibid => @id, :volume => @volume)
             %tr
               %td
-                = link_to link, {:title => @ti} do
-                  %i.fa.fa-arrow-circle-right
+                = link_to link do
+                  %i.fa.fa-arrow-circle-right{'aria-hidden' => 'true'}
                   Interlibrary Loan
               %td
                 = delivery_estimate_display BlacklightCornellRequests::ILL.time
           - elsif option[:method] == BlacklightCornellRequests::AskCirculation
             %tr
               %td
-                = link_to request_circ_path(@id), {:title => @ti} do
-                  %i.fa.fa-arrow-circle-right
+                = link_to request_circ_path(@id) do
+                  %i.fa.fa-arrow-circle-right{'aria-hidden' => 'true'}
                   Check circulation
               %td
                 This item is a short-term loan. Please check at the circulation desk.
@@ -76,28 +75,28 @@
             - link = option[:scanit_link] || request_document_delivery_path(@id)
             %tr
               %td
-                = link_to link, {:title => @ti} do
-                  %i.fa.fa-arrow-circle-right
+                = link_to link do
+                  %i.fa.fa-arrow-circle-right{'aria-hidden' => 'true'}
                   ScanIt
               %td
                 = delivery_estimate_display BlacklightCornellRequests::DocumentDelivery.time
           - elsif option[:method] == BlacklightCornellRequests::PDA
             %tr
               %td
-                = link_to request_pda_path(@id), {:title => @ti} do
-                  %i.fa.fa-arrow-circle-right
+                = link_to request_pda_path(@id) do
+                  %i.fa.fa-arrow-circle-right{'aria-hidden' => 'true'}
                   Purchase request
               %td
                 = delivery_estimate_display BlacklightCornellRequests::PDA.time
           - elsif option[:method] == BlacklightCornellRequests::MannSpecial
             %tr
               %td
-                = link_to request_mann_special_path(@id), {:title => @ti} do
-                  %i.fa.fa-arrow-circle-right
+                = link_to request_mann_special_path(@id) do
+                  %i.fa.fa-arrow-circle-right{'aria-hidden' => 'true'}
                   Mann Special Collections
               %td
                 = delivery_estimate_display BlacklightCornellRequests::MannSpecial.time
 %p.form-alternative-action
   = succeed "." do
     If you need further help, please
-    =link_to 'Ask a Librarian','http://www.library.cornell.edu/get-help/ask'
+    =link_to 'Ask a Librarian','https://www.library.cornell.edu/get-help/ask'
