@@ -21,7 +21,7 @@
       = author_display
     %form#req{:class => form_class, :method => 'post', :action => make_folio_request_path(:bibid => @id)}
       -if @volumes.present? && @volumes.count > 1
-        .form-group.row
+        .row.mb-3
           %label.col-form-label.col-sm-2{:for => "volume-selection"}
             Current Volume:
           .col-sm-10.delivery-estimate
@@ -36,27 +36,27 @@
       %input(type="hidden" name="items_json" value="#{@document['items_json']}")
       = render :partial => item_selection_partial
       = render :partial => 'shared/reqpu'
-      .form-group.row
+      .row.mb-3
         %label.col-form-label.col-sm-2{:for => 'reqcomments'} Notes to library staff:
         .col-sm-10
           %textarea(name="reqcomments" id="reqcomments" class="form-control")
       = render :partial => 'shared/request_date' if show_cancel_date
       - if @estimate.present?
-        .form-group.row
+        .row.mb-3
           .col-form-label.col-sm-2 Delivery time:
           .col-sm-10.delivery-estimate
             Approximately
             = delivery_estimate_display @estimate
       -if @alternate_methods && @alternate_methods.count > 1
         %div.clearfix
-          %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="#{submit_label}")
+          %input#request-submit.btn.btn-danger.float-start(type="submit" name="submit" value="#{submit_label}")
           %span{:id => 'request-loading-spinner'}
         = render :partial => 'shared/request_options'
       -else
         %div.clearfix
-          %input#request-submit.btn.btn-danger.pull-left(type="submit" name="submit" value="#{submit_label}")
-          %div.accordion-heading.request-options.pull-left.form-alternative-action
+          %input#request-submit.btn.btn-danger.float-start(type="submit" name="submit" value="#{submit_label}")
+          %div.accordion-heading.request-options.float-start.form-alternative-action
             or
-            =link_to 'Ask a Librarian','http://www.library.cornell.edu/get-help/ask'
+            =link_to 'Ask a Librarian','https://www.library.cornell.edu/get-help/ask'
             for help.
 
