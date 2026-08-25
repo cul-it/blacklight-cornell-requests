@@ -54,11 +54,18 @@ requests =
       requests.redirectVolume($(this).val(), requestPath)
       return false
 
+    # Listeners for pickup/copy selection. Bound for all request forms so
+    # the submit button doesn't stay disabled after the user corrects a validation error.
+    $('#pickup-locations').change ->
+      requests.clearValidation()
+
+    $('.copy-select').change ->
+      requests.clearValidation()
+
   # Event listeners for library to library (l2l) location suppression
   bindPickupEventListeners: () ->
     # Listener for copy selection
     $('.copy-select').change ->
-      requests.clearValidation()
       # Use JSON.parse to convert string to array
       excludedPickups = JSON.parse($(this).attr('data-exclude-location'))
       # Save the currently selected pickup location (if any)
@@ -66,10 +73,6 @@ requests =
 
       $('#pickup-locations').html(requests.originalPickupList)
       requests.suppressPickup(excludedPickups, selectedPickup)
-
-    # Listener for pickup location selection
-    $('#pickup-locations').change ->
-      requests.clearValidation()
 
   # Confirm we're dealing with a library to library request
   # before firing pickup event listeners
