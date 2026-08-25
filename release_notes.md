@@ -3,6 +3,7 @@
 ## [IN PROGRESS]
 ### Changed
 - Support Blacklight 8 (breaks compatibility with Blacklight 7) (DACCESS-944)
+- Refactored FOLIO request views to use a common template
 
 ### Fixed
 - Code properly handles eager loading of libraries (DACCESS-953)
