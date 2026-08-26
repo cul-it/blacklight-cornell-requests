@@ -76,6 +76,27 @@ module BlacklightCornellRequests
         result = helper.parsed_special_delivery(params)
         expect(result.first[:bd_value]).to eq('')
       end
+
+      it 'filters out additional programs listed in DISABLE_SPECIAL_PROGRAMS' do
+        ENV['DISABLE_SPECIAL_PROGRAMS'] = '250, 400'
+        params = {
+          'programs' => [
+            { 'location_id' => 250, 'name' => 'NYC-CFEM', 'bd_loc_code' => 'A' },
+            { 'location_id' => 300, 'name' => 'Other Program' },
+            { 'location_id' => 400, 'name' => 'NoCode' }
+          ]
+        }
+        result = helper.parsed_special_delivery(params)
+        expect(result.map { |r| r[:value] }).to eq([300])
+      ensure
+        ENV.delete('DISABLE_SPECIAL_PROGRAMS')
+      end
+
+      it 'ignores DISABLE_SPECIAL_PROGRAMS when unset' do
+        ENV.delete('DISABLE_SPECIAL_PROGRAMS')
+        params = { 'programs' => [{ 'location_id' => 250, 'name' => 'NYC-CFEM', 'bd_loc_code' => 'A' }] }
+        expect(helper.parsed_special_delivery(params).map { |r| r[:value] }).to eq([250])
+      end
     end
 
     describe '#pickup_locations' do
