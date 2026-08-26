@@ -1,0 +1,62 @@
+-# Shared layout for FOLIO (hold/recall/page) request forms.
+-# Locals:
+-#   request_action          - value of the hidden "request_action" field ("Hold", "Page", "Recall"); also drives the page heading
+-#   item_selection_partial  - partial used to pick a copy/holding ('shared/reqac', 'shared/l2lac')
+-#   form_class              - CSS class on the #req form; 'l2l-request' enables pickup-location
+-#                             suppression JS (see requests.js.coffee#checkForL2L)
+-#   show_cancel_date        - whether to render the "cancel after" date options (for holds and recalls)
+-#   submit_label            - text for the submit button
+-title = the_vernaculator(@document['title_display'], @document['title_vern_display'])
+-subtitle = the_vernaculator(@document['subtitle_display'], @document['subtitle_vern_display'])
+-page_title = folio_request_heading(request_action, @netid)
+-pickup_locations = pickup_locations
+- @selected_volume = params[:volume]
+= render :partial => 'shared/back_to_item'
+%h2.request-type
+  = page_title
+%div.card
+  %div.card-body
+    %h2.item-title-request.blacklight-title_display=title
+    %div.request-author
+      = author_display
+    %form#req{:class => form_class, :method => 'post', :action => make_folio_request_path(:bibid => @id)}
+      -if @volumes.present? && @volumes.count > 1
+        .row.mb-3
+          %label.col-form-label.col-sm-2{:for => "volume-selection"}
+            Current Volume:
+          .col-sm-10.delivery-estimate
+            = render :partial =>'shared/volume_select'
+      %input(type="hidden" name="bid" value="#{@id}" id="bid")
+      %input(type="hidden" name="request_action" value="#{request_action}" id="request_action")
+      %input(type="hidden" name="instance_id" value="#{@document['instance_id']}")
+      -# The following is a hack. We need the holdings record id in order to place a request
+      -# in FOLIO Lotus, but that information is awkward to get because we don't know the
+      -# selected item ID until the user submits this form. Thus, we pass along the items_json
+      -# block as a param and then use that to figure out which holdings ID to use back in the controller.
+      %input(type="hidden" name="items_json" value="#{@document['items_json']}")
+      = render :partial => item_selection_partial
+      = render :partial => 'shared/reqpu'
+      .row.mb-3
+        %label.col-form-label.col-sm-2{:for => 'reqcomments'} Notes to library staff:
+        .col-sm-10
+          %textarea(name="reqcomments" id="reqcomments" class="form-control")
+      = render :partial => 'shared/request_date' if show_cancel_date
+      - if @estimate.present?
+        .row.mb-3
+          .col-form-label.col-sm-2 Delivery time:
+          .col-sm-10.delivery-estimate
+            Approximately
+            = delivery_estimate_display @estimate
+      -if @alternate_methods && @alternate_methods.count > 1
+        %div.clearfix
+          %input#request-submit.btn.btn-danger.float-start(type="submit" name="submit" value="#{submit_label}")
+          = render :partial => 'shared/loading_spinner'
+        = render :partial => 'shared/request_options'
+      -else
+        %div.clearfix
+          %input#request-submit.btn.btn-danger.float-start(type="submit" name="submit" value="#{submit_label}")
+          %div.accordion-heading.request-options.float-start.form-alternative-action
+            or
+            =link_to 'Ask a Librarian','https://www.library.cornell.edu/get-help/ask'
+            for help.
+
