@@ -92,6 +92,23 @@ module BlacklightCornellRequests
         ENV.delete('DISABLE_SPECIAL_PROGRAMS')
       end
 
+      it 'filters out UUIDs listed in DISABLE_SPECIAL_PROGRAMS' do
+        disabled_id = '7c5abc9f-f3d7-4856-b8d7-6712462ca007'
+        ENV['DISABLE_SPECIAL_PROGRAMS'] = disabled_id
+        params = {
+          'programs' => [
+            { 'location_id' => disabled_id, 'name' => 'Disabled Program' },
+            { 'location_id' => 'ab1fce49-e832-41a4-8afc-7179a62332e2', 'name' => 'Enabled Program' }
+          ]
+        }
+
+        expect(helper.parsed_special_delivery(params).map { |r| r[:value] }).to eq([
+          'ab1fce49-e832-41a4-8afc-7179a62332e2'
+        ])
+      ensure
+        ENV.delete('DISABLE_SPECIAL_PROGRAMS')
+      end
+
       it 'ignores DISABLE_SPECIAL_PROGRAMS when unset' do
         ENV.delete('DISABLE_SPECIAL_PROGRAMS')
         params = { 'programs' => [{ 'location_id' => 250, 'name' => 'NYC-CFEM', 'bd_loc_code' => 'A' }] }

@@ -1,6 +1,9 @@
 # Release Notes - blacklight-cornell-requests
 
 ## [IN PROGRESS]
+### Added
+- ENV key to selectively disable Special Delivery options from appearing in the pickup locations list (DACCESS-976)
+
 ### Changed
 - Support Blacklight 8 (breaks compatibility with Blacklight 7) (DACCESS-944)
 - Refactored FOLIO request views to use a common template

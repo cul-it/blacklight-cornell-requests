@@ -41,7 +41,7 @@ The service keys that work at present are:
 
 Special program delivery options (the "Special Program Delivery: ..." choices sourced from the Special Delivery API and shown in the pickup location dropdown; see `parsed_special_delivery` in `request_helper.rb`) can be individually disabled without a code change via:
 
-* `DISABLE_SPECIAL_PROGRAMS=<comma-separated location_ids>` — e.g. `DISABLE_SPECIAL_PROGRAMS=260` to turn off a single program (such as Cornell Tech). Location_id 224 (faculty office delivery) is always excluded regardless of this setting, since it has its own dedicated menu entry. Remove the ID from the list (or unset the key) to re-enable that program.
+* `DISABLE_SPECIAL_PROGRAMS=<comma-separated location_ids>` — e.g. `DISABLE_SPECIAL_PROGRAMS=b78c284a-b9c4-448a-b181-e913d39ebbd6` to turn off a single program (such as Cornell Tech). Location_id 224 (faculty office delivery) is always excluded regardless of this setting, since it has its own dedicated menu entry. Remove the ID from the list (or unset the key) to re-enable that program.
 
 ### Modifying behavior
 *(NOTE: all of the following will probably be deprecated in the near future; paging limitations are supposedly going away.)*
