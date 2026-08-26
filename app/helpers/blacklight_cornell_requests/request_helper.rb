@@ -24,6 +24,18 @@ module BlacklightCornellRequests
       @document['title_responsibility_display'] ? @document['title_responsibility_display'][0] : nil
     end
 
+    # Page heading for the shared FOLIO (hold/recall/page) request form
+    def folio_request_heading(request_action, netid)
+      case request_action
+      when "Hold"
+        "Hold request for #{netid}"
+      when "Recall"
+        "Recall request for #{netid}"
+      when "Page"
+        "Cornell library to library delivery request for #{netid}"
+      end
+    end
+
     # Return an array of select list option parameters corresponding to the
     # special programs specified in params. Example:
     # "programs"=>[{"location_id"=>250, "name"=>"NYC-CFEM"}]
