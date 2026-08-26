@@ -55,7 +55,6 @@ The service keys that work at present are:
 * `DISABLE_HOLD`
 * `DISABLE_ILL`
 * `DISABLE_L2L`
-* `DISABLE_MANNSPECIAL`
 * `DISABLE_RECALL`
 
 ### Modifying behavior
