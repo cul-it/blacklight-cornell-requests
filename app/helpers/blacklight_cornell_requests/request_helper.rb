@@ -42,16 +42,13 @@ module BlacklightCornellRequests
     # select-list entry. Additional ids can be disabled/re-enabled without a code change via the
     # DISABLE_SPECIAL_PROGRAMS env var (comma-separated location_ids) -- see doc/envkeys.md.
     def disabled_special_program_ids
-      ids = ['224'] + ENV['DISABLE_SPECIAL_PROGRAMS'].to_s.split(',').map(&:strip).reject(&:blank?)
-      Rails.logger.debug "mjc12test6: disabled_special_program_ids: #{ids}"
-      ids
+      ['224'] + ENV['DISABLE_SPECIAL_PROGRAMS'].to_s.split(',').map(&:strip).reject(&:blank?)
     end
 
     # Return an array of select list option parameters corresponding to the
     # special programs specified in params. Example:
     # "programs"=>[{"location_id"=>250, "name"=>"NYC-CFEM"}]
     def parsed_special_delivery(params)
-
       return [] unless params['programs'] && params['programs'].length > 0
 
       params['programs'].reject { |p| disabled_special_program_ids.include?(p['location_id'].to_s) }.sort_by{|p| p['name']}.map do |p|
