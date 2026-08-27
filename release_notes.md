@@ -15,6 +15,7 @@
 
 ### Removed
 - Remove unused james_monkeys collection of class extensions
+- Mann Special Collections routing exception removed (DACCESS-967)
 
 ## [5.5.1] - 2026-07-06
 ### Fixed

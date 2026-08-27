@@ -128,12 +128,11 @@ module BlacklightCornellRequests
           .to receive_message_chain(:search_service, :fetch)
           .and_return(document)
         allow(BlacklightCornellRequests::Patron).to receive(:new).and_return(patron_double)
-        allow(DeliveryMethod).to receive(:enabled_methods).and_return([L2L, BD, MannSpecial, PDA, AskLibrarian])
+        allow(DeliveryMethod).to receive(:enabled_methods).and_return([L2L, BD, PDA, AskLibrarian])
         allow(DeliveryMethod).to receive(:sorted_methods).and_return({ fastest: { method: L2L, items: ['item1'] }, alternate: [{ method: BD, items: ['item2'] }] })
         allow(DeliveryMethod).to receive(:available_folio_methods).and_return([])
         allow(PDA).to receive(:available?).and_return(false)
         allow(BD).to receive(:available?).and_return(false)
-        allow(MannSpecial).to receive(:available?).and_return(false)
         allow(AskLibrarian).to receive(:available?).and_return(true)
         allow_any_instance_of(RequestController).to receive(:user).and_return('testuser')
         allow(Work).to receive(:new).and_return(double(title: 'Test Title', author: 'Test Author', isbn: ['1234567890'], pub_info: 'Test Pub', ill_link: nil, call_number: nil, scanit_link: nil))
@@ -160,14 +159,6 @@ module BlacklightCornellRequests
         allow_any_instance_of(RequestController).to receive(:bd_requestable_id).and_return('bdid')
         get :magic_request, params: { bibid: bibid }
         expect(assigns(:bd_id)).to eq('bdid')
-      end
-
-      it 'removes AskCirculation if MannSpecial is present in options' do
-        allow(DeliveryMethod).to receive(:sorted_methods).and_return({ fastest: { method: MannSpecial, items: ['item1'] }, alternate: [] })
-        allow_any_instance_of(RequestController).to receive(:user).and_return('testuser')
-        get :magic_request, params: { bibid: bibid }
-        # You may want to check that AskCirculation is not present in alternate_methods
-        expect(assigns(:alternate_methods)).not_to include(hash_including(method: AskCirculation))
       end
 
       it 'sets fastest_method to PDA if PDA.available?' do
