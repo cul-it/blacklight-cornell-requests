@@ -15,3 +15,7 @@ h2.request-type
 	width: 2em;
 	height: 2em;
 }
+
+#volume-selection {
+    width: 30%;
+}
