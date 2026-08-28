@@ -25,25 +25,6 @@
 ## Optional keys
 `FOD_DB_URL=<URL to special delivery web service> (optional)`
 
-### Deprecated keys (to be removed in future)
-	VOYAGER_DB=<Voyager identifier for Cornell database>
-	VOYAGER_DB_ID=1@#{DB} 
-	HOLDINGS_URL=<URL to Rick's holdings service> (no longer used?)
-	HOLDING_ID_DN=<ID for Cornell's LDAP service>
-	HOLDING_PW=<password for Cornell's LDAP service>
-	LDAP_HOST=<hostname for Cornell's LDAP service>
-	LDAP_PORT=<port number for Cornell's LDAP service>
-	MYACC_URL=<URL to the **Voyager** myaccount service>
-	ORACLE_HOST=<Oracle database hostname>
-	ORACLE_RDONLY_PASSWORD=<Oracle password>
-	ORACLE_SID=<Oracle SID>
-	REQUEST_URL=<URL for Voyager request services>
-	REST_URL=<URL to the Voyager REST services URL>
-	BORROW_DIRECT_PROD_API_KEY=<API key for BorrowDirect web services>
-	BORROW_DIRECT_TEST_API_KEY=<API key for BorrowDirect test web services>
-	BORROW_DIRECT_URL=<TEST|PRODUCTION>
-	BORROW_DIRECT_TIMEOUT=<BorrowDirect timeout in seconds>
-
 ### Disabling services
 Most delivery services can be “disabled” (i.e., won’t be offered as choices in the Requests system, though of course this has no effect on the services themselves). This is achieved by adding an appropriate key to the `.env` file. For example, `DISABLE_BORROW_DIRECT=1` will remove BorrowDirect from the equation. The exact key value doesn’t matter so long as it evaluates as `true` using Rails’ `present?` method; thus, it’s best to remove the key-value pair entirely when re-enabling the service.
 
@@ -55,8 +36,11 @@ The service keys that work at present are:
 * `DISABLE_HOLD`
 * `DISABLE_ILL`
 * `DISABLE_L2L`
-* `DISABLE_MANNSPECIAL`
 * `DISABLE_RECALL`
+
+Special program delivery options (the "Special Program Delivery: ..." choices sourced from the Special Delivery API and shown in the pickup location dropdown; see `parsed_special_delivery` in `request_helper.rb`) can be individually disabled without a code change via:
+
+* `DISABLE_SPECIAL_PROGRAMS=<comma-separated location_ids>` — e.g. `DISABLE_SPECIAL_PROGRAMS=b78c284a-b9c4-448a-b181-e913d39ebbd6` to turn off a single program (such as Cornell Tech). Location_id 224 (faculty office delivery) is always excluded regardless of this setting, since it has its own dedicated menu entry. Remove the ID from the list (or unset the key) to re-enable that program.
 
 ### Modifying behavior
 *(NOTE: all of the following will probably be deprecated in the near future; paging limitations are supposedly going away.)*

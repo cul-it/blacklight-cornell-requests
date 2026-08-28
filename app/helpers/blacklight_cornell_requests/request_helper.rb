@@ -24,16 +24,34 @@ module BlacklightCornellRequests
       @document['title_responsibility_display'] ? @document['title_responsibility_display'][0] : nil
     end
 
+    # Page heading for the shared FOLIO (hold/recall/page) request form
+    def folio_request_heading(request_action, netid)
+      case request_action
+      when "Hold"
+        "Hold request for #{netid}"
+      when "Recall"
+        "Recall request for #{netid}"
+      when "Page"
+        "Cornell library to library delivery request for #{netid}"
+      end
+    end
+
+    # Special program location_ids that should never be offered as a Special
+    # Delivery choice, even if the Special Delivery API reports the patron as eligible.
+    # 224 (faculty office delivery) is excluded permanently because it has its own dedicated
+    # select-list entry. Additional ids can be disabled/re-enabled without a code change via the
+    # DISABLE_SPECIAL_PROGRAMS env var (comma-separated location_ids) -- see doc/envkeys.md.
+    def disabled_special_program_ids
+      ['224'] + ENV['DISABLE_SPECIAL_PROGRAMS'].to_s.split(',').map(&:strip).reject(&:blank?)
+    end
+
     # Return an array of select list option parameters corresponding to the
     # special programs specified in params. Example:
     # "programs"=>[{"location_id"=>250, "name"=>"NYC-CFEM"}]
     def parsed_special_delivery(params)
-
       return [] unless params['programs'] && params['programs'].length > 0
 
-      # The reject operator is used here to filter out the faculty office delivery
-      # option, which has its own entry in the select list and shouldn't be repeated here.
-      params['programs'].reject{|p| p['location_id'] == 224}.sort_by{|p| p['name']}.map do |p|
+      params['programs'].reject { |p| disabled_special_program_ids.include?(p['location_id'].to_s) }.sort_by{|p| p['name']}.map do |p|
         formatted_label = "Special Program Delivery: #{p['name']}"
         bd_value = p['bd_loc_code'].present? ? p['bd_loc_code'] : ""
         { :label => formatted_label, :value => p['location_id'], :bd_value => bd_value }

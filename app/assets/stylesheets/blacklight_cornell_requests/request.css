@@ -2,6 +2,12 @@
   Place all the styles related to the matching controller here.
   They will automatically be included in application.css.
 */
+h2.request-type 
+{
+	padding: 10px 0 8px;
+	font-size: 1.6em;
+}
+
 #request-loading-spinner {
 	position: relative;
 	display: inline-block;
@@ -10,8 +16,6 @@
 	height: 2em;
 }
 
-h2.request-type 
-{
-	padding: 10px 0 8px;
-	font-size: 1.6em;
+#volume-selection {
+    width: auto;
 }

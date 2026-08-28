@@ -1,5 +1,24 @@
 # Release Notes - blacklight-cornell-requests
 
+## [5.6] - 2026-08-28
+### Added
+- ENV key to selectively disable Special Delivery options from appearing in the pickup locations list (DACCESS-976)
+- CSS for the progress spinner (previously found in blacklight-cornell) (DACCESS-988)
+
+### Changed
+- Support Blacklight 8 (breaks compatibility with Blacklight 7) (DACCESS-944)
+- Refactored FOLIO request views to use a common template
+- Support for Bootstrap 5 (DACCESS-961)
+- Replaced old progress spinners with Boostrap 5 spinners (DACCESS-963)
+- Accessibility: change notes to form hints for consistency and so they are announced by screen readers when the form element gets focus
+
+### Fixed
+- Code properly handles eager loading of libraries (DACCESS-953)
+
+### Removed
+- Remove unused james_monkeys collection of class extensions
+- Mann Special Collections routing exception removed (DACCESS-967)
+
 ## [5.5.1] - 2026-07-06
 ### Fixed
 - Code will gracefully fail if user does not have a FOLIO account (DACCESS-523)

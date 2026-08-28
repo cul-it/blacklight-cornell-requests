@@ -3,7 +3,7 @@
 -## the difference between it and L2L?)
 - Rails.logger.debug "mjc12test: itemstouse - #{@items}"
 -if (@iis.present? && @iis.length > 0)
-  .form-group.row
+  .row.mb-3
     .col-form-label.col-sm-2
       -if (@iis.length > 1)
         Select a copy:
@@ -11,17 +11,16 @@
         This copy:
     .col-sm-10
       -if @iis.length > 1
-        .radio
-          %label{ :for => "copy-any"}
-            %input(id="copy-any" class="copy-select" type="radio" name="holding_id" value="any" data-exclude-location="[]")
-            Any Copy
+        .form-check
+          %input.form-check-input.copy-select(id="copy-any" type="radio" name="holding_id" value="any" data-exclude-location="[]")
+          %label.form-check-label{ :for => "copy-any"} Any Copy
       -@iis.each do |copyn, copyd|
-        .radio
-          %label{ :for => "copy-#{copyn}"}
-            -if (@iis.length == 1)
-              %input(id="copy-#{copyn}" class="copy-select" type="radio" name="holding_id" value="#{copyn}" data-exclude-location="#{copyd[:exclude_location_id]}" checked)
-            -else
-              %input(id="copy-#{copyn}" class="copy-select" type="radio" name="holding_id" value="#{copyn}" data-exclude-location="#{copyd[:exclude_location_id]}")
+        .form-check
+          -if (@iis.length == 1)
+            %input.form-check-input.copy-select(id="copy-#{copyn}" type="radio" name="holding_id" value="#{copyn}" data-exclude-location="#{copyd[:exclude_location_id]}" checked)
+          -else
+            %input.form-check-input.copy-select(id="copy-#{copyn}" type="radio" name="holding_id" value="#{copyn}" data-exclude-location="#{copyd[:exclude_location_id]}")
+          %label.form-check-label{ :for => "copy-#{copyn}"}
             = "#{copyd[:location]} #{copyd[:item_enum]} "
             - if copyd[:copy_number]
               = "c. #{copyd[:copy_number]} "
@@ -31,16 +30,8 @@
               %span.copy-chron.label
                 = copyd[:chron]
 -else
-  -## Commenting these out for now due to Covid-19 requirements. Can't have an item in an unrequestable
-  -## library getting requested. So treating them like l2lac for now.
-  -#.form-group.row
-  -#  .col-sm-10.offset-sm-2
-  -#    .radio
-  -#      %label{ :for => "copy-any"}
-  -#        %input(id="copy-any" class="copy-select" type="radio" name="holding_id" value="any" data-exclude-location="[]" checked)
-  -#        Any Copy
   -if (@items.present? && @items.length > 0)
-    .form-group.row
+    .row.mb-3
       .col-form-label.col-sm-2
         -if (@items.length > 1)
           Select a copy:
@@ -48,12 +39,12 @@
           This copy:
       .col-sm-10
         -@items.each do |i|
-          .radio
-            %label{ :for => "copy-#{i.id}"}
-              -if (@items.length == 1)
-                %input(id="copy-#{i.id}" class="copy-select" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="#{i.excluded_locations}" checked)
-              -else
-                %input(id="copy-#{i.id}" class="copy-select" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="#{i.excluded_locations}")
+          .form-check
+            -if (@items.length == 1)
+              %input.form-check-input.copy-select(id="copy-#{i.id}" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="#{i.excluded_locations}" checked)
+            -else
+              %input.form-check-input.copy-select(id="copy-#{i.id}" type="radio" name="holding_id" value="#{i.id}" data-exclude-location="#{i.excluded_locations}")
+            %label.form-check-label{ :for => "copy-#{i.id}"}
               = "#{i.location['name']} #{i.enumeration} "
               - if i.copy_number
                 = "c. #{i.copy_number} "
