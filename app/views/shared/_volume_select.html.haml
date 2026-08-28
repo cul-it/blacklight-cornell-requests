@@ -1,9 +1,13 @@
 - if @selected_volume.present?
   %label.visually-hidden{:for => "volume-selection"}
     Select volume
-  %select#volume-selection.form-select{:name => "volume-selection", :data => {:request_path => magic_request_path(@id)}}
+  %select#volume-selection.form-select{:name => "volume-selection", 'aria-describedby': 'volume-ill-hint', :data => {:request_path => magic_request_path(@id)}}
     = options_for_select(@volumes.map { |v| [v.enumeration, v.select_option] }.to_h, @selected_volume)
   = render :partial => 'shared/loading_spinner'
+  .form-text#volume-ill-hint
+    Don't see the volume you're looking for? Try
+    %a{:href => @ill_link}
+      Interlibrary Loan
 
 - else
   = render :partial => 'shared/back_to_item'
@@ -17,13 +21,10 @@
           %div#per_page_dropdown.dropdown
             %label.visually-hidden{:for => "volume-selection"}
               Select volume
-            %select#volume-selection.form-select{:name => "volume-selection", :data => {:request_path => magic_request_path(@id)}}
+            %select#volume-selection.form-select{:name => "volume-selection", 'aria-describedby': 'volume-ill-hint', :data => {:request_path => magic_request_path(@id)}}
               = options_for_select({'Choose a volume...' => ''}.merge(@volumes.map { |v| [v.enumeration, v.select_option] }.to_h), @selected_volume)
             = render :partial => 'shared/loading_spinner'
-        %div.col-sm-3.ill-link
-          %p
-            %strong
-              Don't see the volume you're looking for?
-            Try
-            %a{:href => @ill_link}
-              Interlibrary Loan
+            .form-text#volume-ill-hint.mt-2
+              Don't see the volume you're looking for? Try
+              %a{:href => @ill_link}
+                Interlibrary Loan
