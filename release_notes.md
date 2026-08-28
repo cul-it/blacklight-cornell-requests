@@ -3,6 +3,7 @@
 ## [IN PROGRESS]
 ### Added
 - ENV key to selectively disable Special Delivery options from appearing in the pickup locations list (DACCESS-976)
+- CSS for the progress spinner (previously found in blacklight-cornell) (DACCESS-988)
 
 ### Changed
 - Support Blacklight 8 (breaks compatibility with Blacklight 7) (DACCESS-944)
@@ -15,6 +16,7 @@
 
 ### Removed
 - Remove unused james_monkeys collection of class extensions
+- Mann Special Collections routing exception removed (DACCESS-967)
 
 ## [5.5.1] - 2026-07-06
 ### Fixed

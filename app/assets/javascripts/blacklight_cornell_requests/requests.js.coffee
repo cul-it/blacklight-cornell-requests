@@ -33,22 +33,12 @@ requests =
 
     # ... and for BorrowDirect requests
     $('#bd-request-submit').click ->
-      $.fn.spin.presets.requesting =
-        lines: 9,
-        length: 3,
-        width: 2,
-        radius: 6,
       $('#request-loading-spinner').removeClass('d-none')
       requests.submitForm('bd')
       return false
 
     # Listener for volume selection
     $('#volume-selection').change ->
-      $.fn.spin.presets.requesting =
-        lines: 9,
-        length: 3,
-        width: 2,
-        radius: 6,
       $('#request-loading-spinner').removeClass('d-none')
       requestPath = $(this).data('request-path')
       requests.redirectVolume($(this).val(), requestPath)

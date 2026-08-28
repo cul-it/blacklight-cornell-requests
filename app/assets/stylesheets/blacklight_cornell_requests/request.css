@@ -7,3 +7,15 @@ h2.request-type
 	padding: 10px 0 8px;
 	font-size: 1.6em;
 }
+
+#request-loading-spinner {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	width: 2em;
+	height: 2em;
+}
+
+#volume-selection {
+    width: auto;
+}

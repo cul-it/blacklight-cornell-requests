@@ -204,16 +204,6 @@ module BlacklightCornellRequests
       # At this point, options is a hash with keys being available delivery methods
       # and values being arrays of items deliverable using the keyed method
 
-      # Make some adjustments if this is a special collections item (kind of hacky)
-      # TODO: If this item is ONLY available through Mann Special Collections request,
-      # then methods like L2L and Ask at Circ should not appear. But how to handle
-      # the case of an item that is both in special collections and regular collections
-      # somewhere else?
-      if options[MannSpecial]
-        # Rails.logger.debug "mjc12test: MANN SPECIAL OPTIONS CHECK #{}"
-        options[AskCirculation] = []
-        # What about L2L?
-      end
       sorted_methods = DeliveryMethod.sorted_methods(options)
       fastest_method = sorted_methods[:fastest]
       @alternate_methods = sorted_methods[:alternate]
@@ -225,8 +215,6 @@ module BlacklightCornellRequests
         fastest_method = { method: PDA }
       end
 
-      Rails.logger.debug "mjc12test8: fastest #{fastest_method}"
-      Rails.logger.debug "mjc12test8: alternate #{@alternate_methods}"
       # If no other methods are found (i.e., there are no item records to process, such as for
       # an on-order record), ask a librarian
       fastest_method[:method] ||= AskLibrarian
@@ -254,7 +242,6 @@ module BlacklightCornellRequests
       @isbn = work_metadata.isbn
       @pub_info = work_metadata.pub_info
       @ill_link = work_metadata.ill_link
-      @mann_special_delivery_link = MannSpecialDeliveryLinkBuilder.build(work_metadata, @patron)
       @scanit_link = work_metadata.scanit_link
       @netid = user
 
@@ -291,7 +278,6 @@ module BlacklightCornellRequests
       options[DocumentDelivery] << item if DocumentDelivery.available?(item, patron)
       options[AskLibrarian] << item if AskLibrarian.available?(item, patron)
       options[AskCirculation] << item if AskCirculation.available?(item, patron)
-      options[MannSpecial] << item if MannSpecial.available?(item, patron)
 
       options
     end
@@ -351,10 +337,6 @@ module BlacklightCornellRequests
 
     def document_delivery
       magic_request 'document_delivery'
-    end
-
-    def mann_special
-      magic_request 'mann_special'
     end
 
     def blacklight_solr

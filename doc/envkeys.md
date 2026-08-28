@@ -36,7 +36,6 @@ The service keys that work at present are:
 * `DISABLE_HOLD`
 * `DISABLE_ILL`
 * `DISABLE_L2L`
-* `DISABLE_MANNSPECIAL`
 * `DISABLE_RECALL`
 
 Special program delivery options (the "Special Program Delivery: ..." choices sourced from the Special Delivery API and shown in the pickup location dropdown; see `parsed_special_delivery` in `request_helper.rb`) can be individually disabled without a code change via:
