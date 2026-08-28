@@ -1,6 +1,6 @@
 # Release Notes - blacklight-cornell-requests
 
-## [IN PROGRESS]
+## [5.6] - 2026-08-28
 ### Added
 - ENV key to selectively disable Special Delivery options from appearing in the pickup locations list (DACCESS-976)
 - CSS for the progress spinner (previously found in blacklight-cornell) (DACCESS-988)
